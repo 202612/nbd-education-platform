@@ -95,7 +95,6 @@ function QuizStep({ step, onComplete, onBack }) {
 // ================= VIDEO STEP =================
 
 function VideoStep({ step, onComplete, onBack }) {
-  const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [playbackUrl, setPlaybackUrl] = useState(step.video_storage_path ? null : step.video_url);
   const [resolving, setResolving] = useState(!!step.video_storage_path);
@@ -114,13 +113,13 @@ function VideoStep({ step, onComplete, onBack }) {
   }, [step.id, step.video_storage_path, step.video_url]);
 
   async function markWatched() {
-    setBusy(true);
     setError("");
     const { error: rpcError } = await supabase.rpc("complete_video_step", { p_step_id: step.id });
-    setBusy(false);
     if (rpcError) { setError(rpcError.message); return; }
     onComplete();
   }
+
+  const hasSource = !!(step.video_storage_path || step.video_url);
 
   return (
     <div>
@@ -133,21 +132,21 @@ function VideoStep({ step, onComplete, onBack }) {
       )}
       {!resolving && playbackUrl && (
         <video
+          key={playbackUrl}
           src={playbackUrl}
           controls
           onEnded={markWatched}
+          onError={() => setError("This video couldn't be played. It may not have finished uploading correctly — try re-uploading it from the admin panel.")}
           style={{ width: "100%", borderRadius: 10, background: "#000", marginBottom: 16 }}
         />
       )}
-      {!resolving && !playbackUrl && (
+      {!resolving && !playbackUrl && !hasSource && (
         <div style={{ background: "#fdf6e3", border: "1px solid #eddfad", color: "#8a6d1f", fontSize: 13, padding: "10px 14px", borderRadius: 8, marginBottom: 16 }}>
           No video uploaded for this step yet.
         </div>
       )}
       {error && <div style={{ color: "#a3372f", fontSize: 13, marginBottom: 10 }}>{error}</div>}
-      <button onClick={markWatched} disabled={busy} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 8, padding: "9px 18px", fontSize: 14, fontWeight: 500, opacity: busy ? 0.7 : 1 }}>
-        {busy ? "Saving…" : "Mark as watched & continue"}
-      </button>
+      <p style={{ fontSize: 12, color: "#a39a8d" }}>Continue unlocks automatically once the video finishes playing.</p>
     </div>
   );
 }
