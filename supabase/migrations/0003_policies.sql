@@ -16,14 +16,14 @@ alter table certificates enable row level security;
 create policy "admins full access to brands" on brands for all
   using (is_admin()) with check (is_admin());
 create policy "customers read approved brands" on brands for select
-  using (id = any (select approved_brand_ids from accounts where id = my_account_id()));
+  using (id = any (my_approved_brand_ids()));
 
 -- brand_steps — video/quiz/certificate metadata is fine for customers to
 -- read directly (no answer key lives here); it's just the ordered sequence.
 create policy "admins full access to brand_steps" on brand_steps for all
   using (is_admin()) with check (is_admin());
 create policy "customers read steps of approved brands" on brand_steps for select
-  using (brand_id = any (select approved_brand_ids from accounts where id = my_account_id()));
+  using (brand_id = any (my_approved_brand_ids()));
 
 -- quiz_questions — no direct customer policy. Customers only ever see
 -- questions (without the answer key) via the get_quiz_questions RPC.

@@ -14,6 +14,16 @@ language sql stable security definer set search_path = public as $$
   select account_id from app_users where auth_id = auth.uid()
 $$;
 
+-- Returns the caller's approved_brand_ids as an actual array value, not a
+-- one-row subquery — "x = any (select array_col from t)" fails in Postgres
+-- because a bare subquery is treated as a set of scalar rows to compare
+-- one-by-one, not "here's an array to search inside." Wrapping it in a
+-- function call sidesteps that and gives a real array expression instead.
+create or replace function my_approved_brand_ids() returns uuid[]
+language sql stable security definer set search_path = public as $$
+  select coalesce(approved_brand_ids, '{}') from accounts where id = my_account_id()
+$$;
+
 create or replace function is_admin() returns boolean
 language sql stable security definer set search_path = public as $$
   select exists (select 1 from admins where auth_id = auth.uid())
@@ -21,6 +31,7 @@ $$;
 
 grant execute on function my_app_user_id() to authenticated;
 grant execute on function my_account_id() to authenticated;
+grant execute on function my_approved_brand_ids() to authenticated;
 grant execute on function is_admin() to authenticated;
 
 -- True if p_step_id is the first step in its brand's sequence, or the step
@@ -136,7 +147,7 @@ begin
   if v_type <> 'quiz' then
     raise exception 'Not a quiz step';
   end if;
-  if not is_admin() and not (v_brand_id = any (select approved_brand_ids from accounts where id = my_account_id())) then
+  if not is_admin() and not (v_brand_id = any (my_approved_brand_ids())) then
     raise exception 'Not authorized for this step';
   end if;
   return query
@@ -176,7 +187,7 @@ begin
   if v_type <> 'quiz' then
     raise exception 'Not a quiz step';
   end if;
-  if not (v_brand_id = any (select approved_brand_ids from accounts where id = my_account_id())) then
+  if not (v_brand_id = any (my_approved_brand_ids())) then
     raise exception 'Not authorized for this brand';
   end if;
   if not step_unlocked_for(p_step_id, v_uid) then
@@ -226,7 +237,7 @@ begin
   if v_type <> 'video' then
     raise exception 'Not a video step';
   end if;
-  if not (v_brand_id = any (select approved_brand_ids from accounts where id = my_account_id())) then
+  if not (v_brand_id = any (my_approved_brand_ids())) then
     raise exception 'Not authorized for this brand';
   end if;
   if not step_unlocked_for(p_step_id, v_uid) then
@@ -267,7 +278,7 @@ begin
   if v_type <> 'certificate' then
     raise exception 'Not a certificate step';
   end if;
-  if not (v_brand_id = any (select approved_brand_ids from accounts where id = my_account_id())) then
+  if not (v_brand_id = any (my_approved_brand_ids())) then
     raise exception 'Not authorized for this brand';
   end if;
   if not step_unlocked_for(p_step_id, v_uid) then
