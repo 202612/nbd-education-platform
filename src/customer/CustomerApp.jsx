@@ -97,6 +97,21 @@ function QuizStep({ step, onComplete, onBack }) {
 function VideoStep({ step, onComplete, onBack }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [playbackUrl, setPlaybackUrl] = useState(step.video_storage_path ? null : step.video_url);
+  const [resolving, setResolving] = useState(!!step.video_storage_path);
+
+  useEffect(() => {
+    if (!step.video_storage_path) { setPlaybackUrl(step.video_url); setResolving(false); return; }
+    let cancelled = false;
+    setResolving(true);
+    supabase.storage.from("training-videos").createSignedUrl(step.video_storage_path, 3600).then(({ data, error: urlError }) => {
+      if (cancelled) return;
+      setResolving(false);
+      if (urlError) { setError(urlError.message); return; }
+      setPlaybackUrl(data.signedUrl);
+    });
+    return () => { cancelled = true; };
+  }, [step.id, step.video_storage_path, step.video_url]);
 
   async function markWatched() {
     setBusy(true);
@@ -113,14 +128,18 @@ function VideoStep({ step, onComplete, onBack }) {
         <ChevronLeft size={15} /> Back
       </button>
       <h3 style={{ fontSize: 17, fontWeight: 600, color: navy[900], margin: "0 0 14px" }}>{step.title}</h3>
-      {step.video_url ? (
+      {resolving && (
+        <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#8a8074", fontSize: 14, marginBottom: 16 }}><Loader2 size={16} className="spin" /> Loading video…</div>
+      )}
+      {!resolving && playbackUrl && (
         <video
-          src={step.video_url}
+          src={playbackUrl}
           controls
           onEnded={markWatched}
           style={{ width: "100%", borderRadius: 10, background: "#000", marginBottom: 16 }}
         />
-      ) : (
+      )}
+      {!resolving && !playbackUrl && (
         <div style={{ background: "#fdf6e3", border: "1px solid #eddfad", color: "#8a6d1f", fontSize: 13, padding: "10px 14px", borderRadius: 8, marginBottom: 16 }}>
           No video uploaded for this step yet.
         </div>
@@ -397,7 +416,7 @@ export default function CustomerApp({ user, account }) {
       if (account.status !== "approved") return;
       const { data, error } = await supabase
         .from("brands")
-        .select("id,name,tagline,logo_url,steps:brand_steps(id,type,title,video_url,duration,order_index)");
+        .select("id,name,tagline,logo_url,steps:brand_steps(id,type,title,video_url,video_storage_path,duration,order_index)");
       if (cancelled) return;
       if (error) { setLoadError(error.message); return; }
       setBrands(data || []);

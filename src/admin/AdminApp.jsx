@@ -93,6 +93,7 @@ function AddVideoForm({ brandId, initial, submitLabel, onCancel, onSave }) {
   const [title, setTitle] = useState(initial?.title || "");
   const [duration, setDuration] = useState(initial?.duration || "");
   const [videoUrl, setVideoUrl] = useState(initial?.video_url || "");
+  const [storagePath, setStoragePath] = useState(initial?.video_storage_path || null);
   const [uploading, setUploading] = useState(false);
   const [fileName, setFileName] = useState("");
   const [error, setError] = useState("");
@@ -107,8 +108,8 @@ function AddVideoForm({ brandId, initial, submitLabel, onCancel, onSave }) {
     const { error: uploadError } = await supabase.storage.from("training-videos").upload(path, file);
     setUploading(false);
     if (uploadError) { setError(uploadError.message); return; }
-    const { data } = supabase.storage.from("training-videos").getPublicUrl(path);
-    setVideoUrl(data.publicUrl);
+    setStoragePath(path);
+    setVideoUrl("");
     setFileName(file.name);
   }
 
@@ -116,7 +117,12 @@ function AddVideoForm({ brandId, initial, submitLabel, onCancel, onSave }) {
     if (!title.trim()) { setError("Give the video a title"); return; }
     setSaving(true);
     setError("");
-    const err = await onSave({ title: title.trim(), duration: duration.trim(), video_url: videoUrl.trim() || null });
+    const err = await onSave({
+      title: title.trim(),
+      duration: duration.trim(),
+      video_url: storagePath ? null : (videoUrl.trim() || null),
+      video_storage_path: storagePath,
+    });
     setSaving(false);
     if (err) setError(err);
   }
@@ -127,12 +133,18 @@ function AddVideoForm({ brandId, initial, submitLabel, onCancel, onSave }) {
       <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Foundations of Colour Theory" style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 14, boxSizing: "border-box" }} />
       <label style={{ fontSize: 13, color: "#6b6155", display: "block", marginBottom: 4 }}>Duration (optional)</label>
       <input value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="e.g. 6 min" style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 14, boxSizing: "border-box" }} />
-      <label style={{ fontSize: 13, color: "#6b6155", display: "block", marginBottom: 4 }}>Video file (MP4)</label>
+      <label style={{ fontSize: 13, color: "#6b6155", display: "block", marginBottom: 4 }}>Video file (MP4) — private, only approved customers can view it</label>
       <input type="file" accept="video/mp4,video/*" onChange={handleFile} style={{ marginBottom: 8, fontSize: 13 }} />
       {uploading && <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#8a8074", fontSize: 13, marginBottom: 8 }}><Loader2 size={14} className="spin" /> Uploading…</div>}
       {fileName && !uploading && <div style={{ color: "#4d6b2c", fontSize: 13, marginBottom: 8 }}>Uploaded: {fileName}</div>}
-      <div style={{ fontSize: 12, color: "#a39a8d", margin: "4px 0 8px" }}>— or paste a video URL instead —</div>
-      <input value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://…" style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 14, fontSize: 14, boxSizing: "border-box" }} />
+      {storagePath && !fileName && <div style={{ color: "#4d6b2c", fontSize: 13, marginBottom: 8 }}>Using previously uploaded file</div>}
+      <div style={{ fontSize: 12, color: "#a39a8d", margin: "4px 0 8px" }}>— or paste an external video URL instead (e.g. YouTube) —</div>
+      <input
+        value={videoUrl}
+        onChange={(e) => { setVideoUrl(e.target.value); setStoragePath(null); setFileName(""); }}
+        placeholder="https://…"
+        style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 14, fontSize: 14, boxSizing: "border-box" }}
+      />
       {error && <div style={{ color: "#a3372f", fontSize: 13, marginBottom: 10 }}>{error}</div>}
       <div style={{ display: "flex", gap: 8 }}>
         <button onClick={save} disabled={saving || uploading} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 13, opacity: saving || uploading ? 0.7 : 1 }}>{saving ? "Saving…" : (submitLabel || "Save video step")}</button>
@@ -186,7 +198,7 @@ function StepCard({ step, index, count, onMove, onDelete, onEdit }) {
         <div style={{ fontSize: 12, color: "#8a8074" }}>
           {meta.label}
           {step.type === "video" && step.duration ? ` · ${step.duration}` : ""}
-          {step.type === "video" && !step.video_url ? " · no file yet" : ""}
+          {step.type === "video" && !step.video_url && !step.video_storage_path ? " · no file yet" : ""}
           {step.type === "quiz" ? ` · ${step.quiz_questions?.length || 0} question${step.quiz_questions?.length === 1 ? "" : "s"}` : ""}
         </div>
       </div>
@@ -294,7 +306,7 @@ function BrandStepsEditor({ brandId, onBack }) {
     setBrand(b);
     const { data: s } = await supabase
       .from("brand_steps")
-      .select("id,type,title,video_url,duration,order_index,quiz_questions(id)")
+      .select("id,type,title,video_url,video_storage_path,duration,order_index,quiz_questions(id)")
       .eq("brand_id", brandId)
       .order("order_index");
     setSteps(s || []);
@@ -305,9 +317,9 @@ function BrandStepsEditor({ brandId, onBack }) {
     return steps.length ? Math.max(...steps.map((s) => s.order_index)) + 1 : 0;
   }
 
-  async function saveVideo({ title, duration, video_url }) {
+  async function saveVideo({ title, duration, video_url, video_storage_path }) {
     const order_index = await nextOrderIndex();
-    const { error: err } = await supabase.from("brand_steps").insert({ brand_id: brandId, type: "video", title, duration, video_url, order_index });
+    const { error: err } = await supabase.from("brand_steps").insert({ brand_id: brandId, type: "video", title, duration, video_url, video_storage_path, order_index });
     if (err) return err.message;
     setAddingType(null);
     await load();
@@ -356,8 +368,8 @@ function BrandStepsEditor({ brandId, onBack }) {
     setEditingQuizData(null);
   }
 
-  async function updateVideo({ title, duration, video_url }) {
-    const { error: err } = await supabase.from("brand_steps").update({ title, duration, video_url }).eq("id", editingStep.id);
+  async function updateVideo({ title, duration, video_url, video_storage_path }) {
+    const { error: err } = await supabase.from("brand_steps").update({ title, duration, video_url, video_storage_path }).eq("id", editingStep.id);
     if (err) return err.message;
     cancelEdit();
     await load();
