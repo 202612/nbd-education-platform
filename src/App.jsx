@@ -46,7 +46,7 @@ export default function App() {
   const [identity, setIdentity] = useState(null); // { kind, admin } | { kind, user, account } | { kind: "unrecognized" }
   const [resolving, setResolving] = useState(false);
   const [resolveError, setResolveError] = useState("");
-  const [authScreen, setAuthScreen] = useState("login"); // "login" | "apply"
+  const [authScreen, setAuthScreen] = useState("apply"); // "login" | "apply" — new customers land here first; staff/admin sign in via the link on that screen
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));

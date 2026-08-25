@@ -127,7 +127,7 @@ export default function ApplyForAccess({ onSwitchToLogin }) {
         onClick={onSwitchToLogin}
         style={{ display: "block", width: "100%", textAlign: "center", background: "none", border: "none", color: navy[700], fontSize: 13, marginTop: 16 }}
       >
-        Already approved? Sign in
+        Already have an account? Sign in
       </button>
 
       <style>{`.spin { animation: spin 1s linear infinite; } @keyframes spin { to { transform: rotate(360deg); } }`}</style>
