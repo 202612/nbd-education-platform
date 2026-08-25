@@ -1,0 +1,719 @@
+import React, { useEffect, useState } from "react";
+import {
+  ShieldCheck, Building2, Clock, PlayCircle, CheckCircle2, Award, Plus, Trash2, Check, X,
+  ChevronRight, ChevronLeft, ArrowUp, ArrowDown, Search, Loader2, Sparkles, Users, Image as ImageIcon,
+} from "lucide-react";
+import { supabase } from "../lib/supabaseClient.js";
+import { navy, Badge, StatCard } from "../lib/ui.jsx";
+import { AdminAssistant } from "./AdminMock.jsx";
+
+// ================= BRANDS & STEPS =================
+
+const STEP_TYPES = [
+  { type: "video", label: "Video", icon: PlayCircle },
+  { type: "quiz", label: "Quiz", icon: CheckCircle2 },
+  { type: "certificate", label: "Certificate", icon: Award },
+];
+
+function AddQuizForm({ onCancel, onSave }) {
+  const [title, setTitle] = useState("");
+  const [questions, setQuestions] = useState([{ text: "", options: ["", "", ""], correct: 0 }]);
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  function updateQuestion(qi, patch) {
+    setQuestions(questions.map((q, i) => (i === qi ? { ...q, ...patch } : q)));
+  }
+  function updateOption(qi, oi, value) {
+    updateQuestion(qi, { options: questions[qi].options.map((o, i) => (i === oi ? value : o)) });
+  }
+  function addOption(qi) {
+    updateQuestion(qi, { options: [...questions[qi].options, ""] });
+  }
+  function removeOption(qi, oi) {
+    if (questions[qi].options.length <= 2) return;
+    const options = questions[qi].options.filter((_, i) => i !== oi);
+    const correct = questions[qi].correct >= options.length ? 0 : questions[qi].correct;
+    updateQuestion(qi, { options, correct });
+  }
+  function addQuestion() {
+    setQuestions([...questions, { text: "", options: ["", "", ""], correct: 0 }]);
+  }
+  function removeQuestion(qi) {
+    if (questions.length <= 1) return;
+    setQuestions(questions.filter((_, i) => i !== qi));
+  }
+
+  async function save() {
+    if (!title.trim()) { setError("Give the quiz a title"); return; }
+    for (const q of questions) {
+      if (!q.text.trim() || q.options.some((o) => !o.trim())) {
+        setError("Fill in every question and answer option first");
+        return;
+      }
+    }
+    setSaving(true);
+    setError("");
+    const err = await onSave({ title: title.trim(), questions });
+    setSaving(false);
+    if (err) setError(err);
+  }
+
+  return (
+    <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 16, marginBottom: 16 }}>
+      <label style={{ fontSize: 13, color: "#6b6155", display: "block", marginBottom: 4 }}>Quiz title</label>
+      <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Quick check: Foundations" style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 14, fontSize: 14, boxSizing: "border-box" }} />
+      {questions.map((q, qi) => (
+        <div key={qi} style={{ border: "1px solid #e4dfd6", borderRadius: 8, padding: 12, marginBottom: 10 }}>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
+            <input value={q.text} onChange={(e) => updateQuestion(qi, { text: e.target.value })} placeholder={`Question ${qi + 1}`} style={{ flex: 1, padding: "7px 9px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 13 }} />
+            <button onClick={() => removeQuestion(qi)} style={{ background: "none" }}><Trash2 size={14} color="#a39a8d" /></button>
+          </div>
+          {q.options.map((opt, oi) => (
+            <div key={oi} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+              <input type="radio" name={`correct-${qi}`} checked={q.correct === oi} onChange={() => updateQuestion(qi, { correct: oi })} title="Correct answer" />
+              <input value={opt} onChange={(e) => updateOption(qi, oi, e.target.value)} placeholder={`Option ${oi + 1}`} style={{ flex: 1, padding: "6px 9px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 13 }} />
+              {q.options.length > 2 && <button onClick={() => removeOption(qi, oi)} style={{ background: "none" }}><X size={13} color="#a39a8d" /></button>}
+            </div>
+          ))}
+          <button onClick={() => addOption(qi)} style={{ fontSize: 12, color: navy[700], background: "none" }}>+ Add option</button>
+        </div>
+      ))}
+      <button onClick={addQuestion} style={{ fontSize: 13, color: navy[700], background: "none", marginBottom: 14 }}>+ Add question</button>
+      {error && <div style={{ color: "#a3372f", fontSize: 13, marginBottom: 10 }}>{error}</div>}
+      <div style={{ display: "flex", gap: 8 }}>
+        <button onClick={save} disabled={saving} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 13, opacity: saving ? 0.7 : 1 }}>{saving ? "Saving…" : "Save quiz step"}</button>
+        <button onClick={onCancel} style={{ background: "none", border: "1px solid #ddd5cb", borderRadius: 6, padding: "8px 16px", fontSize: 13 }}>Cancel</button>
+      </div>
+    </div>
+  );
+}
+
+function AddVideoForm({ brandId, onCancel, onSave }) {
+  const [title, setTitle] = useState("");
+  const [duration, setDuration] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [fileName, setFileName] = useState("");
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  async function handleFile(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setError("");
+    const path = `${brandId}/${Date.now()}-${file.name}`;
+    const { error: uploadError } = await supabase.storage.from("training-videos").upload(path, file);
+    setUploading(false);
+    if (uploadError) { setError(uploadError.message); return; }
+    const { data } = supabase.storage.from("training-videos").getPublicUrl(path);
+    setVideoUrl(data.publicUrl);
+    setFileName(file.name);
+  }
+
+  async function save() {
+    if (!title.trim()) { setError("Give the video a title"); return; }
+    setSaving(true);
+    setError("");
+    const err = await onSave({ title: title.trim(), duration: duration.trim(), video_url: videoUrl.trim() || null });
+    setSaving(false);
+    if (err) setError(err);
+  }
+
+  return (
+    <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 16, marginBottom: 16 }}>
+      <label style={{ fontSize: 13, color: "#6b6155", display: "block", marginBottom: 4 }}>Video title</label>
+      <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Foundations of Colour Theory" style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 14, boxSizing: "border-box" }} />
+      <label style={{ fontSize: 13, color: "#6b6155", display: "block", marginBottom: 4 }}>Duration (optional)</label>
+      <input value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="e.g. 6 min" style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 14, boxSizing: "border-box" }} />
+      <label style={{ fontSize: 13, color: "#6b6155", display: "block", marginBottom: 4 }}>Video file (MP4)</label>
+      <input type="file" accept="video/mp4,video/*" onChange={handleFile} style={{ marginBottom: 8, fontSize: 13 }} />
+      {uploading && <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#8a8074", fontSize: 13, marginBottom: 8 }}><Loader2 size={14} className="spin" /> Uploading…</div>}
+      {fileName && !uploading && <div style={{ color: "#4d6b2c", fontSize: 13, marginBottom: 8 }}>Uploaded: {fileName}</div>}
+      <div style={{ fontSize: 12, color: "#a39a8d", margin: "4px 0 8px" }}>— or paste a video URL instead —</div>
+      <input value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://…" style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 14, fontSize: 14, boxSizing: "border-box" }} />
+      {error && <div style={{ color: "#a3372f", fontSize: 13, marginBottom: 10 }}>{error}</div>}
+      <div style={{ display: "flex", gap: 8 }}>
+        <button onClick={save} disabled={saving || uploading} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 13, opacity: saving || uploading ? 0.7 : 1 }}>{saving ? "Saving…" : "Save video step"}</button>
+        <button onClick={onCancel} style={{ background: "none", border: "1px solid #ddd5cb", borderRadius: 6, padding: "8px 16px", fontSize: 13 }}>Cancel</button>
+      </div>
+      <style>{`.spin { animation: spin 1s linear infinite; } @keyframes spin { to { transform: rotate(360deg); } }`}</style>
+    </div>
+  );
+}
+
+function AddCertificateForm({ onCancel, onSave }) {
+  const [title, setTitle] = useState("Certificate of Participation");
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  async function save() {
+    if (!title.trim()) { setError("Give the certificate a title"); return; }
+    setSaving(true);
+    setError("");
+    const err = await onSave({ title: title.trim() });
+    setSaving(false);
+    if (err) setError(err);
+  }
+
+  return (
+    <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 16, marginBottom: 16 }}>
+      <label style={{ fontSize: 13, color: "#6b6155", display: "block", marginBottom: 4 }}>Certificate title</label>
+      <input value={title} onChange={(e) => setTitle(e.target.value)} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 14, fontSize: 14, boxSizing: "border-box" }} />
+      <p style={{ fontSize: 12, color: "#a39a8d", margin: "0 0 14px" }}>
+        Awarded automatically once every earlier step in this brand is complete. The certificate is generated for
+        each learner with their name and the date filled in — set the brand's logo above so it appears on it.
+      </p>
+      {error && <div style={{ color: "#a3372f", fontSize: 13, marginBottom: 10 }}>{error}</div>}
+      <div style={{ display: "flex", gap: 8 }}>
+        <button onClick={save} disabled={saving} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 13, opacity: saving ? 0.7 : 1 }}>{saving ? "Saving…" : "Save certificate step"}</button>
+        <button onClick={onCancel} style={{ background: "none", border: "1px solid #ddd5cb", borderRadius: 6, padding: "8px 16px", fontSize: 13 }}>Cancel</button>
+      </div>
+    </div>
+  );
+}
+
+function StepCard({ step, index, count, onMove, onDelete }) {
+  const meta = STEP_TYPES.find((t) => t.type === step.type);
+  const Icon = meta.icon;
+
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 12, background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: "12px 14px", flexWrap: "wrap" }}>
+      <Icon size={16} color={navy[500]} />
+      <div style={{ flex: 1, minWidth: 160 }}>
+        <div style={{ fontWeight: 500, color: navy[900], fontSize: 14 }}>{step.title}</div>
+        <div style={{ fontSize: 12, color: "#8a8074" }}>
+          {meta.label}
+          {step.type === "video" && step.duration ? ` · ${step.duration}` : ""}
+          {step.type === "video" && !step.video_url ? " · no file yet" : ""}
+          {step.type === "quiz" ? ` · ${step.quiz_questions?.length || 0} question${step.quiz_questions?.length === 1 ? "" : "s"}` : ""}
+        </div>
+      </div>
+      <button onClick={() => onMove(index, -1)} disabled={index === 0} style={{ background: "none", opacity: index === 0 ? 0.3 : 1 }}><ArrowUp size={15} color="#6b6155" /></button>
+      <button onClick={() => onMove(index, 1)} disabled={index === count - 1} style={{ background: "none", opacity: index === count - 1 ? 0.3 : 1 }}><ArrowDown size={15} color="#6b6155" /></button>
+      <button onClick={() => onDelete(step.id)} style={{ background: "none" }}><Trash2 size={15} color="#a39a8d" /></button>
+    </div>
+  );
+}
+
+function BrandLogoUpload({ brand, onChanged }) {
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function handleFile(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setError("");
+    const path = `${brand.id}/${Date.now()}-${file.name}`;
+    const { error: uploadError } = await supabase.storage.from("brand-logos").upload(path, file);
+    if (uploadError) { setUploading(false); setError(uploadError.message); return; }
+    const { data } = supabase.storage.from("brand-logos").getPublicUrl(path);
+    await supabase.from("brands").update({ logo_url: data.publicUrl }).eq("id", brand.id);
+    setUploading(false);
+    onChanged();
+  }
+
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 18 }}>
+      {brand.logo_url ? (
+        <img src={brand.logo_url} alt={`${brand.name} logo`} style={{ height: 40, width: 40, objectFit: "contain", borderRadius: 6, border: "1px solid #e4dfd6", background: "#fff" }} />
+      ) : (
+        <div style={{ height: 40, width: 40, borderRadius: 6, border: "1px dashed #ddd5cb", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <ImageIcon size={16} color="#a39a8d" />
+        </div>
+      )}
+      <div>
+        <label style={{ fontSize: 12, color: navy[700], background: navy[50], border: "1px solid #e4dfd6", borderRadius: 6, padding: "5px 10px", cursor: "pointer" }}>
+          {uploading ? "Uploading…" : brand.logo_url ? "Replace logo" : "Upload logo"}
+          <input type="file" accept="image/*" onChange={handleFile} disabled={uploading} style={{ display: "none" }} />
+        </label>
+        {error && <div style={{ color: "#a3372f", fontSize: 12, marginTop: 4 }}>{error}</div>}
+        <div style={{ fontSize: 11, color: "#a39a8d", marginTop: 4 }}>Appears on this brand's generated certificate.</div>
+      </div>
+    </div>
+  );
+}
+
+function BrandStepsEditor({ brandId, onBack }) {
+  const [brand, setBrand] = useState(null);
+  const [steps, setSteps] = useState(null);
+  const [addingType, setAddingType] = useState(null);
+  const [error, setError] = useState("");
+
+  async function load() {
+    const { data: b } = await supabase.from("brands").select("id,name,tagline,logo_url").eq("id", brandId).single();
+    setBrand(b);
+    const { data: s } = await supabase
+      .from("brand_steps")
+      .select("id,type,title,video_url,duration,order_index,quiz_questions(id)")
+      .eq("brand_id", brandId)
+      .order("order_index");
+    setSteps(s || []);
+  }
+  useEffect(() => { load(); }, [brandId]);
+
+  async function nextOrderIndex() {
+    return steps.length ? Math.max(...steps.map((s) => s.order_index)) + 1 : 0;
+  }
+
+  async function saveVideo({ title, duration, video_url }) {
+    const order_index = await nextOrderIndex();
+    const { error: err } = await supabase.from("brand_steps").insert({ brand_id: brandId, type: "video", title, duration, video_url, order_index });
+    if (err) return err.message;
+    setAddingType(null);
+    await load();
+    return null;
+  }
+
+  async function saveQuiz({ title, questions }) {
+    const order_index = await nextOrderIndex();
+    const { data: step, error: stepErr } = await supabase.from("brand_steps").insert({ brand_id: brandId, type: "quiz", title, order_index }).select().single();
+    if (stepErr) return stepErr.message;
+    const rows = questions.map((q, i) => ({ step_id: step.id, text: q.text, options: q.options, correct_index: q.correct, order_index: i }));
+    const { error: qErr } = await supabase.from("quiz_questions").insert(rows);
+    if (qErr) return qErr.message;
+    setAddingType(null);
+    await load();
+    return null;
+  }
+
+  async function saveCertificate({ title }) {
+    const order_index = await nextOrderIndex();
+    const { error: err } = await supabase.from("brand_steps").insert({ brand_id: brandId, type: "certificate", title, order_index });
+    if (err) return err.message;
+    setAddingType(null);
+    await load();
+    return null;
+  }
+
+  async function moveStep(index, direction) {
+    const other = index + direction;
+    if (other < 0 || other >= steps.length) return;
+    const a = steps[index];
+    const b = steps[other];
+    await supabase.from("brand_steps").update({ order_index: b.order_index }).eq("id", a.id);
+    await supabase.from("brand_steps").update({ order_index: a.order_index }).eq("id", b.id);
+    await load();
+  }
+
+  async function deleteStep(id) {
+    await supabase.from("brand_steps").delete().eq("id", id);
+    await load();
+  }
+
+  if (!brand || !steps) {
+    return <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#8a8074", fontSize: 14 }}><Loader2 size={16} /> Loading…</div>;
+  }
+
+  return (
+    <div>
+      <button onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, color: navy[700], marginBottom: 14, background: "none" }}>
+        <ChevronLeft size={15} /> All brands
+      </button>
+      <h2 style={{ fontSize: 20, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>{brand.name}</h2>
+      <p style={{ color: "#8a8074", fontSize: 14, margin: "0 0 18px" }}>Build the sequence customers work through, in order — video, quiz, or certificate steps.</p>
+
+      <BrandLogoUpload brand={brand} onChanged={load} />
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 18 }}>
+        {steps.map((s, i) => (
+          <StepCard key={s.id} step={s} index={i} count={steps.length} onMove={moveStep} onDelete={deleteStep} />
+        ))}
+        {steps.length === 0 && <div style={{ fontSize: 13, color: "#a39a8d" }}>No steps yet — add the first one below.</div>}
+      </div>
+
+      {addingType === "video" && <AddVideoForm brandId={brandId} onCancel={() => setAddingType(null)} onSave={saveVideo} />}
+      {addingType === "quiz" && <AddQuizForm onCancel={() => setAddingType(null)} onSave={saveQuiz} />}
+      {addingType === "certificate" && <AddCertificateForm onCancel={() => setAddingType(null)} onSave={saveCertificate} />}
+
+      {!addingType && (
+        <div style={{ display: "flex", gap: 8 }}>
+          {STEP_TYPES.map((t) => (
+            <button key={t.type} onClick={() => setAddingType(t.type)} style={{ display: "flex", alignItems: "center", gap: 6, background: "#fff", border: "1px solid #ddd5cb", borderRadius: 8, padding: "8px 14px", fontSize: 13, color: navy[900] }}>
+              <Plus size={14} /> <t.icon size={14} /> {t.label}
+            </button>
+          ))}
+        </div>
+      )}
+      {error && <div style={{ color: "#a3372f", fontSize: 13, marginTop: 10 }}>{error}</div>}
+    </div>
+  );
+}
+
+function AdminBrandsLive() {
+  const [brands, setBrands] = useState(null);
+  const [activeBrandId, setActiveBrandId] = useState(null);
+  const [newBrandName, setNewBrandName] = useState("");
+  const [newBrandTagline, setNewBrandTagline] = useState("");
+  const [showAdd, setShowAdd] = useState(false);
+  const [error, setError] = useState("");
+
+  async function load() {
+    const { data } = await supabase.from("brands").select("id,name,tagline,brand_steps(id)").order("name");
+    setBrands(data || []);
+  }
+  useEffect(() => { load(); }, []);
+
+  async function addBrand() {
+    if (!newBrandName.trim()) { setError("Enter a brand name first"); return; }
+    const { error: err } = await supabase.from("brands").insert({ name: newBrandName.trim(), tagline: newBrandTagline.trim() || null });
+    if (err) { setError(err.message); return; }
+    setNewBrandName(""); setNewBrandTagline(""); setShowAdd(false); setError("");
+    load();
+  }
+
+  if (activeBrandId) return <BrandStepsEditor brandId={activeBrandId} onBack={() => { setActiveBrandId(null); load(); }} />;
+
+  if (!brands) return <div style={{ color: "#8a8074", fontSize: 14 }}>Loading brands…</div>;
+
+  return (
+    <div>
+      <h2 style={{ fontSize: 20, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Brands & modules</h2>
+      <p style={{ color: "#8a8074", fontSize: 14, margin: "0 0 18px" }}>Each brand is a sequence of steps customers work through in order.</p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
+        {brands.map((b) => (
+          <button key={b.id} onClick={() => setActiveBrandId(b.id)} style={{ display: "flex", alignItems: "center", gap: 12, textAlign: "left", background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: "13px 16px" }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 500, color: navy[900], fontSize: 14 }}>{b.name}</div>
+              <div style={{ fontSize: 12, color: "#8a8074" }}>{b.tagline} · {b.brand_steps.length} step{b.brand_steps.length === 1 ? "" : "s"}</div>
+            </div>
+            <ChevronRight size={16} color="#a39a8d" />
+          </button>
+        ))}
+      </div>
+      {showAdd ? (
+        <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 16 }}>
+          <input value={newBrandName} onChange={(e) => setNewBrandName(e.target.value)} placeholder="Brand name" style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 10, fontSize: 14, boxSizing: "border-box" }} />
+          <input value={newBrandTagline} onChange={(e) => setNewBrandTagline(e.target.value)} placeholder="Tagline (optional)" style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 14, boxSizing: "border-box" }} />
+          {error && <div style={{ color: "#a3372f", fontSize: 13, marginBottom: 10 }}>{error}</div>}
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={addBrand} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 13 }}>Add brand</button>
+            <button onClick={() => { setShowAdd(false); setError(""); }} style={{ background: "none", border: "1px solid #ddd5cb", borderRadius: 6, padding: "8px 16px", fontSize: 13 }}>Cancel</button>
+          </div>
+        </div>
+      ) : (
+        <button onClick={() => setShowAdd(true)} style={{ display: "flex", alignItems: "center", gap: 6, background: "#fff", border: "1px solid #ddd5cb", borderRadius: 8, padding: "8px 14px", fontSize: 13, color: navy[900] }}>
+          <Plus size={14} /> Add brand
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ================= APPROVALS =================
+
+function AdminApprovalsLive() {
+  const [brands, setBrands] = useState([]);
+  const [pending, setPending] = useState(null);
+  const [selected, setSelected] = useState({});
+  const [busyId, setBusyId] = useState(null);
+  const [toast, setToast] = useState("");
+
+  async function load() {
+    const [{ data: b }, { data: p }] = await Promise.all([
+      supabase.from("brands").select("id,name").order("name"),
+      supabase.from("accounts").select("*").eq("status", "pending").order("created_at"),
+    ]);
+    setBrands(b || []);
+    setPending(p || []);
+  }
+  useEffect(() => { load(); }, []);
+
+  function toggleBrand(accountId, brandId) {
+    setSelected((prev) => {
+      const set = new Set(prev[accountId] || []);
+      set.has(brandId) ? set.delete(brandId) : set.add(brandId);
+      return { ...prev, [accountId]: set };
+    });
+  }
+
+  async function approve(account) {
+    const chosen = Array.from(selected[account.id] || []);
+    setBusyId(account.id);
+    await supabase.from("accounts").update({ status: "approved", approved_brand_ids: chosen }).eq("id", account.id);
+    setBusyId(null);
+    setToast(`${account.company_name} approved for ${chosen.length} brand${chosen.length === 1 ? "" : "s"}`);
+    setTimeout(() => setToast(""), 3500);
+    load();
+  }
+  async function decline(account) {
+    setBusyId(account.id);
+    await supabase.from("accounts").update({ status: "declined" }).eq("id", account.id);
+    setBusyId(null);
+    setToast(`${account.company_name} declined`);
+    setTimeout(() => setToast(""), 3500);
+    load();
+  }
+
+  if (!pending) return <div style={{ color: "#8a8074", fontSize: 14 }}>Loading…</div>;
+
+  return (
+    <div>
+      <h2 style={{ fontSize: 20, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Account approvals</h2>
+      <p style={{ color: "#8a8074", fontSize: 14, margin: "0 0 20px" }}>Pick which brands to grant, then approve or decline.</p>
+      {toast && <div style={{ background: "#eef5e6", color: "#4d6b2c", fontSize: 13, padding: "8px 14px", borderRadius: 8, marginBottom: 14 }}>{toast}</div>}
+      {pending.length === 0 && <div style={{ color: "#8a8074", fontSize: 14 }}>No pending requests.</div>}
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {pending.map((a) => (
+          <div key={a.id} style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 16 }}>
+            <div style={{ fontWeight: 600, color: navy[900] }}>{a.company_name}</div>
+            <div style={{ fontSize: 13, color: "#8a8074", marginBottom: 10 }}>{a.main_contact_name} · {a.main_contact_email}</div>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
+              {brands.map((b) => (
+                <label key={b.id} style={{ display: "flex", alignItems: "center", gap: 6, background: navy[50], border: "1px solid #e4dfd6", borderRadius: 999, padding: "4px 10px", fontSize: 12, cursor: "pointer" }}>
+                  <input type="checkbox" checked={(selected[a.id] || new Set()).has(b.id)} onChange={() => toggleBrand(a.id, b.id)} />
+                  {b.name}
+                </label>
+              ))}
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button onClick={() => approve(a)} disabled={busyId === a.id} style={{ display: "flex", alignItems: "center", gap: 5, background: "#4a6b3d", color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 13, fontWeight: 500, opacity: busyId === a.id ? 0.7 : 1 }}>
+                <Check size={14} /> Approve
+              </button>
+              <button onClick={() => decline(a)} disabled={busyId === a.id} style={{ display: "flex", alignItems: "center", gap: 5, background: "none", border: "1px solid #ddd5cb", borderRadius: 8, padding: "8px 14px", fontSize: 13, opacity: busyId === a.id ? 0.7 : 1 }}>
+                <X size={14} /> Decline
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ================= CUSTOMERS =================
+
+function CustomerProfileLive({ account, brands, onBack }) {
+  const [team, setTeam] = useState(null);
+  const [progressByBrand, setProgressByBrand] = useState({});
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      const { data: users } = await supabase.from("app_users").select("id,name,email,role").eq("account_id", account.id);
+      if (cancelled) return;
+      setTeam(users || []);
+      const holder = (users || []).find((u) => u.role === "holder");
+      if (!holder) return;
+      const { data: done } = await supabase.from("step_progress").select("step_id").eq("user_id", holder.id);
+      const completed = new Set((done || []).map((r) => r.step_id));
+      const map = {};
+      for (const bid of account.approved_brand_ids) {
+        const brand = brands.find((b) => b.id === bid);
+        if (!brand) continue;
+        const total = brand.brand_steps.length;
+        const doneCount = brand.brand_steps.filter((s) => completed.has(s.id)).length;
+        map[bid] = { done: doneCount, total };
+      }
+      setProgressByBrand(map);
+    }
+    load();
+    return () => { cancelled = true; };
+  }, [account.id]);
+
+  return (
+    <div>
+      <button onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, color: navy[700], marginBottom: 16, background: "none" }}>
+        <ChevronLeft size={15} /> All customers
+      </button>
+      <div style={{ fontSize: 12, color: navy[700], fontWeight: 600, letterSpacing: 0.5, marginBottom: 4 }}>{account.customer_number}</div>
+      <h2 style={{ fontSize: 20, fontWeight: 600, color: navy[900], margin: 0 }}>{account.company_name}</h2>
+      <div style={{ fontSize: 13, color: "#8a8074", marginTop: 4, marginBottom: 20 }}>{account.main_contact_name} · {account.main_contact_email}</div>
+
+      <div style={{ fontSize: 13, fontWeight: 600, color: "#6b6155", marginBottom: 10 }}>Brand access & progress</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
+        {account.approved_brand_ids.map((bid) => {
+          const brand = brands.find((b) => b.id === bid);
+          if (!brand) return null;
+          const p = progressByBrand[bid] || { done: 0, total: brand.brand_steps.length };
+          const pct = p.total ? Math.round((p.done / p.total) * 100) : 0;
+          return (
+            <div key={bid} style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: "14px 16px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                <div style={{ fontWeight: 500, color: navy[900], fontSize: 14 }}>{brand.name}</div>
+                <Badge tone={pct === 100 ? "gold" : "navy"}>{p.done} / {p.total} complete</Badge>
+              </div>
+              <div style={{ height: 6, background: "#e4dfd6", borderRadius: 999, overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${pct}%`, background: pct === 100 ? "#4a6b3d" : navy[500] }} />
+              </div>
+            </div>
+          );
+        })}
+        {account.approved_brand_ids.length === 0 && <div style={{ fontSize: 13, color: "#a39a8d" }}>No brand access approved yet.</div>}
+      </div>
+
+      <div style={{ fontSize: 13, fontWeight: 600, color: "#6b6155", marginBottom: 10 }}>Team</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {(team || []).map((u) => (
+          <div key={u.id} style={{ display: "flex", alignItems: "center", gap: 10, background: u.role === "holder" ? navy[50] : "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: "12px 14px" }}>
+            <Users size={16} color={navy[700]} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 500, fontSize: 14, color: navy[900] }}>{u.name}{u.role === "holder" ? " (main account holder)" : ""}</div>
+              <div style={{ fontSize: 12, color: "#8a8074" }}>{u.email}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AdminCustomersLive() {
+  const [accounts, setAccounts] = useState(null);
+  const [brands, setBrands] = useState([]);
+  const [query, setQuery] = useState("");
+  const [openId, setOpenId] = useState(null);
+
+  useEffect(() => {
+    async function load() {
+      const [{ data: a }, { data: b }] = await Promise.all([
+        supabase.from("accounts").select("*").order("company_name"),
+        supabase.from("brands").select("id,name,brand_steps(id)"),
+      ]);
+      setAccounts(a || []);
+      setBrands(b || []);
+    }
+    load();
+  }, []);
+
+  if (!accounts) return <div style={{ color: "#8a8074", fontSize: 14 }}>Loading…</div>;
+
+  const active = accounts.find((a) => a.id === openId);
+  if (active) return <CustomerProfileLive account={active} brands={brands} onBack={() => setOpenId(null)} />;
+
+  const filtered = accounts.filter((a) => {
+    const q = query.trim().toLowerCase();
+    if (!q) return true;
+    return a.company_name.toLowerCase().includes(q) || (a.customer_number || "").toLowerCase().includes(q);
+  });
+
+  return (
+    <div>
+      <h2 style={{ fontSize: 20, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Customers</h2>
+      <p style={{ color: "#8a8074", fontSize: 14, margin: "0 0 16px" }}>Every account, organised by salon name and customer number.</p>
+      <div style={{ position: "relative", marginBottom: 16 }}>
+        <Search size={15} color="#a39a8d" style={{ position: "absolute", left: 12, top: 11 }} />
+        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search by salon name or customer number…" style={{ width: "100%", padding: "9px 12px 9px 34px", border: "1px solid #ddd5cb", borderRadius: 8, fontSize: 14, boxSizing: "border-box" }} />
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        {filtered.map((a) => (
+          <button key={a.id} onClick={() => setOpenId(a.id)} style={{ display: "flex", alignItems: "center", gap: 12, textAlign: "left", background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: "13px 16px" }}>
+            <Building2 size={18} color={navy[500]} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 500, color: navy[900], fontSize: 14 }}>{a.company_name}</div>
+              <div style={{ fontSize: 12, color: "#8a8074" }}>{a.customer_number} · {a.approved_brand_ids.length} brand{a.approved_brand_ids.length !== 1 ? "s" : ""}</div>
+            </div>
+            <Badge tone={a.status === "approved" ? "gold" : a.status === "declined" ? "muted" : "navy"}>{a.status}</Badge>
+            <ChevronRight size={16} color="#a39a8d" />
+          </button>
+        ))}
+        {filtered.length === 0 && <div style={{ fontSize: 13, color: "#a39a8d" }}>No customers match that search.</div>}
+      </div>
+    </div>
+  );
+}
+
+// ================= OVERVIEW =================
+
+function AdminOverview() {
+  const [stats, setStats] = useState(null);
+  useEffect(() => {
+    async function load() {
+      const [brands, steps, customers, pending] = await Promise.all([
+        supabase.from("brands").select("id", { count: "exact", head: true }),
+        supabase.from("brand_steps").select("id", { count: "exact", head: true }),
+        supabase.from("accounts").select("id", { count: "exact", head: true }),
+        supabase.from("accounts").select("id", { count: "exact", head: true }).eq("status", "pending"),
+      ]);
+      setStats({
+        brands: brands.count || 0,
+        steps: steps.count || 0,
+        customers: customers.count || 0,
+        pending: pending.count || 0,
+      });
+    }
+    load();
+  }, []);
+
+  return (
+    <div>
+      <h2 style={{ fontSize: 20, fontWeight: 600, color: navy[900], margin: "0 0 16px" }}>Overview</h2>
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 24 }}>
+        <StatCard label="Brands" value={stats?.brands ?? "…"} icon={ShieldCheck} />
+        <StatCard label="Total steps" value={stats?.steps ?? "…"} icon={PlayCircle} />
+        <StatCard label="Customers" value={stats?.customers ?? "…"} icon={Building2} />
+        <StatCard label="Pending approvals" value={stats?.pending ?? "…"} icon={Clock} />
+      </div>
+      <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 12, padding: 18 }}>
+        <div style={{ fontWeight: 600, color: navy[900], marginBottom: 10 }}>Live on the real database</div>
+        <div style={{ fontSize: 14, color: "#6b6155", lineHeight: 1.7 }}>
+          Brands, steps, quizzes, approvals and customers here all save for real. Certificate PDFs and Gmail-sent
+          approval emails are still placeholders — those come with the Google Drive and email steps of the build.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ================= AI ASSISTANT (preview) =================
+
+const assistantSandboxData = {
+  brands: [
+    { id: "b1", name: "Eleven Australia", tagline: "Haircare & styling", modules: [] },
+    { id: "b2", name: "Kevin.Murphy", tagline: "Haircare", modules: [] },
+    { id: "b3", name: "Color Wow", tagline: "Colour care & styling", modules: [] },
+    { id: "b4", name: "Aveda", tagline: "Haircare & wellness", modules: [] },
+    { id: "b5", name: "Davines", tagline: "Sustainable haircare", modules: [] },
+    { id: "b6", name: "K18", tagline: "Bond repair treatment", modules: [] },
+    { id: "b7", name: "Living Proof", tagline: "Haircare technology", modules: [] },
+  ],
+  requests: [],
+};
+
+function AdminAssistantPreview() {
+  const [data, setData] = useState(assistantSandboxData);
+  function patch(partial) {
+    setData((prev) => ({ ...prev, ...partial }));
+  }
+  return (
+    <div>
+      <div style={{ background: "#fdf6e3", border: "1px solid #eddfad", color: "#8a6d1f", fontSize: 13, padding: "9px 14px", borderRadius: 8, marginBottom: 18 }}>
+        Preview only — try instructions here, but nothing gets saved to your live brand list yet. Use "Brands & modules" to actually build a sequence.
+      </div>
+      <AdminAssistant data={data} patch={patch} />
+    </div>
+  );
+}
+
+// ================= ROOT =================
+
+export default function AdminApp() {
+  const [tab, setTab] = useState("dashboard");
+  const tabs = [
+    { id: "dashboard", label: "Overview", icon: ShieldCheck },
+    { id: "customers", label: "Customers", icon: Building2 },
+    { id: "assistant", label: "AI assistant", icon: Sparkles },
+    { id: "brands", label: "Brands & modules", icon: PlayCircle },
+    { id: "approvals", label: "Approvals", icon: Clock },
+  ];
+  return (
+    <div style={{ display: "flex", gap: 24 }}>
+      <div style={{ width: 190, flexShrink: 0 }}>
+        {tabs.map((t) => (
+          <button key={t.id} onClick={() => setTab(t.id)} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left", padding: "9px 12px", borderRadius: 8, fontSize: 14, marginBottom: 4, background: tab === t.id ? navy[100] : "transparent", color: tab === t.id ? navy[900] : "#6b6155", fontWeight: tab === t.id ? 500 : 400, border: "none" }}>
+            <t.icon size={16} /> {t.label}
+          </button>
+        ))}
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        {tab === "dashboard" && <AdminOverview />}
+        {tab === "customers" && <AdminCustomersLive />}
+        {tab === "assistant" && <AdminAssistantPreview />}
+        {tab === "brands" && <AdminBrandsLive />}
+        {tab === "approvals" && <AdminApprovalsLive />}
+      </div>
+    </div>
+  );
+}
