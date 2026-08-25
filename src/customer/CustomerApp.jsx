@@ -361,12 +361,12 @@ function AccountStatusScreen({ account }) {
     <div style={{ maxWidth: 420, margin: "60px auto", textAlign: "center" }}>
       <Clock size={32} color={navy[500]} style={{ marginBottom: 12 }} />
       <h2 style={{ fontSize: 20, fontWeight: 600, color: navy[900], margin: "0 0 8px" }}>
-        {declined ? "Access not approved" : "Access pending approval"}
+        {declined ? "Access not approved" : "Your account is waiting on approval"}
       </h2>
       <p style={{ color: "#8a8074", fontSize: 14, lineHeight: 1.6 }}>
         {declined
           ? `Training access for ${account.company_name} wasn't approved. Contact your NBD rep if you think this is a mistake.`
-          : `${account.company_name} is still waiting on admin approval. You'll get access as soon as it's approved.`}
+          : "Please check back in 48 hours. You'll get access as soon as it's approved."}
       </p>
     </div>
   );
