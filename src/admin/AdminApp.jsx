@@ -604,9 +604,176 @@ function AdminApprovalsLive() {
 
 // ================= CUSTOMERS =================
 
-function CustomerProfileLive({ account, brands, onBack }) {
+function EditAccountDetails({ account, onSaved }) {
+  const [editing, setEditing] = useState(false);
+  const [customerNumber, setCustomerNumber] = useState(account.customer_number || "");
+  const [companyName, setCompanyName] = useState(account.company_name);
+  const [contactName, setContactName] = useState(account.main_contact_name);
+  const [contactEmail, setContactEmail] = useState(account.main_contact_email);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  async function save() {
+    if (!companyName.trim() || !contactName.trim() || !contactEmail.trim()) {
+      setError("Fill in every field first.");
+      return;
+    }
+    setSaving(true);
+    setError("");
+    const { error: err } = await supabase.from("accounts").update({
+      customer_number: customerNumber.trim() || null,
+      company_name: companyName.trim(),
+      main_contact_name: contactName.trim(),
+      main_contact_email: contactEmail.trim(),
+    }).eq("id", account.id);
+    setSaving(false);
+    if (err) { setError(err.message); return; }
+    setEditing(false);
+    onSaved();
+  }
+
+  if (!editing) {
+    return (
+      <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 4 }}>
+        <h2 style={{ fontSize: 20, fontWeight: 600, color: navy[900], margin: 0 }}>{account.company_name}</h2>
+        <button onClick={() => setEditing(true)} style={{ display: "flex", alignItems: "center", gap: 4, background: "none", color: navy[700], fontSize: 12 }}>
+          <Pencil size={12} /> Edit
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 16, marginBottom: 12 }}>
+      <label style={{ fontSize: 13, color: "#6b6155", display: "block", marginBottom: 4 }}>Customer number</label>
+      <input value={customerNumber} onChange={(e) => setCustomerNumber(e.target.value)} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 10, fontSize: 14, boxSizing: "border-box" }} />
+      <label style={{ fontSize: 13, color: "#6b6155", display: "block", marginBottom: 4 }}>Company name</label>
+      <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 10, fontSize: 14, boxSizing: "border-box" }} />
+      <label style={{ fontSize: 13, color: "#6b6155", display: "block", marginBottom: 4 }}>Main contact name</label>
+      <input value={contactName} onChange={(e) => setContactName(e.target.value)} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 10, fontSize: 14, boxSizing: "border-box" }} />
+      <label style={{ fontSize: 13, color: "#6b6155", display: "block", marginBottom: 4 }}>Main contact email</label>
+      <input value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 14, boxSizing: "border-box" }} />
+      <p style={{ fontSize: 12, color: "#a39a8d", margin: "0 0 12px" }}>Changing the email here doesn't change how they sign in — that's still tied to their original login.</p>
+      {error && <div style={{ color: "#a3372f", fontSize: 13, marginBottom: 10 }}>{error}</div>}
+      <div style={{ display: "flex", gap: 8 }}>
+        <button onClick={save} disabled={saving} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "7px 14px", fontSize: 13, opacity: saving ? 0.7 : 1 }}>{saving ? "Saving…" : "Save"}</button>
+        <button onClick={() => setEditing(false)} style={{ background: "none", border: "1px solid #ddd5cb", borderRadius: 6, padding: "7px 14px", fontSize: 13 }}>Cancel</button>
+      </div>
+    </div>
+  );
+}
+
+function EditBrandAccess({ account, brands, onSaved }) {
+  const [editing, setEditing] = useState(false);
+  const [selected, setSelected] = useState(new Set(account.approved_brand_ids));
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  function toggle(id) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  async function save() {
+    setSaving(true);
+    setError("");
+    const { error: err } = await supabase.from("accounts").update({ approved_brand_ids: Array.from(selected) }).eq("id", account.id);
+    setSaving(false);
+    if (err) { setError(err.message); return; }
+    setEditing(false);
+    onSaved();
+  }
+
+  if (!editing) {
+    return (
+      <button onClick={() => { setSelected(new Set(account.approved_brand_ids)); setEditing(true); }} style={{ display: "flex", alignItems: "center", gap: 4, background: "none", color: navy[700], fontSize: 12, marginBottom: 10 }}>
+        <Pencil size={12} /> Edit brand access
+      </button>
+    );
+  }
+
+  return (
+    <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 16, marginBottom: 24 }}>
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
+        {brands.map((b) => (
+          <label key={b.id} style={{ display: "flex", alignItems: "center", gap: 6, background: navy[50], border: "1px solid #e4dfd6", borderRadius: 999, padding: "4px 10px", fontSize: 12, cursor: "pointer" }}>
+            <input type="checkbox" checked={selected.has(b.id)} onChange={() => toggle(b.id)} />
+            {b.name}
+          </label>
+        ))}
+      </div>
+      {error && <div style={{ color: "#a3372f", fontSize: 13, marginBottom: 10 }}>{error}</div>}
+      <div style={{ display: "flex", gap: 8 }}>
+        <button onClick={save} disabled={saving} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "7px 14px", fontSize: 13, opacity: saving ? 0.7 : 1 }}>{saving ? "Saving…" : "Save"}</button>
+        <button onClick={() => setEditing(false)} style={{ background: "none", border: "1px solid #ddd5cb", borderRadius: 6, padding: "7px 14px", fontSize: 13 }}>Cancel</button>
+      </div>
+    </div>
+  );
+}
+
+function DeleteAccount({ account, onDeleted }) {
+  const [confirming, setConfirming] = useState(false);
+  const [typed, setTyped] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  async function del() {
+    setBusy(true);
+    setError("");
+    const { error: err } = await supabase.from("accounts").delete().eq("id", account.id);
+    setBusy(false);
+    if (err) { setError(err.message); return; }
+    onDeleted();
+  }
+
+  if (!confirming) {
+    return (
+      <button onClick={() => setConfirming(true)} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "1px solid #f0c9c2", color: "#a3372f", borderRadius: 8, padding: "8px 14px", fontSize: 13 }}>
+        <Trash2 size={14} /> Delete account
+      </button>
+    );
+  }
+
+  return (
+    <div style={{ background: "#fbeceb", border: "1px solid #f0c9c2", borderRadius: 10, padding: 16, maxWidth: 420 }}>
+      <div style={{ fontWeight: 600, color: "#a3372f", marginBottom: 6, fontSize: 14 }}>Delete {account.company_name}?</div>
+      <p style={{ fontSize: 13, color: "#6b6155", margin: "0 0 12px" }}>
+        This permanently removes the account, its staff logins, and all their progress and certificates. This can't be undone.
+        Type the company name to confirm.
+      </p>
+      <input
+        value={typed}
+        onChange={(e) => setTyped(e.target.value)}
+        placeholder={account.company_name}
+        style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 14, boxSizing: "border-box" }}
+      />
+      {error && <div style={{ color: "#a3372f", fontSize: 13, marginBottom: 10 }}>{error}</div>}
+      <div style={{ display: "flex", gap: 8 }}>
+        <button
+          onClick={del}
+          disabled={busy || typed.trim() !== account.company_name}
+          style={{ background: "#a3372f", color: "#fff", border: "none", borderRadius: 6, padding: "7px 14px", fontSize: 13, opacity: busy || typed.trim() !== account.company_name ? 0.5 : 1 }}
+        >
+          {busy ? "Deleting…" : "Permanently delete"}
+        </button>
+        <button onClick={() => { setConfirming(false); setTyped(""); setError(""); }} style={{ background: "none", border: "1px solid #ddd5cb", borderRadius: 6, padding: "7px 14px", fontSize: 13 }}>Cancel</button>
+      </div>
+    </div>
+  );
+}
+
+function CustomerProfileLive({ account: initialAccount, brands, onBack, onDeleted }) {
+  const [account, setAccount] = useState(initialAccount);
   const [team, setTeam] = useState(null);
   const [progressByBrand, setProgressByBrand] = useState({});
+
+  async function refreshAccount() {
+    const { data } = await supabase.from("accounts").select("*").eq("id", account.id).single();
+    if (data) setAccount(data);
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -638,10 +805,11 @@ function CustomerProfileLive({ account, brands, onBack }) {
         <ChevronLeft size={15} /> All customers
       </button>
       <div style={{ fontSize: 12, color: navy[700], fontWeight: 600, letterSpacing: 0.5, marginBottom: 4 }}>{account.customer_number}</div>
-      <h2 style={{ fontSize: 20, fontWeight: 600, color: navy[900], margin: 0 }}>{account.company_name}</h2>
+      <EditAccountDetails account={account} onSaved={refreshAccount} />
       <div style={{ fontSize: 13, color: "#8a8074", marginTop: 4, marginBottom: 20 }}>{account.main_contact_name} · {account.main_contact_email}</div>
 
       <div style={{ fontSize: 13, fontWeight: 600, color: "#6b6155", marginBottom: 10 }}>Brand access & progress</div>
+      <EditBrandAccess account={account} brands={brands} onSaved={refreshAccount} />
       <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
         {account.approved_brand_ids.map((bid) => {
           const brand = brands.find((b) => b.id === bid);
@@ -675,6 +843,10 @@ function CustomerProfileLive({ account, brands, onBack }) {
           </div>
         ))}
       </div>
+
+      <div style={{ marginTop: 28, paddingTop: 20, borderTop: "1px solid #e4dfd6" }}>
+        <DeleteAccount account={account} onDeleted={onDeleted} />
+      </div>
     </div>
   );
 }
@@ -685,22 +857,29 @@ function AdminCustomersLive() {
   const [query, setQuery] = useState("");
   const [openId, setOpenId] = useState(null);
 
-  useEffect(() => {
-    async function load() {
-      const [{ data: a }, { data: b }] = await Promise.all([
-        supabase.from("accounts").select("*").order("company_name"),
-        supabase.from("brands").select("id,name,brand_steps(id)"),
-      ]);
-      setAccounts(a || []);
-      setBrands(b || []);
-    }
-    load();
-  }, []);
+  async function load() {
+    const [{ data: a }, { data: b }] = await Promise.all([
+      supabase.from("accounts").select("*").order("company_name"),
+      supabase.from("brands").select("id,name,brand_steps(id)"),
+    ]);
+    setAccounts(a || []);
+    setBrands(b || []);
+  }
+  useEffect(() => { load(); }, []);
 
   if (!accounts) return <div style={{ color: "#8a8074", fontSize: 14 }}>Loading…</div>;
 
   const active = accounts.find((a) => a.id === openId);
-  if (active) return <CustomerProfileLive account={active} brands={brands} onBack={() => setOpenId(null)} />;
+  if (active) {
+    return (
+      <CustomerProfileLive
+        account={active}
+        brands={brands}
+        onBack={() => setOpenId(null)}
+        onDeleted={() => { setOpenId(null); load(); }}
+      />
+    );
+  }
 
   const filtered = accounts.filter((a) => {
     const q = query.trim().toLowerCase();

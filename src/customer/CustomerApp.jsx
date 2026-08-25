@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
-  PlayCircle, CheckCircle2, Lock, Award, Users, Trash2, Loader2, ChevronLeft, Clock, Mail, Download,
+  PlayCircle, CheckCircle2, Lock, Award, Users, Trash2, Loader2, ChevronLeft, Clock, Mail, Download, Settings,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
@@ -391,10 +391,94 @@ function AccountStatusScreen({ account }) {
   );
 }
 
+// ================= SETTINGS =================
+
+function AccountSettings({ user, account, onNameSaved }) {
+  const [name, setName] = useState(user.name);
+  const [nameSaving, setNameSaving] = useState(false);
+  const [nameError, setNameError] = useState("");
+  const [nameNotice, setNameNotice] = useState("");
+
+  const [customerNumber, setCustomerNumber] = useState(account.customer_number || "");
+  const [companyName, setCompanyName] = useState(account.company_name);
+  const [contactName, setContactName] = useState(account.main_contact_name);
+  const [contactEmail, setContactEmail] = useState(account.main_contact_email);
+  const [accountSaving, setAccountSaving] = useState(false);
+  const [accountError, setAccountError] = useState("");
+  const [accountNotice, setAccountNotice] = useState("");
+
+  async function saveName(e) {
+    e.preventDefault();
+    if (!name.trim()) { setNameError("Name can't be empty"); return; }
+    setNameSaving(true);
+    setNameError("");
+    setNameNotice("");
+    const { error } = await supabase.rpc("update_my_profile", { p_name: name.trim() });
+    setNameSaving(false);
+    if (error) { setNameError(error.message); return; }
+    setNameNotice("Saved.");
+    onNameSaved(name.trim());
+  }
+
+  async function saveAccount(e) {
+    e.preventDefault();
+    if (!companyName.trim() || !contactName.trim() || !contactEmail.trim()) {
+      setAccountError("Fill in every field first.");
+      return;
+    }
+    setAccountSaving(true);
+    setAccountError("");
+    setAccountNotice("");
+    const { error } = await supabase.rpc("update_my_account", {
+      p_customer_number: customerNumber.trim(),
+      p_company_name: companyName.trim(),
+      p_main_contact_name: contactName.trim(),
+      p_main_contact_email: contactEmail.trim(),
+    });
+    setAccountSaving(false);
+    if (error) { setAccountError(error.message); return; }
+    setAccountNotice("Saved.");
+  }
+
+  return (
+    <div>
+      <h2 style={{ fontSize: 20, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Settings</h2>
+      <p style={{ color: "#8a8074", fontSize: 14, margin: "0 0 24px" }}>Update your own details and your company's account details.</p>
+
+      <form onSubmit={saveName} style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 18, marginBottom: 18 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: "#6b6155", marginBottom: 12 }}>Your profile</div>
+        <label style={{ fontSize: 13, color: "#6b6155", display: "block", marginBottom: 4 }}>Full name</label>
+        <input value={name} onChange={(e) => setName(e.target.value)} style={{ width: "100%", padding: "9px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 14, boxSizing: "border-box" }} />
+        <p style={{ fontSize: 12, color: "#a39a8d", margin: "0 0 12px" }}>This is the name printed on your certificates.</p>
+        {nameError && <div style={{ color: "#a3372f", fontSize: 13, marginBottom: 10 }}>{nameError}</div>}
+        {nameNotice && <div style={{ color: "#4d6b2c", fontSize: 13, marginBottom: 10 }}>{nameNotice}</div>}
+        <button type="submit" disabled={nameSaving} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 13, opacity: nameSaving ? 0.7 : 1 }}>{nameSaving ? "Saving…" : "Save name"}</button>
+      </form>
+
+      <form onSubmit={saveAccount} style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 18 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: "#6b6155", marginBottom: 12 }}>Company details</div>
+        <label style={{ fontSize: 13, color: "#6b6155", display: "block", marginBottom: 4 }}>Customer number</label>
+        <input value={customerNumber} onChange={(e) => setCustomerNumber(e.target.value)} style={{ width: "100%", padding: "9px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 14, boxSizing: "border-box" }} />
+        <label style={{ fontSize: 13, color: "#6b6155", display: "block", marginBottom: 4 }}>Salon / business name</label>
+        <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} style={{ width: "100%", padding: "9px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 14, boxSizing: "border-box" }} />
+        <label style={{ fontSize: 13, color: "#6b6155", display: "block", marginBottom: 4 }}>Main contact name</label>
+        <input value={contactName} onChange={(e) => setContactName(e.target.value)} style={{ width: "100%", padding: "9px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 14, boxSizing: "border-box" }} />
+        <label style={{ fontSize: 13, color: "#6b6155", display: "block", marginBottom: 4 }}>Main contact email</label>
+        <input value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} style={{ width: "100%", padding: "9px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 14, boxSizing: "border-box" }} />
+        <p style={{ fontSize: 12, color: "#a39a8d", margin: "0 0 12px" }}>This doesn't change the email you sign in with — that stays as-is.</p>
+        {accountError && <div style={{ color: "#a3372f", fontSize: 13, marginBottom: 10 }}>{accountError}</div>}
+        {accountNotice && <div style={{ color: "#4d6b2c", fontSize: 13, marginBottom: 10 }}>{accountNotice}</div>}
+        <button type="submit" disabled={accountSaving} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 13, opacity: accountSaving ? 0.7 : 1 }}>{accountSaving ? "Saving…" : "Save company details"}</button>
+      </form>
+    </div>
+  );
+}
+
 // ================= ROOT =================
 
 export default function CustomerApp({ user, account }) {
   const [tab, setTab] = useState("training");
+  const [displayName, setDisplayName] = useState(user.name);
   const [brands, setBrands] = useState(null);
   const [completedStepIds, setCompletedStepIds] = useState(new Set());
   const [team, setTeam] = useState([]);
@@ -459,6 +543,7 @@ export default function CustomerApp({ user, account }) {
         {[
           { id: "training", label: "Training", icon: PlayCircle },
           { id: "team", label: "Team", icon: Users },
+          { id: "settings", label: "Settings", icon: Settings },
         ].map((t) => (
           <button
             key={t.id}
@@ -473,8 +558,9 @@ export default function CustomerApp({ user, account }) {
         </div>
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        {tab === "training" && <CustomerDashboard brands={brands} completedStepIds={completedStepIds} onStepCompleted={handleStepCompleted} participantName={user.name} />}
+        {tab === "training" && <CustomerDashboard brands={brands} completedStepIds={completedStepIds} onStepCompleted={handleStepCompleted} participantName={displayName} />}
         {tab === "team" && <CustomerTeam team={team} currentUserId={user.id} onAdd={handleAddStaff} onRemove={handleRemoveStaff} />}
+        {tab === "settings" && <AccountSettings user={user} account={account} onNameSaved={setDisplayName} />}
       </div>
     </div>
   );
