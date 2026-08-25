@@ -12,6 +12,60 @@ function formatDate(isoString) {
   return new Date(isoString).toLocaleDateString("en-IE", { day: "numeric", month: "long", year: "numeric" });
 }
 
+function extractYouTubeId(url) {
+  if (!url) return null;
+  const match = url.match(/(?:youtube\.com\/watch\?v=|youtube\.com\/embed\/|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  return match ? match[1] : null;
+}
+
+// Loads YouTube's official Player API once and reuses it — this is what
+// lets us genuinely detect "the video ended," unlike a plain iframe embed
+// (e.g. Google Drive's), which tells the parent page nothing.
+let youtubeApiPromise = null;
+function loadYouTubeApi() {
+  if (window.YT && window.YT.Player) return Promise.resolve(window.YT);
+  if (youtubeApiPromise) return youtubeApiPromise;
+  youtubeApiPromise = new Promise((resolve) => {
+    const previous = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => {
+      if (previous) previous();
+      resolve(window.YT);
+    };
+    const tag = document.createElement("script");
+    tag.src = "https://www.youtube.com/iframe_api";
+    document.head.appendChild(tag);
+  });
+  return youtubeApiPromise;
+}
+
+function YouTubePlayer({ videoId, onEnded }) {
+  const containerRef = useRef(null);
+  const playerRef = useRef(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    loadYouTubeApi().then((YT) => {
+      if (cancelled || !containerRef.current) return;
+      playerRef.current = new YT.Player(containerRef.current, {
+        videoId,
+        playerVars: { rel: 0, modestbranding: 1 },
+        events: {
+          onStateChange: (e) => {
+            if (e.data === YT.PlayerState.ENDED) onEnded();
+          },
+        },
+      });
+    });
+    return () => {
+      cancelled = true;
+      if (playerRef.current?.destroy) playerRef.current.destroy();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [videoId]);
+
+  return <div ref={containerRef} style={{ width: "100%", aspectRatio: "16 / 9", borderRadius: 10, overflow: "hidden", marginBottom: 16, background: "#000" }} />;
+}
+
 // ================= QUIZ STEP =================
 // Questions are fetched without their correct answers, and grading happens
 // server-side via the submit_quiz_answers RPC — the client never sees
@@ -120,6 +174,7 @@ function VideoStep({ step, onComplete, onBack }) {
   }
 
   const hasSource = !!(step.video_storage_path || step.video_url);
+  const youtubeId = !step.video_storage_path ? extractYouTubeId(step.video_url) : null;
 
   return (
     <div>
@@ -127,10 +182,11 @@ function VideoStep({ step, onComplete, onBack }) {
         <ChevronLeft size={15} /> Back
       </button>
       <h3 style={{ fontSize: 17, fontWeight: 600, color: navy[900], margin: "0 0 14px" }}>{step.title}</h3>
-      {resolving && (
+      {youtubeId && <YouTubePlayer videoId={youtubeId} onEnded={markWatched} />}
+      {!youtubeId && resolving && (
         <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#8a8074", fontSize: 14, marginBottom: 16 }}><Loader2 size={16} className="spin" /> Loading video…</div>
       )}
-      {!resolving && playbackUrl && (
+      {!youtubeId && !resolving && playbackUrl && (
         <video
           key={playbackUrl}
           src={playbackUrl}
@@ -140,7 +196,7 @@ function VideoStep({ step, onComplete, onBack }) {
           style={{ width: "100%", borderRadius: 10, background: "#000", marginBottom: 16 }}
         />
       )}
-      {!resolving && !playbackUrl && !hasSource && (
+      {!youtubeId && !resolving && !playbackUrl && !hasSource && (
         <div style={{ background: "#fdf6e3", border: "1px solid #eddfad", color: "#8a6d1f", fontSize: 13, padding: "10px 14px", borderRadius: 8, marginBottom: 16 }}>
           No video uploaded for this step yet.
         </div>
