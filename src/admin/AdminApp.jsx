@@ -463,7 +463,7 @@ function AdminApprovalsLive() {
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
               {brands.map((b) => (
                 <label key={b.id} style={{ display: "flex", alignItems: "center", gap: 6, background: navy[50], border: "1px solid #e4dfd6", borderRadius: 999, padding: "4px 10px", fontSize: 12, cursor: "pointer" }}>
-                  <input type="checkbox" checked={(selected[a.id] || new Set()).has(b.id)} onChange={() => toggleBrand(a.id, b.id)} />
+                  <input type="checkbox" checked={(selected[a.id] || new Set(a.requested_brand_ids)).has(b.id)} onChange={() => toggleBrand(a.id, b.id)} />
                   {b.name}
                 </label>
               ))}

@@ -3,7 +3,7 @@ import { Loader2 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
 import { navy, Logo } from "../lib/ui.jsx";
 
-export default function Login() {
+export default function Login({ onSwitchToApply }) {
   const [mode, setMode] = useState("signin"); // "signin" | "signup"
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -90,6 +90,15 @@ export default function Login() {
       >
         {mode === "signin" ? "First time signing in? Create your password" : "Already have a password? Sign in"}
       </button>
+
+      {mode === "signin" && (
+        <button
+          onClick={onSwitchToApply}
+          style={{ display: "block", width: "100%", textAlign: "center", background: "none", border: "none", color: "#8a8074", fontSize: 13, marginTop: 10 }}
+        >
+          New customer? Request training access
+        </button>
+      )}
 
       <style>{`.spin { animation: spin 1s linear infinite; } @keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>

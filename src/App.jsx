@@ -3,6 +3,7 @@ import { Loader2 } from "lucide-react";
 import { supabase } from "./lib/supabaseClient.js";
 import { navy, cream, Logo, WORDMARK_SRC } from "./lib/ui.jsx";
 import Login from "./components/Login.jsx";
+import ApplyForAccess from "./components/ApplyForAccess.jsx";
 import AdminApp from "./admin/AdminApp.jsx";
 import CustomerApp from "./customer/CustomerApp.jsx";
 
@@ -45,6 +46,7 @@ export default function App() {
   const [identity, setIdentity] = useState(null); // { kind, admin } | { kind, user, account } | { kind: "unrecognized" }
   const [resolving, setResolving] = useState(false);
   const [resolveError, setResolveError] = useState("");
+  const [authScreen, setAuthScreen] = useState("login"); // "login" | "apply"
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
@@ -73,7 +75,11 @@ export default function App() {
   }
 
   if (session === undefined) return <CenteredLoader label="Loading…" />;
-  if (!session) return <Login />;
+  if (!session) {
+    return authScreen === "apply"
+      ? <ApplyForAccess onSwitchToLogin={() => setAuthScreen("login")} />
+      : <Login onSwitchToApply={() => setAuthScreen("apply")} />;
+  }
   if (resolving || identity === null) return <CenteredLoader label="Checking your account…" />;
   if (resolveError) {
     return (
