@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   ShieldCheck, Building2, Clock, PlayCircle, CheckCircle2, Award, Plus, Trash2, Check, X,
-  ChevronRight, ChevronLeft, ArrowUp, ArrowDown, Search, Loader2, Sparkles, Users, Image as ImageIcon,
+  ChevronRight, ChevronLeft, ArrowUp, ArrowDown, Search, Loader2, Sparkles, Users, Image as ImageIcon, Pencil,
 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
 import { navy, Badge, StatCard } from "../lib/ui.jsx";
@@ -15,9 +15,9 @@ const STEP_TYPES = [
   { type: "certificate", label: "Certificate", icon: Award },
 ];
 
-function AddQuizForm({ onCancel, onSave }) {
-  const [title, setTitle] = useState("");
-  const [questions, setQuestions] = useState([{ text: "", options: ["", "", ""], correct: 0 }]);
+function AddQuizForm({ initial, submitLabel, onCancel, onSave }) {
+  const [title, setTitle] = useState(initial?.title || "");
+  const [questions, setQuestions] = useState(initial?.questions || [{ text: "", options: ["", "", ""], correct: 0 }]);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -82,17 +82,17 @@ function AddQuizForm({ onCancel, onSave }) {
       <button onClick={addQuestion} style={{ fontSize: 13, color: navy[700], background: "none", marginBottom: 14 }}>+ Add question</button>
       {error && <div style={{ color: "#a3372f", fontSize: 13, marginBottom: 10 }}>{error}</div>}
       <div style={{ display: "flex", gap: 8 }}>
-        <button onClick={save} disabled={saving} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 13, opacity: saving ? 0.7 : 1 }}>{saving ? "Saving…" : "Save quiz step"}</button>
+        <button onClick={save} disabled={saving} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 13, opacity: saving ? 0.7 : 1 }}>{saving ? "Saving…" : (submitLabel || "Save quiz step")}</button>
         <button onClick={onCancel} style={{ background: "none", border: "1px solid #ddd5cb", borderRadius: 6, padding: "8px 16px", fontSize: 13 }}>Cancel</button>
       </div>
     </div>
   );
 }
 
-function AddVideoForm({ brandId, onCancel, onSave }) {
-  const [title, setTitle] = useState("");
-  const [duration, setDuration] = useState("");
-  const [videoUrl, setVideoUrl] = useState("");
+function AddVideoForm({ brandId, initial, submitLabel, onCancel, onSave }) {
+  const [title, setTitle] = useState(initial?.title || "");
+  const [duration, setDuration] = useState(initial?.duration || "");
+  const [videoUrl, setVideoUrl] = useState(initial?.video_url || "");
   const [uploading, setUploading] = useState(false);
   const [fileName, setFileName] = useState("");
   const [error, setError] = useState("");
@@ -135,7 +135,7 @@ function AddVideoForm({ brandId, onCancel, onSave }) {
       <input value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://…" style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 14, fontSize: 14, boxSizing: "border-box" }} />
       {error && <div style={{ color: "#a3372f", fontSize: 13, marginBottom: 10 }}>{error}</div>}
       <div style={{ display: "flex", gap: 8 }}>
-        <button onClick={save} disabled={saving || uploading} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 13, opacity: saving || uploading ? 0.7 : 1 }}>{saving ? "Saving…" : "Save video step"}</button>
+        <button onClick={save} disabled={saving || uploading} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 13, opacity: saving || uploading ? 0.7 : 1 }}>{saving ? "Saving…" : (submitLabel || "Save video step")}</button>
         <button onClick={onCancel} style={{ background: "none", border: "1px solid #ddd5cb", borderRadius: 6, padding: "8px 16px", fontSize: 13 }}>Cancel</button>
       </div>
       <style>{`.spin { animation: spin 1s linear infinite; } @keyframes spin { to { transform: rotate(360deg); } }`}</style>
@@ -143,8 +143,8 @@ function AddVideoForm({ brandId, onCancel, onSave }) {
   );
 }
 
-function AddCertificateForm({ onCancel, onSave }) {
-  const [title, setTitle] = useState("Certificate of Participation");
+function AddCertificateForm({ initial, submitLabel, onCancel, onSave }) {
+  const [title, setTitle] = useState(initial?.title || "Certificate of Participation");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -167,14 +167,14 @@ function AddCertificateForm({ onCancel, onSave }) {
       </p>
       {error && <div style={{ color: "#a3372f", fontSize: 13, marginBottom: 10 }}>{error}</div>}
       <div style={{ display: "flex", gap: 8 }}>
-        <button onClick={save} disabled={saving} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 13, opacity: saving ? 0.7 : 1 }}>{saving ? "Saving…" : "Save certificate step"}</button>
+        <button onClick={save} disabled={saving} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 13, opacity: saving ? 0.7 : 1 }}>{saving ? "Saving…" : (submitLabel || "Save certificate step")}</button>
         <button onClick={onCancel} style={{ background: "none", border: "1px solid #ddd5cb", borderRadius: 6, padding: "8px 16px", fontSize: 13 }}>Cancel</button>
       </div>
     </div>
   );
 }
 
-function StepCard({ step, index, count, onMove, onDelete }) {
+function StepCard({ step, index, count, onMove, onDelete, onEdit }) {
   const meta = STEP_TYPES.find((t) => t.type === step.type);
   const Icon = meta.icon;
 
@@ -190,6 +190,7 @@ function StepCard({ step, index, count, onMove, onDelete }) {
           {step.type === "quiz" ? ` · ${step.quiz_questions?.length || 0} question${step.quiz_questions?.length === 1 ? "" : "s"}` : ""}
         </div>
       </div>
+      <button onClick={() => onEdit(step)} style={{ background: "none" }}><Pencil size={15} color="#6b6155" /></button>
       <button onClick={() => onMove(index, -1)} disabled={index === 0} style={{ background: "none", opacity: index === 0 ? 0.3 : 1 }}><ArrowUp size={15} color="#6b6155" /></button>
       <button onClick={() => onMove(index, 1)} disabled={index === count - 1} style={{ background: "none", opacity: index === count - 1 ? 0.3 : 1 }}><ArrowDown size={15} color="#6b6155" /></button>
       <button onClick={() => onDelete(step.id)} style={{ background: "none" }}><Trash2 size={15} color="#a39a8d" /></button>
@@ -236,10 +237,56 @@ function BrandLogoUpload({ brand, onChanged }) {
   );
 }
 
+function EditBrandDetails({ brand, onChanged }) {
+  const [editing, setEditing] = useState(false);
+  const [name, setName] = useState(brand.name);
+  const [tagline, setTagline] = useState(brand.tagline || "");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  async function save() {
+    if (!name.trim()) { setError("Brand name can't be empty"); return; }
+    setSaving(true);
+    setError("");
+    const { error: err } = await supabase.from("brands").update({ name: name.trim(), tagline: tagline.trim() || null }).eq("id", brand.id);
+    setSaving(false);
+    if (err) { setError(err.message); return; }
+    setEditing(false);
+    onChanged();
+  }
+
+  if (!editing) {
+    return (
+      <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 4 }}>
+        <h2 style={{ fontSize: 20, fontWeight: 600, color: navy[900], margin: 0 }}>{brand.name}</h2>
+        <button onClick={() => { setName(brand.name); setTagline(brand.tagline || ""); setEditing(true); }} style={{ display: "flex", alignItems: "center", gap: 4, background: "none", color: navy[700], fontSize: 12 }}>
+          <Pencil size={12} /> Edit
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 14, marginBottom: 12 }}>
+      <label style={{ fontSize: 13, color: "#6b6155", display: "block", marginBottom: 4 }}>Brand name</label>
+      <input value={name} onChange={(e) => setName(e.target.value)} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 10, fontSize: 14, boxSizing: "border-box" }} />
+      <label style={{ fontSize: 13, color: "#6b6155", display: "block", marginBottom: 4 }}>Tagline</label>
+      <input value={tagline} onChange={(e) => setTagline(e.target.value)} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 14, boxSizing: "border-box" }} />
+      {error && <div style={{ color: "#a3372f", fontSize: 13, marginBottom: 10 }}>{error}</div>}
+      <div style={{ display: "flex", gap: 8 }}>
+        <button onClick={save} disabled={saving} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "7px 14px", fontSize: 13, opacity: saving ? 0.7 : 1 }}>{saving ? "Saving…" : "Save"}</button>
+        <button onClick={() => setEditing(false)} style={{ background: "none", border: "1px solid #ddd5cb", borderRadius: 6, padding: "7px 14px", fontSize: 13 }}>Cancel</button>
+      </div>
+    </div>
+  );
+}
+
 function BrandStepsEditor({ brandId, onBack }) {
   const [brand, setBrand] = useState(null);
   const [steps, setSteps] = useState(null);
   const [addingType, setAddingType] = useState(null);
+  const [editingStep, setEditingStep] = useState(null);
+  const [editingQuizData, setEditingQuizData] = useState(null);
   const [error, setError] = useState("");
 
   async function load() {
@@ -288,6 +335,56 @@ function BrandStepsEditor({ brandId, onBack }) {
     return null;
   }
 
+  async function startEdit(step) {
+    setAddingType(null);
+    if (step.type === "quiz") {
+      const { data: qs } = await supabase
+        .from("quiz_questions")
+        .select("text,options,correct_index,order_index")
+        .eq("step_id", step.id)
+        .order("order_index");
+      setEditingQuizData({
+        title: step.title,
+        questions: (qs || []).map((q) => ({ text: q.text, options: q.options, correct: q.correct_index })),
+      });
+    }
+    setEditingStep(step);
+  }
+
+  function cancelEdit() {
+    setEditingStep(null);
+    setEditingQuizData(null);
+  }
+
+  async function updateVideo({ title, duration, video_url }) {
+    const { error: err } = await supabase.from("brand_steps").update({ title, duration, video_url }).eq("id", editingStep.id);
+    if (err) return err.message;
+    cancelEdit();
+    await load();
+    return null;
+  }
+
+  async function updateQuiz({ title, questions }) {
+    const { error: titleErr } = await supabase.from("brand_steps").update({ title }).eq("id", editingStep.id);
+    if (titleErr) return titleErr.message;
+    const { error: delErr } = await supabase.from("quiz_questions").delete().eq("step_id", editingStep.id);
+    if (delErr) return delErr.message;
+    const rows = questions.map((q, i) => ({ step_id: editingStep.id, text: q.text, options: q.options, correct_index: q.correct, order_index: i }));
+    const { error: insErr } = await supabase.from("quiz_questions").insert(rows);
+    if (insErr) return insErr.message;
+    cancelEdit();
+    await load();
+    return null;
+  }
+
+  async function updateCertificate({ title }) {
+    const { error: err } = await supabase.from("brand_steps").update({ title }).eq("id", editingStep.id);
+    if (err) return err.message;
+    cancelEdit();
+    await load();
+    return null;
+  }
+
   async function moveStep(index, direction) {
     const other = index + direction;
     if (other < 0 || other >= steps.length) return;
@@ -312,23 +409,33 @@ function BrandStepsEditor({ brandId, onBack }) {
       <button onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, color: navy[700], marginBottom: 14, background: "none" }}>
         <ChevronLeft size={15} /> All brands
       </button>
-      <h2 style={{ fontSize: 20, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>{brand.name}</h2>
+      <EditBrandDetails brand={brand} onChanged={load} />
       <p style={{ color: "#8a8074", fontSize: 14, margin: "0 0 18px" }}>Build the sequence customers work through, in order — video, quiz, or certificate steps.</p>
 
       <BrandLogoUpload brand={brand} onChanged={load} />
 
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 18 }}>
         {steps.map((s, i) => (
-          <StepCard key={s.id} step={s} index={i} count={steps.length} onMove={moveStep} onDelete={deleteStep} />
+          <StepCard key={s.id} step={s} index={i} count={steps.length} onMove={moveStep} onDelete={deleteStep} onEdit={startEdit} />
         ))}
         {steps.length === 0 && <div style={{ fontSize: 13, color: "#a39a8d" }}>No steps yet — add the first one below.</div>}
       </div>
 
-      {addingType === "video" && <AddVideoForm brandId={brandId} onCancel={() => setAddingType(null)} onSave={saveVideo} />}
-      {addingType === "quiz" && <AddQuizForm onCancel={() => setAddingType(null)} onSave={saveQuiz} />}
-      {addingType === "certificate" && <AddCertificateForm onCancel={() => setAddingType(null)} onSave={saveCertificate} />}
+      {editingStep && editingStep.type === "video" && (
+        <AddVideoForm brandId={brandId} initial={editingStep} submitLabel="Save changes" onCancel={cancelEdit} onSave={updateVideo} />
+      )}
+      {editingStep && editingStep.type === "quiz" && editingQuizData && (
+        <AddQuizForm initial={editingQuizData} submitLabel="Save changes" onCancel={cancelEdit} onSave={updateQuiz} />
+      )}
+      {editingStep && editingStep.type === "certificate" && (
+        <AddCertificateForm initial={editingStep} submitLabel="Save changes" onCancel={cancelEdit} onSave={updateCertificate} />
+      )}
 
-      {!addingType && (
+      {!editingStep && addingType === "video" && <AddVideoForm brandId={brandId} onCancel={() => setAddingType(null)} onSave={saveVideo} />}
+      {!editingStep && addingType === "quiz" && <AddQuizForm onCancel={() => setAddingType(null)} onSave={saveQuiz} />}
+      {!editingStep && addingType === "certificate" && <AddCertificateForm onCancel={() => setAddingType(null)} onSave={saveCertificate} />}
+
+      {!editingStep && !addingType && (
         <div style={{ display: "flex", gap: 8 }}>
           {STEP_TYPES.map((t) => (
             <button key={t.type} onClick={() => setAddingType(t.type)} style={{ display: "flex", alignItems: "center", gap: 6, background: "#fff", border: "1px solid #ddd5cb", borderRadius: 8, padding: "8px 14px", fontSize: 13, color: navy[900] }}>
