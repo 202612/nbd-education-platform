@@ -16,12 +16,12 @@ function Shell({ children, onSignOut, roleLabel }) {
             <Logo size={44} />
             <div style={{ width: 1, height: 32, background: "#e4dfd6" }} />
             <div>
-              <div style={{ fontSize: 11, color: "#a39a8d", letterSpacing: 1, textTransform: "uppercase" }}>{roleLabel}</div>
+              <div style={{ fontSize: 13, color: "#a39a8d", letterSpacing: 1, textTransform: "uppercase" }}>{roleLabel}</div>
               <img src={WORDMARK_SRC} alt="National Beauty Distribution Ireland" style={{ height: 22, marginTop: 4 }} />
             </div>
           </div>
           {onSignOut && (
-            <button onClick={onSignOut} style={{ background: "none", border: "1px solid #e4dfd6", borderRadius: 999, padding: "7px 16px", fontSize: 13, color: "#6b6155" }}>
+            <button onClick={onSignOut} style={{ background: "none", border: "1px solid #e4dfd6", borderRadius: 999, padding: "7px 16px", fontSize: 15, color: "#6b6155" }}>
               Sign out
             </button>
           )}
@@ -34,7 +34,7 @@ function Shell({ children, onSignOut, roleLabel }) {
 
 function CenteredLoader({ label }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 300, color: "#8a8074", fontSize: 14, gap: 8 }}>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: 300, color: "#8a8074", fontSize: 16, gap: 8 }}>
       <Loader2 size={16} className="spin" /> {label}
       <style>{`.spin { animation: spin 1s linear infinite; } @keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
@@ -83,7 +83,7 @@ export default function App() {
   if (resolving || identity === null) return <CenteredLoader label="Checking your account…" />;
   if (resolveError) {
     return (
-      <div style={{ maxWidth: 420, margin: "80px auto", textAlign: "center", color: "#a3372f", fontSize: 14 }}>
+      <div style={{ maxWidth: 420, margin: "80px auto", textAlign: "center", color: "#a3372f", fontSize: 16 }}>
         Couldn't check your account: {resolveError}
       </div>
     );
@@ -108,8 +108,8 @@ export default function App() {
   return (
     <Shell onSignOut={signOut} roleLabel="Education platform">
       <div style={{ maxWidth: 420, margin: "60px auto", textAlign: "center" }}>
-        <h2 style={{ fontSize: 18, fontWeight: 600, color: navy[900], margin: "0 0 8px" }}>This login isn't set up yet</h2>
-        <p style={{ color: "#8a8074", fontSize: 14, lineHeight: 1.6 }}>
+        <h2 style={{ fontSize: 20, fontWeight: 600, color: navy[900], margin: "0 0 8px" }}>This login isn't set up yet</h2>
+        <p style={{ color: "#8a8074", fontSize: 16, lineHeight: 1.6 }}>
           {session.user.email} doesn't match any admin or account on this platform. If this is a mistake, contact your NBD admin.
         </p>
       </div>

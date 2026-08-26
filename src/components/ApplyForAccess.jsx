@@ -63,8 +63,8 @@ export default function ApplyForAccess({ onSwitchToLogin }) {
     // "pending approval" screen — nothing else to do here.
   }
 
-  const labelStyle = { fontSize: 13, color: grey, display: "block", marginBottom: 4, fontWeight: 700 };
-  const inputStyle = { width: "100%", padding: "11px 12px", border: "1px solid #d8d8d8", borderRadius: 6, marginBottom: 14, fontSize: 15, boxSizing: "border-box", fontFamily: "inherit" };
+  const labelStyle = { fontSize: 15, color: grey, display: "block", marginBottom: 4, fontWeight: 700 };
+  const inputStyle = { width: "100%", padding: "11px 12px", border: "1px solid #d8d8d8", borderRadius: 6, marginBottom: 14, fontSize: 17, boxSizing: "border-box", fontFamily: "inherit" };
 
   return (
     <div style={{ fontFamily: "'Lato', -apple-system, sans-serif", background: cream, minHeight: "100vh" }}>
@@ -75,8 +75,8 @@ export default function ApplyForAccess({ onSwitchToLogin }) {
       />
 
       <div style={{ maxWidth: 480, margin: "0 auto", padding: "48px 20px 80px" }}>
-        <h2 style={{ fontSize: 22, fontWeight: 700, color: navy[900], margin: "0 0 4px", textAlign: "center" }}>Request training access</h2>
-        <p style={{ color: grey, fontSize: 14, margin: "0 0 28px", textAlign: "center" }}>
+        <h2 style={{ fontSize: 24, fontWeight: 700, color: navy[900], margin: "0 0 4px", textAlign: "center" }}>Request training access</h2>
+        <p style={{ color: grey, fontSize: 16, margin: "0 0 28px", textAlign: "center" }}>
           Tell us about your salon — we'll set up access to the brands you stock once approved.
         </p>
 
@@ -104,26 +104,26 @@ export default function ApplyForAccess({ onSwitchToLogin }) {
           <label style={labelStyle}>Choose a password</label>
           <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} style={{ ...inputStyle, marginBottom: 22 }} />
 
-          <div style={{ fontSize: 13, color: grey, fontWeight: 700, marginBottom: 10 }}>Which brands do you stock?</div>
-          {!brands && <div style={{ fontSize: 13, color: "#999", marginBottom: 18 }}>Loading brands…</div>}
+          <div style={{ fontSize: 15, color: grey, fontWeight: 700, marginBottom: 10 }}>Which brands do you stock?</div>
+          {!brands && <div style={{ fontSize: 15, color: "#999", marginBottom: 18 }}>Loading brands…</div>}
           <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 22 }}>
             {(brands || []).map((b) => (
               <label key={b.id} style={{ display: "flex", alignItems: "center", gap: 10, background: "#fff", border: "1px solid #e2e2e2", borderRadius: 8, padding: "11px 14px", cursor: "pointer" }}>
                 <input type="checkbox" checked={selected.has(b.id)} onChange={() => toggleBrand(b.id)} />
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: 14, color: navy[900] }}>{b.name}</div>
-                  {b.tagline && <div style={{ fontSize: 12, color: "#999" }}>{b.tagline}</div>}
+                  <div style={{ fontWeight: 700, fontSize: 16, color: navy[900] }}>{b.name}</div>
+                  {b.tagline && <div style={{ fontSize: 14, color: "#999" }}>{b.tagline}</div>}
                 </div>
               </label>
             ))}
           </div>
 
-          {error && <div style={{ color: "#a3372f", fontSize: 13, marginBottom: 16 }}>{error}</div>}
+          {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 16 }}>{error}</div>}
 
           <button
             type="submit"
             disabled={busy}
-            style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "13px 16px", fontSize: 15, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", opacity: busy ? 0.7 : 1, fontFamily: "inherit" }}
+            style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "13px 16px", fontSize: 17, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", opacity: busy ? 0.7 : 1, fontFamily: "inherit" }}
           >
             {busy && <Loader2 size={14} className="spin" />}
             Submit request
@@ -132,7 +132,7 @@ export default function ApplyForAccess({ onSwitchToLogin }) {
 
         <button
           onClick={onSwitchToLogin}
-          style={{ display: "block", width: "100%", textAlign: "center", background: "none", border: "none", color: navy[700], fontSize: 14, marginTop: 20, fontFamily: "inherit" }}
+          style={{ display: "block", width: "100%", textAlign: "center", background: "none", border: "none", color: navy[700], fontSize: 16, marginTop: 20, fontFamily: "inherit" }}
         >
           Already have an account? Sign in
         </button>

@@ -104,42 +104,42 @@ function QuizStep({ step, onComplete, onBack }) {
     if (data.passed) onComplete();
   }
 
-  if (loadError) return <div style={{ color: "#a3372f", fontSize: 14 }}>{loadError}</div>;
+  if (loadError) return <div style={{ color: "#a3372f", fontSize: 16 }}>{loadError}</div>;
   if (!questions) {
-    return <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#8a8074", fontSize: 14 }}><Loader2 size={16} className="spin" /> Loading quiz…</div>;
+    return <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#8a8074", fontSize: 16 }}><Loader2 size={16} className="spin" /> Loading quiz…</div>;
   }
 
   if (result === "pass") {
     return (
       <div style={{ textAlign: "center", padding: "40px 0" }}>
         <CheckCircle2 size={36} color="#4a6b3d" style={{ marginBottom: 10 }} />
-        <h3 style={{ fontSize: 18, fontWeight: 600, color: navy[900], margin: "0 0 6px" }}>Quiz passed</h3>
-        <p style={{ color: "#8a8074", fontSize: 14, marginBottom: 18 }}>The next step is now unlocked.</p>
-        <button onClick={onBack} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 8, padding: "9px 18px", fontSize: 14 }}>Back to sequence</button>
+        <h3 style={{ fontSize: 20, fontWeight: 600, color: navy[900], margin: "0 0 6px" }}>Quiz passed</h3>
+        <p style={{ color: "#8a8074", fontSize: 16, marginBottom: 18 }}>The next step is now unlocked.</p>
+        <button onClick={onBack} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 8, padding: "9px 18px", fontSize: 16 }}>Back to sequence</button>
       </div>
     );
   }
 
   return (
     <div>
-      <button onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, color: navy[700], marginBottom: 14, background: "none" }}>
+      <button onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 15, color: navy[700], marginBottom: 14, background: "none" }}>
         <ChevronLeft size={15} /> Back
       </button>
-      <h3 style={{ fontSize: 17, fontWeight: 600, color: navy[900], margin: "0 0 14px" }}>Quick check: {step.title}</h3>
-      {result === "fail" && <div style={{ background: "#fbeceb", color: "#a3372f", fontSize: 13, padding: "10px 14px", borderRadius: 8, marginBottom: 14 }}>Not quite — review the video and try again.</div>}
+      <h3 style={{ fontSize: 19, fontWeight: 600, color: navy[900], margin: "0 0 14px" }}>Quick check: {step.title}</h3>
+      {result === "fail" && <div style={{ background: "#fbeceb", color: "#a3372f", fontSize: 15, padding: "10px 14px", borderRadius: 8, marginBottom: 14 }}>Not quite — review the video and try again.</div>}
       {questions.map((q, qi) => (
         <div key={q.id} style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 14, fontWeight: 500, color: navy[900], marginBottom: 8 }}>{qi + 1}. {q.text}</div>
+          <div style={{ fontSize: 16, fontWeight: 500, color: navy[900], marginBottom: 8 }}>{qi + 1}. {q.text}</div>
           {q.options.map((opt, oi) => (
-            <label key={oi} style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 0", fontSize: 14, color: "#3d3830", cursor: "pointer" }}>
+            <label key={oi} style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 0", fontSize: 16, color: "#3d3830", cursor: "pointer" }}>
               <input type="radio" name={q.id} checked={answers[q.id] === oi} onChange={() => setAnswers({ ...answers, [q.id]: oi })} />
               {opt}
             </label>
           ))}
         </div>
       ))}
-      {error && <div style={{ color: "#a3372f", fontSize: 13, marginBottom: 10 }}>{error}</div>}
-      <button onClick={submit} disabled={submitting} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 8, padding: "9px 18px", fontSize: 14, fontWeight: 500, opacity: submitting ? 0.7 : 1 }}>
+      {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 10 }}>{error}</div>}
+      <button onClick={submit} disabled={submitting} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 8, padding: "9px 18px", fontSize: 16, fontWeight: 500, opacity: submitting ? 0.7 : 1 }}>
         {submitting ? "Checking…" : "Submit answers"}
       </button>
     </div>
@@ -178,13 +178,13 @@ function VideoStep({ step, onComplete, onBack }) {
 
   return (
     <div>
-      <button onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, color: navy[700], marginBottom: 14, background: "none" }}>
+      <button onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 15, color: navy[700], marginBottom: 14, background: "none" }}>
         <ChevronLeft size={15} /> Back
       </button>
-      <h3 style={{ fontSize: 17, fontWeight: 600, color: navy[900], margin: "0 0 14px" }}>{step.title}</h3>
+      <h3 style={{ fontSize: 19, fontWeight: 600, color: navy[900], margin: "0 0 14px" }}>{step.title}</h3>
       {youtubeId && <YouTubePlayer videoId={youtubeId} onEnded={markWatched} />}
       {!youtubeId && resolving && (
-        <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#8a8074", fontSize: 14, marginBottom: 16 }}><Loader2 size={16} className="spin" /> Loading video…</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#8a8074", fontSize: 16, marginBottom: 16 }}><Loader2 size={16} className="spin" /> Loading video…</div>
       )}
       {!youtubeId && !resolving && playbackUrl && (
         <video
@@ -197,12 +197,12 @@ function VideoStep({ step, onComplete, onBack }) {
         />
       )}
       {!youtubeId && !resolving && !playbackUrl && !hasSource && (
-        <div style={{ background: "#fdf6e3", border: "1px solid #eddfad", color: "#8a6d1f", fontSize: 13, padding: "10px 14px", borderRadius: 8, marginBottom: 16 }}>
+        <div style={{ background: "#fdf6e3", border: "1px solid #eddfad", color: "#8a6d1f", fontSize: 15, padding: "10px 14px", borderRadius: 8, marginBottom: 16 }}>
           No video uploaded for this step yet.
         </div>
       )}
-      {error && <div style={{ color: "#a3372f", fontSize: 13, marginBottom: 10 }}>{error}</div>}
-      <p style={{ fontSize: 12, color: "#a39a8d" }}>Continue unlocks automatically once the video finishes playing.</p>
+      {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 10 }}>{error}</div>}
+      <p style={{ fontSize: 14, color: "#a39a8d" }}>Continue unlocks automatically once the video finishes playing.</p>
     </div>
   );
 }
@@ -242,12 +242,12 @@ function CertificateStep({ step, brand, participantName, onComplete, onBack }) {
 
   return (
     <div>
-      <button onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, color: navy[700], marginBottom: 14, background: "none" }}>
+      <button onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 15, color: navy[700], marginBottom: 14, background: "none" }}>
         <ChevronLeft size={15} /> Back
       </button>
 
-      {claiming && <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#8a8074", fontSize: 14, marginBottom: 14 }}><Loader2 size={16} className="spin" /> Preparing your certificate…</div>}
-      {error && <div style={{ color: "#a3372f", fontSize: 13, marginBottom: 14 }}>{error}</div>}
+      {claiming && <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#8a8074", fontSize: 16, marginBottom: 14 }}><Loader2 size={16} className="spin" /> Preparing your certificate…</div>}
+      {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 14 }}>{error}</div>}
 
       {!claiming && !error && (
         <>
@@ -261,13 +261,13 @@ function CertificateStep({ step, brand, participantName, onComplete, onBack }) {
             }}
           >
             {brand.logo_url && <img src={brand.logo_url} alt={brand.name} style={{ maxHeight: 64, maxWidth: 220, objectFit: "contain", marginBottom: 24 }} />}
-            <div style={{ fontSize: 13, letterSpacing: 3, color: "#8a8074", textTransform: "uppercase", marginBottom: 18 }}>Certificate of Participation</div>
-            <div style={{ fontSize: 14, color: "#6b6155", marginBottom: 8 }}>This certifies that</div>
-            <div style={{ fontSize: 32, fontWeight: 600, color: navy[900], marginBottom: 18, fontFamily: "Georgia, 'Times New Roman', serif" }}>{participantName}</div>
-            <div style={{ fontSize: 14, color: "#6b6155", marginBottom: 28, maxWidth: 480 }}>
+            <div style={{ fontSize: 15, letterSpacing: 3, color: "#8a8074", textTransform: "uppercase", marginBottom: 18 }}>Certificate of Participation</div>
+            <div style={{ fontSize: 16, color: "#6b6155", marginBottom: 8 }}>This certifies that</div>
+            <div style={{ fontSize: 34, fontWeight: 600, color: navy[900], marginBottom: 18, fontFamily: "Georgia, 'Times New Roman', serif" }}>{participantName}</div>
+            <div style={{ fontSize: 16, color: "#6b6155", marginBottom: 28, maxWidth: 480 }}>
               has successfully completed the <strong>{brand.name}</strong> training programme
             </div>
-            <div style={{ fontSize: 13, color: "#a39a8d", marginBottom: 16 }}>{formatDate(issuedAt)}</div>
+            <div style={{ fontSize: 15, color: "#a39a8d", marginBottom: 16 }}>{formatDate(issuedAt)}</div>
             <Logo size={28} />
           </div>
 
@@ -275,7 +275,7 @@ function CertificateStep({ step, brand, participantName, onComplete, onBack }) {
             <button
               onClick={downloadPdf}
               disabled={downloading}
-              style={{ display: "inline-flex", alignItems: "center", gap: 8, background: navy[700], color: "#fff", border: "none", borderRadius: 8, padding: "10px 20px", fontSize: 14, fontWeight: 500, opacity: downloading ? 0.7 : 1 }}
+              style={{ display: "inline-flex", alignItems: "center", gap: 8, background: navy[700], color: "#fff", border: "none", borderRadius: 8, padding: "10px 20px", fontSize: 16, fontWeight: 500, opacity: downloading ? 0.7 : 1 }}
             >
               <Download size={15} /> {downloading ? "Preparing PDF…" : "Download certificate (PDF)"}
             </button>
@@ -302,8 +302,8 @@ function StepRow({ step, done, locked, onOpen }) {
     >
       {locked ? <Lock size={16} color="#a39a8d" /> : done ? <CheckCircle2 size={16} color="#4a6b3d" /> : <Icon size={16} color={navy[500]} />}
       <div style={{ flex: 1 }}>
-        <div style={{ fontWeight: 500, color: navy[900], fontSize: 14 }}>{step.title}</div>
-        <div style={{ fontSize: 12, color: "#8a8074" }}>{STEP_LABEL[step.type]}{step.type === "video" && step.duration ? ` · ${step.duration}` : ""}</div>
+        <div style={{ fontWeight: 500, color: navy[900], fontSize: 16 }}>{step.title}</div>
+        <div style={{ fontSize: 14, color: "#8a8074" }}>{STEP_LABEL[step.type]}{step.type === "video" && step.duration ? ` · ${step.duration}` : ""}</div>
       </div>
       {done && <Badge tone="gold">Done</Badge>}
     </button>
@@ -329,7 +329,7 @@ function CustomerBrandDetail({ brand, completedStepIds, onStepCompleted, partici
 
   return (
     <div>
-      <button onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, color: navy[700], marginBottom: 14, background: "none" }}>
+      <button onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 15, color: navy[700], marginBottom: 14, background: "none" }}>
         <ChevronLeft size={15} /> All brands
       </button>
       <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 6 }}>
@@ -338,16 +338,16 @@ function CustomerBrandDetail({ brand, completedStepIds, onStepCompleted, partici
             <img src={brand.logo_url} alt={brand.name} style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }} />
           </div>
         )}
-        <h3 style={{ fontSize: 22, fontWeight: 700, color: navy[900], margin: 0 }}>{brand.name}</h3>
+        <h3 style={{ fontSize: 24, fontWeight: 700, color: navy[900], margin: 0 }}>{brand.name}</h3>
       </div>
-      <p style={{ color: "#8a8074", fontSize: 14, margin: "0 0 18px" }}>{doneCount} of {steps.length} steps complete</p>
+      <p style={{ color: "#8a8074", fontSize: 16, margin: "0 0 18px" }}>{doneCount} of {steps.length} steps complete</p>
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {steps.map((s, i) => {
           const done = completedStepIds.has(s.id);
           const locked = i > 0 && !completedStepIds.has(steps[i - 1].id);
           return <StepRow key={s.id} step={s} done={done} locked={locked} onOpen={setOpenStepId} />;
         })}
-        {steps.length === 0 && <div style={{ color: "#8a8074", fontSize: 14 }}>No steps added to this brand yet — check back soon.</div>}
+        {steps.length === 0 && <div style={{ color: "#8a8074", fontSize: 16 }}>No steps added to this brand yet — check back soon.</div>}
       </div>
     </div>
   );
@@ -361,9 +361,9 @@ function CustomerDashboard({ brands, completedStepIds, onStepCompleted, particip
   if (brand) return <CustomerBrandDetail brand={brand} completedStepIds={completedStepIds} onStepCompleted={onStepCompleted} participantName={participantName} onBack={() => setOpenBrandId(null)} />;
   return (
     <div>
-      <h2 style={{ fontSize: 22, fontWeight: 700, color: navy[900], margin: "0 0 4px" }}>Welcome back{participantName ? `, ${participantName.split(" ")[0]}` : ""}</h2>
-      <p style={{ color: "#8a8074", fontSize: 14, margin: "0 0 20px" }}>Your training, for the brands you stock.</p>
-      {brands.length === 0 && <div style={{ color: "#8a8074", fontSize: 14 }}>No brands approved on this account yet.</div>}
+      <h2 style={{ fontSize: 24, fontWeight: 700, color: navy[900], margin: "0 0 4px" }}>Welcome back{participantName ? `, ${participantName.split(" ")[0]}` : ""}</h2>
+      <p style={{ color: "#8a8074", fontSize: 16, margin: "0 0 20px" }}>Your training, for the brands you stock.</p>
+      {brands.length === 0 && <div style={{ color: "#8a8074", fontSize: 16 }}>No brands approved on this account yet.</div>}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
         {brands.map((b) => {
           const done = b.steps.filter((s) => completedStepIds.has(s.id)).length;
@@ -374,12 +374,12 @@ function CustomerDashboard({ brands, completedStepIds, onStepCompleted, particip
                 {b.logo_url ? (
                   <img src={b.logo_url} alt={b.name} style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }} />
                 ) : (
-                  <div style={{ fontWeight: 700, fontSize: 20, color: navy[700] }}>{b.name}</div>
+                  <div style={{ fontWeight: 700, fontSize: 22, color: navy[700] }}>{b.name}</div>
                 )}
               </div>
               <div style={{ padding: 16 }}>
                 <div style={{ fontWeight: 700, color: navy[900], marginBottom: 4 }}>{b.name}</div>
-                <div style={{ fontSize: 13, color: "#8a8074", marginBottom: 10 }}>{done} of {b.steps.length} steps complete</div>
+                <div style={{ fontSize: 15, color: "#8a8074", marginBottom: 10 }}>{done} of {b.steps.length} steps complete</div>
                 <div style={{ height: 6, background: "#e4dfd6", borderRadius: 999, overflow: "hidden" }}>
                   <div style={{ height: "100%", width: `${pct}%`, background: pct === 100 ? "#4a6b3d" : navy[500] }} />
                 </div>
@@ -413,23 +413,23 @@ function CustomerTeam({ team, currentUserId, onAdd, onRemove }) {
 
   return (
     <div>
-      <h2 style={{ fontSize: 20, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Team</h2>
-      <p style={{ color: "#8a8074", fontSize: 14, margin: "0 0 20px" }}>Add staff to your account. They sign in with the exact email you enter here, choosing their own password the first time.</p>
+      <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Team</h2>
+      <p style={{ color: "#8a8074", fontSize: 16, margin: "0 0 20px" }}>Add staff to your account. They sign in with the exact email you enter here, choosing their own password the first time.</p>
       <div style={{ display: "flex", gap: 8, marginBottom: 18, flexWrap: "wrap" }}>
-        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Staff name" style={{ flex: 1, minWidth: 140, padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 14 }} />
-        <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" style={{ flex: 1, minWidth: 140, padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 14 }} />
-        <button onClick={add} disabled={busy} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 13, opacity: busy ? 0.7 : 1 }}>Add</button>
+        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Staff name" style={{ flex: 1, minWidth: 140, padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 16 }} />
+        <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" style={{ flex: 1, minWidth: 140, padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 16 }} />
+        <button onClick={add} disabled={busy} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 15, opacity: busy ? 0.7 : 1 }}>Add</button>
       </div>
-      {error && <div style={{ color: "#a3372f", fontSize: 13, marginBottom: 12 }}>{error}</div>}
+      {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 12 }}>{error}</div>}
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {team.map((u) => (
           <div key={u.id} style={{ display: "flex", alignItems: "center", gap: 10, background: u.role === "holder" ? navy[50] : "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: "12px 14px" }}>
             <Users size={16} color={navy[700]} />
             <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 500, fontSize: 14, color: navy[900] }}>
+              <div style={{ fontWeight: 500, fontSize: 16, color: navy[900] }}>
                 {u.name}{u.id === currentUserId ? " (you)" : ""}{u.role === "holder" ? " · main account holder" : ""}
               </div>
-              <div style={{ fontSize: 12, color: "#8a8074" }}>{u.email}</div>
+              <div style={{ fontSize: 14, color: "#8a8074" }}>{u.email}</div>
             </div>
             {u.role === "staff" && (
               <button onClick={() => onRemove(u.id)} style={{ background: "none" }}>
@@ -450,10 +450,10 @@ function AccountStatusScreen({ account }) {
   return (
     <div style={{ maxWidth: 420, margin: "60px auto", textAlign: "center" }}>
       <Clock size={32} color={navy[500]} style={{ marginBottom: 12 }} />
-      <h2 style={{ fontSize: 20, fontWeight: 600, color: navy[900], margin: "0 0 8px" }}>
+      <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: "0 0 8px" }}>
         {declined ? "Access not approved" : "Your account is waiting on approval"}
       </h2>
-      <p style={{ color: "#8a8074", fontSize: 14, lineHeight: 1.6 }}>
+      <p style={{ color: "#8a8074", fontSize: 16, lineHeight: 1.6 }}>
         {declined
           ? `Training access for ${account.company_name} wasn't approved. Contact your NBD rep if you think this is a mistake.`
           : "Please check back in 48 hours. You'll get access as soon as it's approved."}
@@ -513,33 +513,33 @@ function AccountSettings({ user, account, onNameSaved }) {
 
   return (
     <div>
-      <h2 style={{ fontSize: 20, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Settings</h2>
-      <p style={{ color: "#8a8074", fontSize: 14, margin: "0 0 24px" }}>Update your own details and your company's account details.</p>
+      <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Settings</h2>
+      <p style={{ color: "#8a8074", fontSize: 16, margin: "0 0 24px" }}>Update your own details and your company's account details.</p>
 
       <form onSubmit={saveName} style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 18, marginBottom: 18 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: "#6b6155", marginBottom: 12 }}>Your profile</div>
-        <label style={{ fontSize: 13, color: "#6b6155", display: "block", marginBottom: 4 }}>Full name</label>
-        <input value={name} onChange={(e) => setName(e.target.value)} style={{ width: "100%", padding: "9px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 14, boxSizing: "border-box" }} />
-        <p style={{ fontSize: 12, color: "#a39a8d", margin: "0 0 12px" }}>This is the name printed on your certificates.</p>
-        {nameError && <div style={{ color: "#a3372f", fontSize: 13, marginBottom: 10 }}>{nameError}</div>}
-        {nameNotice && <div style={{ color: "#4d6b2c", fontSize: 13, marginBottom: 10 }}>{nameNotice}</div>}
-        <button type="submit" disabled={nameSaving} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 13, opacity: nameSaving ? 0.7 : 1 }}>{nameSaving ? "Saving…" : "Save name"}</button>
+        <div style={{ fontSize: 15, fontWeight: 600, color: "#6b6155", marginBottom: 12 }}>Your profile</div>
+        <label style={{ fontSize: 15, color: "#6b6155", display: "block", marginBottom: 4 }}>Full name</label>
+        <input value={name} onChange={(e) => setName(e.target.value)} style={{ width: "100%", padding: "9px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 16, boxSizing: "border-box" }} />
+        <p style={{ fontSize: 14, color: "#a39a8d", margin: "0 0 12px" }}>This is the name printed on your certificates.</p>
+        {nameError && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 10 }}>{nameError}</div>}
+        {nameNotice && <div style={{ color: "#4d6b2c", fontSize: 15, marginBottom: 10 }}>{nameNotice}</div>}
+        <button type="submit" disabled={nameSaving} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 15, opacity: nameSaving ? 0.7 : 1 }}>{nameSaving ? "Saving…" : "Save name"}</button>
       </form>
 
       <form onSubmit={saveAccount} style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 18 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: "#6b6155", marginBottom: 12 }}>Company details</div>
-        <label style={{ fontSize: 13, color: "#6b6155", display: "block", marginBottom: 4 }}>Customer number</label>
-        <input value={customerNumber} onChange={(e) => setCustomerNumber(e.target.value)} style={{ width: "100%", padding: "9px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 14, boxSizing: "border-box" }} />
-        <label style={{ fontSize: 13, color: "#6b6155", display: "block", marginBottom: 4 }}>Salon / business name</label>
-        <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} style={{ width: "100%", padding: "9px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 14, boxSizing: "border-box" }} />
-        <label style={{ fontSize: 13, color: "#6b6155", display: "block", marginBottom: 4 }}>Main contact name</label>
-        <input value={contactName} onChange={(e) => setContactName(e.target.value)} style={{ width: "100%", padding: "9px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 14, boxSizing: "border-box" }} />
-        <label style={{ fontSize: 13, color: "#6b6155", display: "block", marginBottom: 4 }}>Main contact email</label>
-        <input value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} style={{ width: "100%", padding: "9px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 14, boxSizing: "border-box" }} />
-        <p style={{ fontSize: 12, color: "#a39a8d", margin: "0 0 12px" }}>This doesn't change the email you sign in with — that stays as-is.</p>
-        {accountError && <div style={{ color: "#a3372f", fontSize: 13, marginBottom: 10 }}>{accountError}</div>}
-        {accountNotice && <div style={{ color: "#4d6b2c", fontSize: 13, marginBottom: 10 }}>{accountNotice}</div>}
-        <button type="submit" disabled={accountSaving} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 13, opacity: accountSaving ? 0.7 : 1 }}>{accountSaving ? "Saving…" : "Save company details"}</button>
+        <div style={{ fontSize: 15, fontWeight: 600, color: "#6b6155", marginBottom: 12 }}>Company details</div>
+        <label style={{ fontSize: 15, color: "#6b6155", display: "block", marginBottom: 4 }}>Customer number</label>
+        <input value={customerNumber} onChange={(e) => setCustomerNumber(e.target.value)} style={{ width: "100%", padding: "9px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 16, boxSizing: "border-box" }} />
+        <label style={{ fontSize: 15, color: "#6b6155", display: "block", marginBottom: 4 }}>Salon / business name</label>
+        <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} style={{ width: "100%", padding: "9px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 16, boxSizing: "border-box" }} />
+        <label style={{ fontSize: 15, color: "#6b6155", display: "block", marginBottom: 4 }}>Main contact name</label>
+        <input value={contactName} onChange={(e) => setContactName(e.target.value)} style={{ width: "100%", padding: "9px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 16, boxSizing: "border-box" }} />
+        <label style={{ fontSize: 15, color: "#6b6155", display: "block", marginBottom: 4 }}>Main contact email</label>
+        <input value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} style={{ width: "100%", padding: "9px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 16, boxSizing: "border-box" }} />
+        <p style={{ fontSize: 14, color: "#a39a8d", margin: "0 0 12px" }}>This doesn't change the email you sign in with — that stays as-is.</p>
+        {accountError && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 10 }}>{accountError}</div>}
+        {accountNotice && <div style={{ color: "#4d6b2c", fontSize: 15, marginBottom: 10 }}>{accountNotice}</div>}
+        <button type="submit" disabled={accountSaving} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 15, opacity: accountSaving ? 0.7 : 1 }}>{accountSaving ? "Saving…" : "Save company details"}</button>
       </form>
     </div>
   );
@@ -587,9 +587,9 @@ export default function CustomerApp({ user, account }) {
     return <AccountStatusScreen account={account} />;
   }
 
-  if (loadError) return <div style={{ color: "#a3372f", fontSize: 14 }}>{loadError}</div>;
+  if (loadError) return <div style={{ color: "#a3372f", fontSize: 16 }}>{loadError}</div>;
   if (!brands) {
-    return <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#8a8074", fontSize: 14 }}><Loader2 size={16} className="spin" /> Loading your training…</div>;
+    return <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#8a8074", fontSize: 16 }}><Loader2 size={16} className="spin" /> Loading your training…</div>;
   }
 
   async function handleStepCompleted() {
@@ -619,12 +619,12 @@ export default function CustomerApp({ user, account }) {
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left", padding: "9px 12px", borderRadius: 8, fontSize: 14, marginBottom: 4, background: tab === t.id ? navy[100] : "transparent", color: tab === t.id ? navy[900] : "#6b6155", fontWeight: tab === t.id ? 500 : 400, border: "none" }}
+            style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left", padding: "9px 12px", borderRadius: 8, fontSize: 16, marginBottom: 4, background: tab === t.id ? navy[100] : "transparent", color: tab === t.id ? navy[900] : "#6b6155", fontWeight: tab === t.id ? 500 : 400, border: "none" }}
           >
             <t.icon size={16} /> {t.label}
           </button>
         ))}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left", padding: "9px 12px", borderRadius: 8, fontSize: 13, color: "#a39a8d", marginTop: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left", padding: "9px 12px", borderRadius: 8, fontSize: 15, color: "#a39a8d", marginTop: 12 }}>
           <Mail size={14} /> Contact NBD to request another brand
         </div>
       </div>

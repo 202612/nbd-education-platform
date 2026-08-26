@@ -48,40 +48,40 @@ export default function Login({ onSwitchToApply }) {
       />
 
       <div style={{ maxWidth: 400, margin: "0 auto", padding: "48px 20px 80px" }}>
-        <h2 style={{ fontSize: 22, fontWeight: 700, color: navy[900], margin: "0 0 4px", textAlign: "center" }}>
+        <h2 style={{ fontSize: 24, fontWeight: 700, color: navy[900], margin: "0 0 4px", textAlign: "center" }}>
           {mode === "signin" ? "Sign in" : "Create your password"}
         </h2>
-        <p style={{ color: grey, fontSize: 14, margin: "0 0 28px", textAlign: "center" }}>
+        <p style={{ color: grey, fontSize: 16, margin: "0 0 28px", textAlign: "center" }}>
           {mode === "signin"
             ? "For approved account holders, staff, and admins."
             : "First time here? Use the email your admin set up for you and choose a password."}
         </p>
 
         <form onSubmit={submit}>
-          <label style={{ fontSize: 13, color: grey, display: "block", marginBottom: 4, fontWeight: 700 }}>Email</label>
+          <label style={{ fontSize: 15, color: grey, display: "block", marginBottom: 4, fontWeight: 700 }}>Email</label>
           <input
             type="email"
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            style={{ width: "100%", padding: "11px 12px", border: "1px solid #d8d8d8", borderRadius: 6, marginBottom: 14, fontSize: 15, boxSizing: "border-box", fontFamily: "inherit" }}
+            style={{ width: "100%", padding: "11px 12px", border: "1px solid #d8d8d8", borderRadius: 6, marginBottom: 14, fontSize: 17, boxSizing: "border-box", fontFamily: "inherit" }}
           />
-          <label style={{ fontSize: 13, color: grey, display: "block", marginBottom: 4, fontWeight: 700 }}>Password</label>
+          <label style={{ fontSize: 15, color: grey, display: "block", marginBottom: 4, fontWeight: 700 }}>Password</label>
           <input
             type="password"
             autoComplete={mode === "signin" ? "current-password" : "new-password"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            style={{ width: "100%", padding: "11px 12px", border: "1px solid #d8d8d8", borderRadius: 6, marginBottom: 20, fontSize: 15, boxSizing: "border-box", fontFamily: "inherit" }}
+            style={{ width: "100%", padding: "11px 12px", border: "1px solid #d8d8d8", borderRadius: 6, marginBottom: 20, fontSize: 17, boxSizing: "border-box", fontFamily: "inherit" }}
           />
 
-          {error && <div style={{ color: "#a3372f", fontSize: 13, marginBottom: 16 }}>{error}</div>}
-          {notice && <div style={{ color: navy[700], fontSize: 13, marginBottom: 16 }}>{notice}</div>}
+          {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 16 }}>{error}</div>}
+          {notice && <div style={{ color: navy[700], fontSize: 15, marginBottom: 16 }}>{notice}</div>}
 
           <button
             type="submit"
             disabled={busy}
-            style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "13px 16px", fontSize: 15, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", opacity: busy ? 0.7 : 1, fontFamily: "inherit" }}
+            style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "13px 16px", fontSize: 17, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", opacity: busy ? 0.7 : 1, fontFamily: "inherit" }}
           >
             {busy && <Loader2 size={14} className="spin" />}
             {mode === "signin" ? "Sign in" : "Create password & continue"}
@@ -90,7 +90,7 @@ export default function Login({ onSwitchToApply }) {
 
         <button
           onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setError(""); setNotice(""); }}
-          style={{ display: "block", width: "100%", textAlign: "center", background: "none", border: "none", color: navy[700], fontSize: 14, marginTop: 20, fontFamily: "inherit" }}
+          style={{ display: "block", width: "100%", textAlign: "center", background: "none", border: "none", color: navy[700], fontSize: 16, marginTop: 20, fontFamily: "inherit" }}
         >
           {mode === "signin" ? "First time signing in? Create your password" : "Already have a password? Sign in"}
         </button>
@@ -98,7 +98,7 @@ export default function Login({ onSwitchToApply }) {
         {mode === "signin" && (
           <button
             onClick={onSwitchToApply}
-            style={{ display: "block", width: "100%", textAlign: "center", background: "none", border: "none", color: grey, fontSize: 13, marginTop: 10, fontFamily: "inherit" }}
+            style={{ display: "block", width: "100%", textAlign: "center", background: "none", border: "none", color: grey, fontSize: 15, marginTop: 10, fontFamily: "inherit" }}
           >
             New customer? Request training access
           </button>

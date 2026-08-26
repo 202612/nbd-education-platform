@@ -13,16 +13,16 @@ export function Badge({ children, tone = "navy" }) {
     gold: { background: "#eef5e6", color: "#4d6b2c" },
     muted: { background: "#efe9e3", color: "#6b6155" },
   };
-  return <span style={{ ...tones[tone], fontSize: 12, fontWeight: 500, padding: "3px 10px", borderRadius: 999 }}>{children}</span>;
+  return <span style={{ ...tones[tone], fontSize: 14, fontWeight: 500, padding: "3px 10px", borderRadius: 999 }}>{children}</span>;
 }
 
 export function StatCard({ label, value, icon: Icon }) {
   return (
     <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 12, padding: "16px 18px", flex: 1, minWidth: 140 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#8a8074", fontSize: 13, marginBottom: 8 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#8a8074", fontSize: 15, marginBottom: 8 }}>
         <Icon size={15} /> {label}
       </div>
-      <div style={{ fontSize: 26, fontWeight: 600, color: navy[900] }}>{value}</div>
+      <div style={{ fontSize: 28, fontWeight: 600, color: navy[900] }}>{value}</div>
     </div>
   );
 }
@@ -43,7 +43,7 @@ export function AuthHero({ eyebrow, headline, subtitle }) {
       <div style={{ display: "flex", justifyContent: "center", marginBottom: 28 }}>
         <img src={WORDMARK_SRC} alt="National Beauty Distribution" style={{ height: 30, filter: "brightness(0) invert(1)" }} />
       </div>
-      <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: navy[500], marginBottom: 18 }}>
+      <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: navy[500], marginBottom: 18 }}>
         {eyebrow}
       </div>
       <h1

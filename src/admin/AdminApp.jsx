@@ -61,29 +61,29 @@ function AddQuizForm({ initial, submitLabel, onCancel, onSave }) {
 
   return (
     <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 16, marginBottom: 16 }}>
-      <label style={{ fontSize: 13, color: "#6b6155", display: "block", marginBottom: 4 }}>Quiz title</label>
-      <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Quick check: Foundations" style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 14, fontSize: 14, boxSizing: "border-box" }} />
+      <label style={{ fontSize: 15, color: "#6b6155", display: "block", marginBottom: 4 }}>Quiz title</label>
+      <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Quick check: Foundations" style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 14, fontSize: 16, boxSizing: "border-box" }} />
       {questions.map((q, qi) => (
         <div key={qi} style={{ border: "1px solid #e4dfd6", borderRadius: 8, padding: 12, marginBottom: 10 }}>
           <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
-            <input value={q.text} onChange={(e) => updateQuestion(qi, { text: e.target.value })} placeholder={`Question ${qi + 1}`} style={{ flex: 1, padding: "7px 9px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 13 }} />
+            <input value={q.text} onChange={(e) => updateQuestion(qi, { text: e.target.value })} placeholder={`Question ${qi + 1}`} style={{ flex: 1, padding: "7px 9px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 15 }} />
             <button onClick={() => removeQuestion(qi)} style={{ background: "none" }}><Trash2 size={14} color="#a39a8d" /></button>
           </div>
           {q.options.map((opt, oi) => (
             <div key={oi} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
               <input type="radio" name={`correct-${qi}`} checked={q.correct === oi} onChange={() => updateQuestion(qi, { correct: oi })} title="Correct answer" />
-              <input value={opt} onChange={(e) => updateOption(qi, oi, e.target.value)} placeholder={`Option ${oi + 1}`} style={{ flex: 1, padding: "6px 9px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 13 }} />
+              <input value={opt} onChange={(e) => updateOption(qi, oi, e.target.value)} placeholder={`Option ${oi + 1}`} style={{ flex: 1, padding: "6px 9px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 15 }} />
               {q.options.length > 2 && <button onClick={() => removeOption(qi, oi)} style={{ background: "none" }}><X size={13} color="#a39a8d" /></button>}
             </div>
           ))}
-          <button onClick={() => addOption(qi)} style={{ fontSize: 12, color: navy[700], background: "none" }}>+ Add option</button>
+          <button onClick={() => addOption(qi)} style={{ fontSize: 14, color: navy[700], background: "none" }}>+ Add option</button>
         </div>
       ))}
-      <button onClick={addQuestion} style={{ fontSize: 13, color: navy[700], background: "none", marginBottom: 14 }}>+ Add question</button>
-      {error && <div style={{ color: "#a3372f", fontSize: 13, marginBottom: 10 }}>{error}</div>}
+      <button onClick={addQuestion} style={{ fontSize: 15, color: navy[700], background: "none", marginBottom: 14 }}>+ Add question</button>
+      {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 10 }}>{error}</div>}
       <div style={{ display: "flex", gap: 8 }}>
-        <button onClick={save} disabled={saving} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 13, opacity: saving ? 0.7 : 1 }}>{saving ? "Saving…" : (submitLabel || "Save quiz step")}</button>
-        <button onClick={onCancel} style={{ background: "none", border: "1px solid #ddd5cb", borderRadius: 6, padding: "8px 16px", fontSize: 13 }}>Cancel</button>
+        <button onClick={save} disabled={saving} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 15, opacity: saving ? 0.7 : 1 }}>{saving ? "Saving…" : (submitLabel || "Save quiz step")}</button>
+        <button onClick={onCancel} style={{ background: "none", border: "1px solid #ddd5cb", borderRadius: 6, padding: "8px 16px", fontSize: 15 }}>Cancel</button>
       </div>
     </div>
   );
@@ -129,26 +129,26 @@ function AddVideoForm({ brandId, initial, submitLabel, onCancel, onSave }) {
 
   return (
     <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 16, marginBottom: 16 }}>
-      <label style={{ fontSize: 13, color: "#6b6155", display: "block", marginBottom: 4 }}>Video title</label>
-      <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Foundations of Colour Theory" style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 14, boxSizing: "border-box" }} />
-      <label style={{ fontSize: 13, color: "#6b6155", display: "block", marginBottom: 4 }}>Duration (optional)</label>
-      <input value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="e.g. 6 min" style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 14, boxSizing: "border-box" }} />
-      <label style={{ fontSize: 13, color: "#6b6155", display: "block", marginBottom: 4 }}>Video file (MP4) — private, only approved customers can view it</label>
-      <input type="file" accept="video/mp4,video/*" onChange={handleFile} style={{ marginBottom: 8, fontSize: 13 }} />
-      {uploading && <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#8a8074", fontSize: 13, marginBottom: 8 }}><Loader2 size={14} className="spin" /> Uploading…</div>}
-      {fileName && !uploading && <div style={{ color: "#4d6b2c", fontSize: 13, marginBottom: 8 }}>Uploaded: {fileName}</div>}
-      {storagePath && !fileName && <div style={{ color: "#4d6b2c", fontSize: 13, marginBottom: 8 }}>Using previously uploaded file</div>}
-      <div style={{ fontSize: 12, color: "#a39a8d", margin: "4px 0 8px" }}>— or paste an external video URL instead (e.g. YouTube) —</div>
+      <label style={{ fontSize: 15, color: "#6b6155", display: "block", marginBottom: 4 }}>Video title</label>
+      <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Foundations of Colour Theory" style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 16, boxSizing: "border-box" }} />
+      <label style={{ fontSize: 15, color: "#6b6155", display: "block", marginBottom: 4 }}>Duration (optional)</label>
+      <input value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="e.g. 6 min" style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 16, boxSizing: "border-box" }} />
+      <label style={{ fontSize: 15, color: "#6b6155", display: "block", marginBottom: 4 }}>Video file (MP4) — private, only approved customers can view it</label>
+      <input type="file" accept="video/mp4,video/*" onChange={handleFile} style={{ marginBottom: 8, fontSize: 15 }} />
+      {uploading && <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#8a8074", fontSize: 15, marginBottom: 8 }}><Loader2 size={14} className="spin" /> Uploading…</div>}
+      {fileName && !uploading && <div style={{ color: "#4d6b2c", fontSize: 15, marginBottom: 8 }}>Uploaded: {fileName}</div>}
+      {storagePath && !fileName && <div style={{ color: "#4d6b2c", fontSize: 15, marginBottom: 8 }}>Using previously uploaded file</div>}
+      <div style={{ fontSize: 14, color: "#a39a8d", margin: "4px 0 8px" }}>— or paste an external video URL instead (e.g. YouTube) —</div>
       <input
         value={videoUrl}
         onChange={(e) => { setVideoUrl(e.target.value); setStoragePath(null); setFileName(""); }}
         placeholder="https://…"
-        style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 14, fontSize: 14, boxSizing: "border-box" }}
+        style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 14, fontSize: 16, boxSizing: "border-box" }}
       />
-      {error && <div style={{ color: "#a3372f", fontSize: 13, marginBottom: 10 }}>{error}</div>}
+      {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 10 }}>{error}</div>}
       <div style={{ display: "flex", gap: 8 }}>
-        <button onClick={save} disabled={saving || uploading} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 13, opacity: saving || uploading ? 0.7 : 1 }}>{saving ? "Saving…" : (submitLabel || "Save video step")}</button>
-        <button onClick={onCancel} style={{ background: "none", border: "1px solid #ddd5cb", borderRadius: 6, padding: "8px 16px", fontSize: 13 }}>Cancel</button>
+        <button onClick={save} disabled={saving || uploading} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 15, opacity: saving || uploading ? 0.7 : 1 }}>{saving ? "Saving…" : (submitLabel || "Save video step")}</button>
+        <button onClick={onCancel} style={{ background: "none", border: "1px solid #ddd5cb", borderRadius: 6, padding: "8px 16px", fontSize: 15 }}>Cancel</button>
       </div>
       <style>{`.spin { animation: spin 1s linear infinite; } @keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
@@ -171,16 +171,16 @@ function AddCertificateForm({ initial, submitLabel, onCancel, onSave }) {
 
   return (
     <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 16, marginBottom: 16 }}>
-      <label style={{ fontSize: 13, color: "#6b6155", display: "block", marginBottom: 4 }}>Certificate title</label>
-      <input value={title} onChange={(e) => setTitle(e.target.value)} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 14, fontSize: 14, boxSizing: "border-box" }} />
-      <p style={{ fontSize: 12, color: "#a39a8d", margin: "0 0 14px" }}>
+      <label style={{ fontSize: 15, color: "#6b6155", display: "block", marginBottom: 4 }}>Certificate title</label>
+      <input value={title} onChange={(e) => setTitle(e.target.value)} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 14, fontSize: 16, boxSizing: "border-box" }} />
+      <p style={{ fontSize: 14, color: "#a39a8d", margin: "0 0 14px" }}>
         Awarded automatically once every earlier step in this brand is complete. The certificate is generated for
         each learner with their name and the date filled in — set the brand's logo above so it appears on it.
       </p>
-      {error && <div style={{ color: "#a3372f", fontSize: 13, marginBottom: 10 }}>{error}</div>}
+      {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 10 }}>{error}</div>}
       <div style={{ display: "flex", gap: 8 }}>
-        <button onClick={save} disabled={saving} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 13, opacity: saving ? 0.7 : 1 }}>{saving ? "Saving…" : (submitLabel || "Save certificate step")}</button>
-        <button onClick={onCancel} style={{ background: "none", border: "1px solid #ddd5cb", borderRadius: 6, padding: "8px 16px", fontSize: 13 }}>Cancel</button>
+        <button onClick={save} disabled={saving} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 15, opacity: saving ? 0.7 : 1 }}>{saving ? "Saving…" : (submitLabel || "Save certificate step")}</button>
+        <button onClick={onCancel} style={{ background: "none", border: "1px solid #ddd5cb", borderRadius: 6, padding: "8px 16px", fontSize: 15 }}>Cancel</button>
       </div>
     </div>
   );
@@ -194,8 +194,8 @@ function StepCard({ step, index, count, onMove, onDelete, onEdit }) {
     <div style={{ display: "flex", alignItems: "center", gap: 12, background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: "12px 14px", flexWrap: "wrap" }}>
       <Icon size={16} color={navy[500]} />
       <div style={{ flex: 1, minWidth: 160 }}>
-        <div style={{ fontWeight: 500, color: navy[900], fontSize: 14 }}>{step.title}</div>
-        <div style={{ fontSize: 12, color: "#8a8074" }}>
+        <div style={{ fontWeight: 500, color: navy[900], fontSize: 16 }}>{step.title}</div>
+        <div style={{ fontSize: 14, color: "#8a8074" }}>
           {meta.label}
           {step.type === "video" && step.duration ? ` · ${step.duration}` : ""}
           {step.type === "video" && !step.video_url && !step.video_storage_path ? " · no file yet" : ""}
@@ -238,12 +238,12 @@ function BrandLogoUpload({ brand, onChanged }) {
         </div>
       )}
       <div>
-        <label style={{ fontSize: 12, color: navy[700], background: navy[50], border: "1px solid #e4dfd6", borderRadius: 6, padding: "5px 10px", cursor: "pointer" }}>
+        <label style={{ fontSize: 14, color: navy[700], background: navy[50], border: "1px solid #e4dfd6", borderRadius: 6, padding: "5px 10px", cursor: "pointer" }}>
           {uploading ? "Uploading…" : brand.logo_url ? "Replace logo" : "Upload logo"}
           <input type="file" accept="image/*" onChange={handleFile} disabled={uploading} style={{ display: "none" }} />
         </label>
-        {error && <div style={{ color: "#a3372f", fontSize: 12, marginTop: 4 }}>{error}</div>}
-        <div style={{ fontSize: 11, color: "#a39a8d", marginTop: 4 }}>Appears on this brand's generated certificate.</div>
+        {error && <div style={{ color: "#a3372f", fontSize: 14, marginTop: 4 }}>{error}</div>}
+        <div style={{ fontSize: 13, color: "#a39a8d", marginTop: 4 }}>Appears on this brand's generated certificate.</div>
       </div>
     </div>
   );
@@ -270,8 +270,8 @@ function EditBrandDetails({ brand, onChanged }) {
   if (!editing) {
     return (
       <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 4 }}>
-        <h2 style={{ fontSize: 20, fontWeight: 600, color: navy[900], margin: 0 }}>{brand.name}</h2>
-        <button onClick={() => { setName(brand.name); setTagline(brand.tagline || ""); setEditing(true); }} style={{ display: "flex", alignItems: "center", gap: 4, background: "none", color: navy[700], fontSize: 12 }}>
+        <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: 0 }}>{brand.name}</h2>
+        <button onClick={() => { setName(brand.name); setTagline(brand.tagline || ""); setEditing(true); }} style={{ display: "flex", alignItems: "center", gap: 4, background: "none", color: navy[700], fontSize: 14 }}>
           <Pencil size={12} /> Edit
         </button>
       </div>
@@ -280,14 +280,14 @@ function EditBrandDetails({ brand, onChanged }) {
 
   return (
     <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 14, marginBottom: 12 }}>
-      <label style={{ fontSize: 13, color: "#6b6155", display: "block", marginBottom: 4 }}>Brand name</label>
-      <input value={name} onChange={(e) => setName(e.target.value)} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 10, fontSize: 14, boxSizing: "border-box" }} />
-      <label style={{ fontSize: 13, color: "#6b6155", display: "block", marginBottom: 4 }}>Tagline</label>
-      <input value={tagline} onChange={(e) => setTagline(e.target.value)} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 14, boxSizing: "border-box" }} />
-      {error && <div style={{ color: "#a3372f", fontSize: 13, marginBottom: 10 }}>{error}</div>}
+      <label style={{ fontSize: 15, color: "#6b6155", display: "block", marginBottom: 4 }}>Brand name</label>
+      <input value={name} onChange={(e) => setName(e.target.value)} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 10, fontSize: 16, boxSizing: "border-box" }} />
+      <label style={{ fontSize: 15, color: "#6b6155", display: "block", marginBottom: 4 }}>Tagline</label>
+      <input value={tagline} onChange={(e) => setTagline(e.target.value)} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 16, boxSizing: "border-box" }} />
+      {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 10 }}>{error}</div>}
       <div style={{ display: "flex", gap: 8 }}>
-        <button onClick={save} disabled={saving} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "7px 14px", fontSize: 13, opacity: saving ? 0.7 : 1 }}>{saving ? "Saving…" : "Save"}</button>
-        <button onClick={() => setEditing(false)} style={{ background: "none", border: "1px solid #ddd5cb", borderRadius: 6, padding: "7px 14px", fontSize: 13 }}>Cancel</button>
+        <button onClick={save} disabled={saving} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "7px 14px", fontSize: 15, opacity: saving ? 0.7 : 1 }}>{saving ? "Saving…" : "Save"}</button>
+        <button onClick={() => setEditing(false)} style={{ background: "none", border: "1px solid #ddd5cb", borderRadius: 6, padding: "7px 14px", fontSize: 15 }}>Cancel</button>
       </div>
     </div>
   );
@@ -413,16 +413,16 @@ function BrandStepsEditor({ brandId, onBack }) {
   }
 
   if (!brand || !steps) {
-    return <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#8a8074", fontSize: 14 }}><Loader2 size={16} /> Loading…</div>;
+    return <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#8a8074", fontSize: 16 }}><Loader2 size={16} /> Loading…</div>;
   }
 
   return (
     <div>
-      <button onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, color: navy[700], marginBottom: 14, background: "none" }}>
+      <button onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 15, color: navy[700], marginBottom: 14, background: "none" }}>
         <ChevronLeft size={15} /> All brands
       </button>
       <EditBrandDetails brand={brand} onChanged={load} />
-      <p style={{ color: "#8a8074", fontSize: 14, margin: "0 0 18px" }}>Build the sequence customers work through, in order — video, quiz, or certificate steps.</p>
+      <p style={{ color: "#8a8074", fontSize: 16, margin: "0 0 18px" }}>Build the sequence customers work through, in order — video, quiz, or certificate steps.</p>
 
       <BrandLogoUpload brand={brand} onChanged={load} />
 
@@ -430,7 +430,7 @@ function BrandStepsEditor({ brandId, onBack }) {
         {steps.map((s, i) => (
           <StepCard key={s.id} step={s} index={i} count={steps.length} onMove={moveStep} onDelete={deleteStep} onEdit={startEdit} />
         ))}
-        {steps.length === 0 && <div style={{ fontSize: 13, color: "#a39a8d" }}>No steps yet — add the first one below.</div>}
+        {steps.length === 0 && <div style={{ fontSize: 15, color: "#a39a8d" }}>No steps yet — add the first one below.</div>}
       </div>
 
       {editingStep && editingStep.type === "video" && (
@@ -450,13 +450,13 @@ function BrandStepsEditor({ brandId, onBack }) {
       {!editingStep && !addingType && (
         <div style={{ display: "flex", gap: 8 }}>
           {STEP_TYPES.map((t) => (
-            <button key={t.type} onClick={() => setAddingType(t.type)} style={{ display: "flex", alignItems: "center", gap: 6, background: "#fff", border: "1px solid #ddd5cb", borderRadius: 8, padding: "8px 14px", fontSize: 13, color: navy[900] }}>
+            <button key={t.type} onClick={() => setAddingType(t.type)} style={{ display: "flex", alignItems: "center", gap: 6, background: "#fff", border: "1px solid #ddd5cb", borderRadius: 8, padding: "8px 14px", fontSize: 15, color: navy[900] }}>
               <Plus size={14} /> <t.icon size={14} /> {t.label}
             </button>
           ))}
         </div>
       )}
-      {error && <div style={{ color: "#a3372f", fontSize: 13, marginTop: 10 }}>{error}</div>}
+      {error && <div style={{ color: "#a3372f", fontSize: 15, marginTop: 10 }}>{error}</div>}
     </div>
   );
 }
@@ -485,12 +485,12 @@ function AdminBrandsLive() {
 
   if (activeBrandId) return <BrandStepsEditor brandId={activeBrandId} onBack={() => { setActiveBrandId(null); load(); }} />;
 
-  if (!brands) return <div style={{ color: "#8a8074", fontSize: 14 }}>Loading brands…</div>;
+  if (!brands) return <div style={{ color: "#8a8074", fontSize: 16 }}>Loading brands…</div>;
 
   return (
     <div>
-      <h2 style={{ fontSize: 20, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Brands & modules</h2>
-      <p style={{ color: "#8a8074", fontSize: 14, margin: "0 0 18px" }}>Each brand is a sequence of steps customers work through in order.</p>
+      <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Brands & modules</h2>
+      <p style={{ color: "#8a8074", fontSize: 16, margin: "0 0 18px" }}>Each brand is a sequence of steps customers work through in order.</p>
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
         {brands.map((b) => (
           <button key={b.id} onClick={() => setActiveBrandId(b.id)} style={{ display: "flex", alignItems: "center", gap: 12, textAlign: "left", background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: "13px 16px" }}>
@@ -500,8 +500,8 @@ function AdminBrandsLive() {
               <div style={{ height: 32, width: 32, borderRadius: 6, background: navy[50], flexShrink: 0 }} />
             )}
             <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 500, color: navy[900], fontSize: 14 }}>{b.name}</div>
-              <div style={{ fontSize: 12, color: "#8a8074" }}>{b.tagline} · {b.brand_steps.length} step{b.brand_steps.length === 1 ? "" : "s"}</div>
+              <div style={{ fontWeight: 500, color: navy[900], fontSize: 16 }}>{b.name}</div>
+              <div style={{ fontSize: 14, color: "#8a8074" }}>{b.tagline} · {b.brand_steps.length} step{b.brand_steps.length === 1 ? "" : "s"}</div>
             </div>
             <ChevronRight size={16} color="#a39a8d" />
           </button>
@@ -509,16 +509,16 @@ function AdminBrandsLive() {
       </div>
       {showAdd ? (
         <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 16 }}>
-          <input value={newBrandName} onChange={(e) => setNewBrandName(e.target.value)} placeholder="Brand name" style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 10, fontSize: 14, boxSizing: "border-box" }} />
-          <input value={newBrandTagline} onChange={(e) => setNewBrandTagline(e.target.value)} placeholder="Tagline (optional)" style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 14, boxSizing: "border-box" }} />
-          {error && <div style={{ color: "#a3372f", fontSize: 13, marginBottom: 10 }}>{error}</div>}
+          <input value={newBrandName} onChange={(e) => setNewBrandName(e.target.value)} placeholder="Brand name" style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 10, fontSize: 16, boxSizing: "border-box" }} />
+          <input value={newBrandTagline} onChange={(e) => setNewBrandTagline(e.target.value)} placeholder="Tagline (optional)" style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 16, boxSizing: "border-box" }} />
+          {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 10 }}>{error}</div>}
           <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={addBrand} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 13 }}>Add brand</button>
-            <button onClick={() => { setShowAdd(false); setError(""); }} style={{ background: "none", border: "1px solid #ddd5cb", borderRadius: 6, padding: "8px 16px", fontSize: 13 }}>Cancel</button>
+            <button onClick={addBrand} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 15 }}>Add brand</button>
+            <button onClick={() => { setShowAdd(false); setError(""); }} style={{ background: "none", border: "1px solid #ddd5cb", borderRadius: 6, padding: "8px 16px", fontSize: 15 }}>Cancel</button>
           </div>
         </div>
       ) : (
-        <button onClick={() => setShowAdd(true)} style={{ display: "flex", alignItems: "center", gap: 6, background: "#fff", border: "1px solid #ddd5cb", borderRadius: 8, padding: "8px 14px", fontSize: 13, color: navy[900] }}>
+        <button onClick={() => setShowAdd(true)} style={{ display: "flex", alignItems: "center", gap: 6, background: "#fff", border: "1px solid #ddd5cb", borderRadius: 8, padding: "8px 14px", fontSize: 15, color: navy[900] }}>
           <Plus size={14} /> Add brand
         </button>
       )}
@@ -571,32 +571,32 @@ function AdminApprovalsLive() {
     load();
   }
 
-  if (!pending) return <div style={{ color: "#8a8074", fontSize: 14 }}>Loading…</div>;
+  if (!pending) return <div style={{ color: "#8a8074", fontSize: 16 }}>Loading…</div>;
 
   return (
     <div>
-      <h2 style={{ fontSize: 20, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Account approvals</h2>
-      <p style={{ color: "#8a8074", fontSize: 14, margin: "0 0 20px" }}>Pick which brands to grant, then approve or decline.</p>
-      {toast && <div style={{ background: "#eef5e6", color: "#4d6b2c", fontSize: 13, padding: "8px 14px", borderRadius: 8, marginBottom: 14 }}>{toast}</div>}
-      {pending.length === 0 && <div style={{ color: "#8a8074", fontSize: 14 }}>No pending requests.</div>}
+      <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Account approvals</h2>
+      <p style={{ color: "#8a8074", fontSize: 16, margin: "0 0 20px" }}>Pick which brands to grant, then approve or decline.</p>
+      {toast && <div style={{ background: "#eef5e6", color: "#4d6b2c", fontSize: 15, padding: "8px 14px", borderRadius: 8, marginBottom: 14 }}>{toast}</div>}
+      {pending.length === 0 && <div style={{ color: "#8a8074", fontSize: 16 }}>No pending requests.</div>}
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {pending.map((a) => (
           <div key={a.id} style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 16 }}>
             <div style={{ fontWeight: 600, color: navy[900] }}>{a.company_name}</div>
-            <div style={{ fontSize: 13, color: "#8a8074", marginBottom: 10 }}>{a.main_contact_name} · {a.main_contact_email}</div>
+            <div style={{ fontSize: 15, color: "#8a8074", marginBottom: 10 }}>{a.main_contact_name} · {a.main_contact_email}</div>
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
               {brands.map((b) => (
-                <label key={b.id} style={{ display: "flex", alignItems: "center", gap: 6, background: navy[50], border: "1px solid #e4dfd6", borderRadius: 999, padding: "4px 10px", fontSize: 12, cursor: "pointer" }}>
+                <label key={b.id} style={{ display: "flex", alignItems: "center", gap: 6, background: navy[50], border: "1px solid #e4dfd6", borderRadius: 999, padding: "4px 10px", fontSize: 14, cursor: "pointer" }}>
                   <input type="checkbox" checked={(selected[a.id] || new Set(a.requested_brand_ids)).has(b.id)} onChange={() => toggleBrand(a.id, b.id)} />
                   {b.name}
                 </label>
               ))}
             </div>
             <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={() => approve(a)} disabled={busyId === a.id} style={{ display: "flex", alignItems: "center", gap: 5, background: "#4a6b3d", color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 13, fontWeight: 500, opacity: busyId === a.id ? 0.7 : 1 }}>
+              <button onClick={() => approve(a)} disabled={busyId === a.id} style={{ display: "flex", alignItems: "center", gap: 5, background: "#4a6b3d", color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 15, fontWeight: 500, opacity: busyId === a.id ? 0.7 : 1 }}>
                 <Check size={14} /> Approve
               </button>
-              <button onClick={() => decline(a)} disabled={busyId === a.id} style={{ display: "flex", alignItems: "center", gap: 5, background: "none", border: "1px solid #ddd5cb", borderRadius: 8, padding: "8px 14px", fontSize: 13, opacity: busyId === a.id ? 0.7 : 1 }}>
+              <button onClick={() => decline(a)} disabled={busyId === a.id} style={{ display: "flex", alignItems: "center", gap: 5, background: "none", border: "1px solid #ddd5cb", borderRadius: 8, padding: "8px 14px", fontSize: 15, opacity: busyId === a.id ? 0.7 : 1 }}>
                 <X size={14} /> Decline
               </button>
             </div>
@@ -640,8 +640,8 @@ function EditAccountDetails({ account, onSaved }) {
   if (!editing) {
     return (
       <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 4 }}>
-        <h2 style={{ fontSize: 20, fontWeight: 600, color: navy[900], margin: 0 }}>{account.company_name}</h2>
-        <button onClick={() => setEditing(true)} style={{ display: "flex", alignItems: "center", gap: 4, background: "none", color: navy[700], fontSize: 12 }}>
+        <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: 0 }}>{account.company_name}</h2>
+        <button onClick={() => setEditing(true)} style={{ display: "flex", alignItems: "center", gap: 4, background: "none", color: navy[700], fontSize: 14 }}>
           <Pencil size={12} /> Edit
         </button>
       </div>
@@ -650,19 +650,19 @@ function EditAccountDetails({ account, onSaved }) {
 
   return (
     <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 16, marginBottom: 12 }}>
-      <label style={{ fontSize: 13, color: "#6b6155", display: "block", marginBottom: 4 }}>Customer number</label>
-      <input value={customerNumber} onChange={(e) => setCustomerNumber(e.target.value)} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 10, fontSize: 14, boxSizing: "border-box" }} />
-      <label style={{ fontSize: 13, color: "#6b6155", display: "block", marginBottom: 4 }}>Company name</label>
-      <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 10, fontSize: 14, boxSizing: "border-box" }} />
-      <label style={{ fontSize: 13, color: "#6b6155", display: "block", marginBottom: 4 }}>Main contact name</label>
-      <input value={contactName} onChange={(e) => setContactName(e.target.value)} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 10, fontSize: 14, boxSizing: "border-box" }} />
-      <label style={{ fontSize: 13, color: "#6b6155", display: "block", marginBottom: 4 }}>Main contact email</label>
-      <input value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 14, boxSizing: "border-box" }} />
-      <p style={{ fontSize: 12, color: "#a39a8d", margin: "0 0 12px" }}>Changing the email here doesn't change how they sign in — that's still tied to their original login.</p>
-      {error && <div style={{ color: "#a3372f", fontSize: 13, marginBottom: 10 }}>{error}</div>}
+      <label style={{ fontSize: 15, color: "#6b6155", display: "block", marginBottom: 4 }}>Customer number</label>
+      <input value={customerNumber} onChange={(e) => setCustomerNumber(e.target.value)} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 10, fontSize: 16, boxSizing: "border-box" }} />
+      <label style={{ fontSize: 15, color: "#6b6155", display: "block", marginBottom: 4 }}>Company name</label>
+      <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 10, fontSize: 16, boxSizing: "border-box" }} />
+      <label style={{ fontSize: 15, color: "#6b6155", display: "block", marginBottom: 4 }}>Main contact name</label>
+      <input value={contactName} onChange={(e) => setContactName(e.target.value)} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 10, fontSize: 16, boxSizing: "border-box" }} />
+      <label style={{ fontSize: 15, color: "#6b6155", display: "block", marginBottom: 4 }}>Main contact email</label>
+      <input value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 16, boxSizing: "border-box" }} />
+      <p style={{ fontSize: 14, color: "#a39a8d", margin: "0 0 12px" }}>Changing the email here doesn't change how they sign in — that's still tied to their original login.</p>
+      {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 10 }}>{error}</div>}
       <div style={{ display: "flex", gap: 8 }}>
-        <button onClick={save} disabled={saving} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "7px 14px", fontSize: 13, opacity: saving ? 0.7 : 1 }}>{saving ? "Saving…" : "Save"}</button>
-        <button onClick={() => setEditing(false)} style={{ background: "none", border: "1px solid #ddd5cb", borderRadius: 6, padding: "7px 14px", fontSize: 13 }}>Cancel</button>
+        <button onClick={save} disabled={saving} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "7px 14px", fontSize: 15, opacity: saving ? 0.7 : 1 }}>{saving ? "Saving…" : "Save"}</button>
+        <button onClick={() => setEditing(false)} style={{ background: "none", border: "1px solid #ddd5cb", borderRadius: 6, padding: "7px 14px", fontSize: 15 }}>Cancel</button>
       </div>
     </div>
   );
@@ -694,7 +694,7 @@ function EditBrandAccess({ account, brands, onSaved }) {
 
   if (!editing) {
     return (
-      <button onClick={() => { setSelected(new Set(account.approved_brand_ids)); setEditing(true); }} style={{ display: "flex", alignItems: "center", gap: 4, background: "none", color: navy[700], fontSize: 12, marginBottom: 10 }}>
+      <button onClick={() => { setSelected(new Set(account.approved_brand_ids)); setEditing(true); }} style={{ display: "flex", alignItems: "center", gap: 4, background: "none", color: navy[700], fontSize: 14, marginBottom: 10 }}>
         <Pencil size={12} /> Edit brand access
       </button>
     );
@@ -704,16 +704,16 @@ function EditBrandAccess({ account, brands, onSaved }) {
     <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 16, marginBottom: 24 }}>
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 12 }}>
         {brands.map((b) => (
-          <label key={b.id} style={{ display: "flex", alignItems: "center", gap: 6, background: navy[50], border: "1px solid #e4dfd6", borderRadius: 999, padding: "4px 10px", fontSize: 12, cursor: "pointer" }}>
+          <label key={b.id} style={{ display: "flex", alignItems: "center", gap: 6, background: navy[50], border: "1px solid #e4dfd6", borderRadius: 999, padding: "4px 10px", fontSize: 14, cursor: "pointer" }}>
             <input type="checkbox" checked={selected.has(b.id)} onChange={() => toggle(b.id)} />
             {b.name}
           </label>
         ))}
       </div>
-      {error && <div style={{ color: "#a3372f", fontSize: 13, marginBottom: 10 }}>{error}</div>}
+      {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 10 }}>{error}</div>}
       <div style={{ display: "flex", gap: 8 }}>
-        <button onClick={save} disabled={saving} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "7px 14px", fontSize: 13, opacity: saving ? 0.7 : 1 }}>{saving ? "Saving…" : "Save"}</button>
-        <button onClick={() => setEditing(false)} style={{ background: "none", border: "1px solid #ddd5cb", borderRadius: 6, padding: "7px 14px", fontSize: 13 }}>Cancel</button>
+        <button onClick={save} disabled={saving} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "7px 14px", fontSize: 15, opacity: saving ? 0.7 : 1 }}>{saving ? "Saving…" : "Save"}</button>
+        <button onClick={() => setEditing(false)} style={{ background: "none", border: "1px solid #ddd5cb", borderRadius: 6, padding: "7px 14px", fontSize: 15 }}>Cancel</button>
       </div>
     </div>
   );
@@ -736,7 +736,7 @@ function DeleteAccount({ account, onDeleted }) {
 
   if (!confirming) {
     return (
-      <button onClick={() => setConfirming(true)} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "1px solid #f0c9c2", color: "#a3372f", borderRadius: 8, padding: "8px 14px", fontSize: 13 }}>
+      <button onClick={() => setConfirming(true)} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "1px solid #f0c9c2", color: "#a3372f", borderRadius: 8, padding: "8px 14px", fontSize: 15 }}>
         <Trash2 size={14} /> Delete account
       </button>
     );
@@ -744,8 +744,8 @@ function DeleteAccount({ account, onDeleted }) {
 
   return (
     <div style={{ background: "#fbeceb", border: "1px solid #f0c9c2", borderRadius: 10, padding: 16, maxWidth: 420 }}>
-      <div style={{ fontWeight: 600, color: "#a3372f", marginBottom: 6, fontSize: 14 }}>Delete {account.company_name}?</div>
-      <p style={{ fontSize: 13, color: "#6b6155", margin: "0 0 12px" }}>
+      <div style={{ fontWeight: 600, color: "#a3372f", marginBottom: 6, fontSize: 16 }}>Delete {account.company_name}?</div>
+      <p style={{ fontSize: 15, color: "#6b6155", margin: "0 0 12px" }}>
         This permanently removes the account, its staff logins, and all their progress and certificates. This can't be undone.
         Type the company name to confirm.
       </p>
@@ -753,18 +753,18 @@ function DeleteAccount({ account, onDeleted }) {
         value={typed}
         onChange={(e) => setTyped(e.target.value)}
         placeholder={account.company_name}
-        style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 14, boxSizing: "border-box" }}
+        style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 16, boxSizing: "border-box" }}
       />
-      {error && <div style={{ color: "#a3372f", fontSize: 13, marginBottom: 10 }}>{error}</div>}
+      {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 10 }}>{error}</div>}
       <div style={{ display: "flex", gap: 8 }}>
         <button
           onClick={del}
           disabled={busy || typed.trim() !== account.company_name}
-          style={{ background: "#a3372f", color: "#fff", border: "none", borderRadius: 6, padding: "7px 14px", fontSize: 13, opacity: busy || typed.trim() !== account.company_name ? 0.5 : 1 }}
+          style={{ background: "#a3372f", color: "#fff", border: "none", borderRadius: 6, padding: "7px 14px", fontSize: 15, opacity: busy || typed.trim() !== account.company_name ? 0.5 : 1 }}
         >
           {busy ? "Deleting…" : "Permanently delete"}
         </button>
-        <button onClick={() => { setConfirming(false); setTyped(""); setError(""); }} style={{ background: "none", border: "1px solid #ddd5cb", borderRadius: 6, padding: "7px 14px", fontSize: 13 }}>Cancel</button>
+        <button onClick={() => { setConfirming(false); setTyped(""); setError(""); }} style={{ background: "none", border: "1px solid #ddd5cb", borderRadius: 6, padding: "7px 14px", fontSize: 15 }}>Cancel</button>
       </div>
     </div>
   );
@@ -806,14 +806,14 @@ function CustomerProfileLive({ account: initialAccount, brands, onBack, onDelete
 
   return (
     <div>
-      <button onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, color: navy[700], marginBottom: 16, background: "none" }}>
+      <button onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 15, color: navy[700], marginBottom: 16, background: "none" }}>
         <ChevronLeft size={15} /> All customers
       </button>
-      <div style={{ fontSize: 12, color: navy[700], fontWeight: 600, letterSpacing: 0.5, marginBottom: 4 }}>{account.customer_number}</div>
+      <div style={{ fontSize: 14, color: navy[700], fontWeight: 600, letterSpacing: 0.5, marginBottom: 4 }}>{account.customer_number}</div>
       <EditAccountDetails account={account} onSaved={refreshAccount} />
-      <div style={{ fontSize: 13, color: "#8a8074", marginTop: 4, marginBottom: 20 }}>{account.main_contact_name} · {account.main_contact_email}</div>
+      <div style={{ fontSize: 15, color: "#8a8074", marginTop: 4, marginBottom: 20 }}>{account.main_contact_name} · {account.main_contact_email}</div>
 
-      <div style={{ fontSize: 13, fontWeight: 600, color: "#6b6155", marginBottom: 10 }}>Brand access & progress</div>
+      <div style={{ fontSize: 15, fontWeight: 600, color: "#6b6155", marginBottom: 10 }}>Brand access & progress</div>
       <EditBrandAccess account={account} brands={brands} onSaved={refreshAccount} />
       <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
         {account.approved_brand_ids.map((bid) => {
@@ -824,7 +824,7 @@ function CustomerProfileLive({ account: initialAccount, brands, onBack, onDelete
           return (
             <div key={bid} style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: "14px 16px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                <div style={{ fontWeight: 500, color: navy[900], fontSize: 14 }}>{brand.name}</div>
+                <div style={{ fontWeight: 500, color: navy[900], fontSize: 16 }}>{brand.name}</div>
                 <Badge tone={pct === 100 ? "gold" : "navy"}>{p.done} / {p.total} complete</Badge>
               </div>
               <div style={{ height: 6, background: "#e4dfd6", borderRadius: 999, overflow: "hidden" }}>
@@ -833,17 +833,17 @@ function CustomerProfileLive({ account: initialAccount, brands, onBack, onDelete
             </div>
           );
         })}
-        {account.approved_brand_ids.length === 0 && <div style={{ fontSize: 13, color: "#a39a8d" }}>No brand access approved yet.</div>}
+        {account.approved_brand_ids.length === 0 && <div style={{ fontSize: 15, color: "#a39a8d" }}>No brand access approved yet.</div>}
       </div>
 
-      <div style={{ fontSize: 13, fontWeight: 600, color: "#6b6155", marginBottom: 10 }}>Team</div>
+      <div style={{ fontSize: 15, fontWeight: 600, color: "#6b6155", marginBottom: 10 }}>Team</div>
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {(team || []).map((u) => (
           <div key={u.id} style={{ display: "flex", alignItems: "center", gap: 10, background: u.role === "holder" ? navy[50] : "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: "12px 14px" }}>
             <Users size={16} color={navy[700]} />
             <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 500, fontSize: 14, color: navy[900] }}>{u.name}{u.role === "holder" ? " (main account holder)" : ""}</div>
-              <div style={{ fontSize: 12, color: "#8a8074" }}>{u.email}</div>
+              <div style={{ fontWeight: 500, fontSize: 16, color: navy[900] }}>{u.name}{u.role === "holder" ? " (main account holder)" : ""}</div>
+              <div style={{ fontSize: 14, color: "#8a8074" }}>{u.email}</div>
             </div>
           </div>
         ))}
@@ -872,7 +872,7 @@ function AdminCustomersLive() {
   }
   useEffect(() => { load(); }, []);
 
-  if (!accounts) return <div style={{ color: "#8a8074", fontSize: 14 }}>Loading…</div>;
+  if (!accounts) return <div style={{ color: "#8a8074", fontSize: 16 }}>Loading…</div>;
 
   const active = accounts.find((a) => a.id === openId);
   if (active) {
@@ -894,25 +894,25 @@ function AdminCustomersLive() {
 
   return (
     <div>
-      <h2 style={{ fontSize: 20, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Customers</h2>
-      <p style={{ color: "#8a8074", fontSize: 14, margin: "0 0 16px" }}>Every account, organised by salon name and customer number.</p>
+      <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Customers</h2>
+      <p style={{ color: "#8a8074", fontSize: 16, margin: "0 0 16px" }}>Every account, organised by salon name and customer number.</p>
       <div style={{ position: "relative", marginBottom: 16 }}>
         <Search size={15} color="#a39a8d" style={{ position: "absolute", left: 12, top: 11 }} />
-        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search by salon name or customer number…" style={{ width: "100%", padding: "9px 12px 9px 34px", border: "1px solid #ddd5cb", borderRadius: 8, fontSize: 14, boxSizing: "border-box" }} />
+        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search by salon name or customer number…" style={{ width: "100%", padding: "9px 12px 9px 34px", border: "1px solid #ddd5cb", borderRadius: 8, fontSize: 16, boxSizing: "border-box" }} />
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {filtered.map((a) => (
           <button key={a.id} onClick={() => setOpenId(a.id)} style={{ display: "flex", alignItems: "center", gap: 12, textAlign: "left", background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: "13px 16px" }}>
             <Building2 size={18} color={navy[500]} />
             <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 500, color: navy[900], fontSize: 14 }}>{a.company_name}</div>
-              <div style={{ fontSize: 12, color: "#8a8074" }}>{a.customer_number} · {a.approved_brand_ids.length} brand{a.approved_brand_ids.length !== 1 ? "s" : ""}</div>
+              <div style={{ fontWeight: 500, color: navy[900], fontSize: 16 }}>{a.company_name}</div>
+              <div style={{ fontSize: 14, color: "#8a8074" }}>{a.customer_number} · {a.approved_brand_ids.length} brand{a.approved_brand_ids.length !== 1 ? "s" : ""}</div>
             </div>
             <Badge tone={a.status === "approved" ? "gold" : a.status === "declined" ? "muted" : "navy"}>{a.status}</Badge>
             <ChevronRight size={16} color="#a39a8d" />
           </button>
         ))}
-        {filtered.length === 0 && <div style={{ fontSize: 13, color: "#a39a8d" }}>No customers match that search.</div>}
+        {filtered.length === 0 && <div style={{ fontSize: 15, color: "#a39a8d" }}>No customers match that search.</div>}
       </div>
     </div>
   );
@@ -942,7 +942,7 @@ function AdminOverview() {
 
   return (
     <div>
-      <h2 style={{ fontSize: 20, fontWeight: 600, color: navy[900], margin: "0 0 16px" }}>Overview</h2>
+      <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: "0 0 16px" }}>Overview</h2>
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 24 }}>
         <StatCard label="Brands" value={stats?.brands ?? "…"} icon={ShieldCheck} />
         <StatCard label="Total steps" value={stats?.steps ?? "…"} icon={PlayCircle} />
@@ -951,7 +951,7 @@ function AdminOverview() {
       </div>
       <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 12, padding: 18 }}>
         <div style={{ fontWeight: 600, color: navy[900], marginBottom: 10 }}>Live on the real database</div>
-        <div style={{ fontSize: 14, color: "#6b6155", lineHeight: 1.7 }}>
+        <div style={{ fontSize: 16, color: "#6b6155", lineHeight: 1.7 }}>
           Brands, steps, quizzes, approvals and customers here all save for real. Certificate PDFs and Gmail-sent
           approval emails are still placeholders — those come with the Google Drive and email steps of the build.
         </div>
@@ -982,7 +982,7 @@ function AdminAssistantPreview() {
   }
   return (
     <div>
-      <div style={{ background: "#fdf6e3", border: "1px solid #eddfad", color: "#8a6d1f", fontSize: 13, padding: "9px 14px", borderRadius: 8, marginBottom: 18 }}>
+      <div style={{ background: "#fdf6e3", border: "1px solid #eddfad", color: "#8a6d1f", fontSize: 15, padding: "9px 14px", borderRadius: 8, marginBottom: 18 }}>
         Preview only — try instructions here, but nothing gets saved to your live brand list yet. Use "Brands & modules" to actually build a sequence.
       </div>
       <AdminAssistant data={data} patch={patch} />
@@ -1005,7 +1005,7 @@ export default function AdminApp() {
     <div style={{ display: "flex", gap: 24 }}>
       <div style={{ width: 190, flexShrink: 0 }}>
         {tabs.map((t) => (
-          <button key={t.id} onClick={() => setTab(t.id)} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left", padding: "9px 12px", borderRadius: 8, fontSize: 14, marginBottom: 4, background: tab === t.id ? navy[100] : "transparent", color: tab === t.id ? navy[900] : "#6b6155", fontWeight: tab === t.id ? 500 : 400, border: "none" }}>
+          <button key={t.id} onClick={() => setTab(t.id)} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left", padding: "9px 12px", borderRadius: 8, fontSize: 16, marginBottom: 4, background: tab === t.id ? navy[100] : "transparent", color: tab === t.id ? navy[900] : "#6b6155", fontWeight: tab === t.id ? 500 : 400, border: "none" }}>
             <t.icon size={16} /> {t.label}
           </button>
         ))}

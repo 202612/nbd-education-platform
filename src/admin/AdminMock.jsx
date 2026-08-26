@@ -78,72 +78,72 @@ function AdminBrands({ brands, patch }) {
   if (brand) {
     return (
       <div>
-        <button onClick={() => setActiveBrand(null)} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, color: navy[700], marginBottom: 16, background: "none" }}>
+        <button onClick={() => setActiveBrand(null)} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 15, color: navy[700], marginBottom: 16, background: "none" }}>
           <ChevronLeft size={15} /> All brands
         </button>
-        <h2 style={{ fontSize: 20, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>{brand.name}</h2>
-        <p style={{ color: "#8a8074", fontSize: 14, margin: "0 0 20px" }}>{brand.modules.length} module{brand.modules.length !== 1 ? "s" : ""} in this category</p>
+        <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>{brand.name}</h2>
+        <p style={{ color: "#8a8074", fontSize: 16, margin: "0 0 20px" }}>{brand.modules.length} module{brand.modules.length !== 1 ? "s" : ""} in this category</p>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
           {brand.modules.map((m, i) => (
             <div key={m.id} style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
-                <div style={{ fontSize: 13, color: "#8a8074", marginBottom: 2 }}>Video {i + 1}</div>
+                <div style={{ fontSize: 15, color: "#8a8074", marginBottom: 2 }}>Video {i + 1}</div>
                 <div style={{ fontWeight: 500, color: navy[900] }}>{m.title}</div>
-                <div style={{ fontSize: 13, color: "#8a8074", marginTop: 4 }}>{m.duration} · {m.questions.length} quiz question{m.questions.length !== 1 ? "s" : ""}</div>
+                <div style={{ fontSize: 15, color: "#8a8074", marginTop: 4 }}>{m.duration} · {m.questions.length} quiz question{m.questions.length !== 1 ? "s" : ""}</div>
               </div>
               <Badge tone="gold">Live</Badge>
             </div>
           ))}
           {brand.modules.length > 0 && (
-            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#4d6b2c", padding: "10px 16px", background: "#eef5e6", borderRadius: 10 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 15, color: "#4d6b2c", padding: "10px 16px", background: "#eef5e6", borderRadius: 10 }}>
               <Award size={15} /> Certificate issued automatically once all modules are passed
             </div>
           )}
         </div>
 
         {!showAddModule ? (
-          <button onClick={() => setShowAddModule(true)} style={{ display: "flex", alignItems: "center", gap: 6, background: navy[700], color: "#fff", border: "none", borderRadius: 8, padding: "10px 16px", fontSize: 14, fontWeight: 500 }}>
+          <button onClick={() => setShowAddModule(true)} style={{ display: "flex", alignItems: "center", gap: 6, background: navy[700], color: "#fff", border: "none", borderRadius: 8, padding: "10px 16px", fontSize: 16, fontWeight: 500 }}>
             <Plus size={16} /> Add video + quiz
           </button>
         ) : (
           <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 12, padding: 20 }}>
-            <h3 style={{ fontSize: 15, fontWeight: 600, margin: "0 0 14px", color: navy[900] }}>New module</h3>
-            <label style={{ fontSize: 13, color: "#6b6155", display: "block", marginBottom: 4 }}>Video title</label>
-            <input value={videoTitle} onChange={(e) => setVideoTitle(e.target.value)} placeholder="e.g. Applying the bond-repair additive" style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 14 }} />
+            <h3 style={{ fontSize: 17, fontWeight: 600, margin: "0 0 14px", color: navy[900] }}>New module</h3>
+            <label style={{ fontSize: 15, color: "#6b6155", display: "block", marginBottom: 4 }}>Video title</label>
+            <input value={videoTitle} onChange={(e) => setVideoTitle(e.target.value)} placeholder="e.g. Applying the bond-repair additive" style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 16 }} />
 
-            <label style={{ fontSize: 13, color: "#6b6155", display: "block", marginBottom: 4 }}>Video file</label>
-            <label style={{ display: "flex", alignItems: "center", gap: 8, border: "1px dashed #ccc2b3", borderRadius: 6, padding: "10px 12px", marginBottom: 4, fontSize: 13, color: "#8a8074", cursor: "pointer" }}>
+            <label style={{ fontSize: 15, color: "#6b6155", display: "block", marginBottom: 4 }}>Video file</label>
+            <label style={{ display: "flex", alignItems: "center", gap: 8, border: "1px dashed #ccc2b3", borderRadius: 6, padding: "10px 12px", marginBottom: 4, fontSize: 15, color: "#8a8074", cursor: "pointer" }}>
               <Upload size={15} />
               {uploadName || "Choose a video file to upload"}
               <input type="file" accept="video/*" style={{ display: "none" }} onChange={(e) => setUploadName(e.target.files[0]?.name || "")} />
             </label>
-            <div style={{ fontSize: 12, color: "#a39a8d", marginBottom: 12 }}>Shell only — real video storage connects here once the platform is built out.</div>
+            <div style={{ fontSize: 14, color: "#a39a8d", marginBottom: 12 }}>Shell only — real video storage connects here once the platform is built out.</div>
 
-            <label style={{ fontSize: 13, color: "#6b6155", display: "block", marginBottom: 4 }}>Duration</label>
-            <input value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="e.g. 6 min" style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 16, fontSize: 14 }} />
+            <label style={{ fontSize: 15, color: "#6b6155", display: "block", marginBottom: 4 }}>Duration</label>
+            <input value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="e.g. 6 min" style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 16, fontSize: 16 }} />
 
             <div style={{ borderTop: "1px solid #e4dfd6", paddingTop: 14 }}>
-              <div style={{ fontSize: 13, color: "#6b6155", marginBottom: 8 }}>Quiz questions (must pass to unlock the next video)</div>
+              <div style={{ fontSize: 15, color: "#6b6155", marginBottom: 8 }}>Quiz questions (must pass to unlock the next video)</div>
               {questions.map((q, qi) => (
                 <div key={qi} style={{ background: cream, borderRadius: 8, padding: 12, marginBottom: 10 }}>
-                  <input value={q.text} onChange={(e) => { const qs = [...questions]; qs[qi].text = e.target.value; setQuestions(qs); }} placeholder={`Question ${qi + 1}`} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 8, fontSize: 14 }} />
+                  <input value={q.text} onChange={(e) => { const qs = [...questions]; qs[qi].text = e.target.value; setQuestions(qs); }} placeholder={`Question ${qi + 1}`} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 8, fontSize: 16 }} />
                   {q.options.map((opt, oi) => (
                     <div key={oi} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
                       <input type="radio" checked={q.correct === oi} onChange={() => { const qs = [...questions]; qs[qi].correct = oi; setQuestions(qs); }} />
-                      <input value={opt} onChange={(e) => { const qs = [...questions]; qs[qi].options[oi] = e.target.value; setQuestions(qs); }} placeholder={`Answer option ${oi + 1}`} style={{ flex: 1, padding: "6px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 13 }} />
+                      <input value={opt} onChange={(e) => { const qs = [...questions]; qs[qi].options[oi] = e.target.value; setQuestions(qs); }} placeholder={`Answer option ${oi + 1}`} style={{ flex: 1, padding: "6px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 15 }} />
                     </div>
                   ))}
-                  <button onClick={() => { const qs = [...questions]; qs[qi].options.push(""); setQuestions(qs); }} style={{ fontSize: 12, color: navy[700], background: "none" }}>+ Add option</button>
+                  <button onClick={() => { const qs = [...questions]; qs[qi].options.push(""); setQuestions(qs); }} style={{ fontSize: 14, color: navy[700], background: "none" }}>+ Add option</button>
                 </div>
               ))}
-              <button onClick={() => setQuestions([...questions, { text: "", options: ["", ""], correct: 0 }])} style={{ fontSize: 13, color: navy[700], background: "none", marginBottom: 14 }}>+ Add another question</button>
+              <button onClick={() => setQuestions([...questions, { text: "", options: ["", ""], correct: 0 }])} style={{ fontSize: 15, color: navy[700], background: "none", marginBottom: 14 }}>+ Add another question</button>
             </div>
 
-            {error && <div style={{ color: "#a3372f", fontSize: 13, marginBottom: 10 }}>{error}</div>}
+            {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 10 }}>{error}</div>}
             <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={saveModule} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 8, padding: "9px 16px", fontSize: 14, fontWeight: 500 }}>Save module</button>
-              <button onClick={() => { setShowAddModule(false); setError(""); }} style={{ background: "none", border: "1px solid #ddd5cb", borderRadius: 8, padding: "9px 16px", fontSize: 14 }}>Cancel</button>
+              <button onClick={saveModule} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 8, padding: "9px 16px", fontSize: 16, fontWeight: 500 }}>Save module</button>
+              <button onClick={() => { setShowAddModule(false); setError(""); }} style={{ background: "none", border: "1px solid #ddd5cb", borderRadius: 8, padding: "9px 16px", fontSize: 16 }}>Cancel</button>
             </div>
           </div>
         )}
@@ -154,23 +154,23 @@ function AdminBrands({ brands, patch }) {
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-        <h2 style={{ fontSize: 20, fontWeight: 600, color: navy[900], margin: 0 }}>Brands</h2>
-        <button onClick={() => setShowAddBrand(!showAddBrand)} style={{ display: "flex", alignItems: "center", gap: 6, background: navy[700], color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 13, fontWeight: 500 }}>
+        <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: 0 }}>Brands</h2>
+        <button onClick={() => setShowAddBrand(!showAddBrand)} style={{ display: "flex", alignItems: "center", gap: 6, background: navy[700], color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 15, fontWeight: 500 }}>
           <Plus size={15} /> Add brand
         </button>
       </div>
       {showAddBrand && (
         <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-          <input value={newBrandName} onChange={(e) => setNewBrandName(e.target.value)} placeholder="Brand name" style={{ flex: 1, padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 14 }} />
-          <button onClick={addBrand} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "8px 14px", fontSize: 13 }}>Save</button>
+          <input value={newBrandName} onChange={(e) => setNewBrandName(e.target.value)} placeholder="Brand name" style={{ flex: 1, padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 16 }} />
+          <button onClick={addBrand} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "8px 14px", fontSize: 15 }}>Save</button>
         </div>
       )}
-      {error && <div style={{ color: "#a3372f", fontSize: 13, marginBottom: 10 }}>{error}</div>}
+      {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 10 }}>{error}</div>}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
         {brands.map((b) => (
           <button key={b.id} onClick={() => setActiveBrand(b.id)} style={{ textAlign: "left", background: "#fff", border: "1px solid #e4dfd6", borderRadius: 12, padding: 16 }}>
             <div style={{ fontWeight: 600, color: navy[900], marginBottom: 4 }}>{b.name}</div>
-            <div style={{ fontSize: 13, color: "#8a8074", marginBottom: 10 }}>{b.tagline}</div>
+            <div style={{ fontSize: 15, color: "#8a8074", marginBottom: 10 }}>{b.tagline}</div>
             <Badge>{b.modules.length} module{b.modules.length !== 1 ? "s" : ""}</Badge>
           </button>
         ))}
@@ -191,25 +191,25 @@ function AdminApprovals({ requests, patch, brands }) {
   const decided = requests.filter((r) => r.status !== "pending");
   return (
     <div>
-      <h2 style={{ fontSize: 20, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Account approvals</h2>
-      <p style={{ color: "#8a8074", fontSize: 14, margin: "0 0 20px" }}>New customer signups wait here until you approve brand access manually.</p>
-      {toast && <div style={{ background: "#eef5e6", color: "#4d6b2c", fontSize: 13, padding: "8px 14px", borderRadius: 8, marginBottom: 14 }}>{toast}</div>}
-      {pending.length === 0 && <div style={{ color: "#8a8074", fontSize: 14 }}>No pending requests.</div>}
+      <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Account approvals</h2>
+      <p style={{ color: "#8a8074", fontSize: 16, margin: "0 0 20px" }}>New customer signups wait here until you approve brand access manually.</p>
+      {toast && <div style={{ background: "#eef5e6", color: "#4d6b2c", fontSize: 15, padding: "8px 14px", borderRadius: 8, marginBottom: 14 }}>{toast}</div>}
+      {pending.length === 0 && <div style={{ color: "#8a8074", fontSize: 16 }}>No pending requests.</div>}
       <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
         {pending.map((r) => (
           <div key={r.id} style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 16, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
             <div>
               <div style={{ fontWeight: 600, color: navy[900] }}>{r.company}</div>
-              <div style={{ fontSize: 13, color: "#8a8074" }}>{r.contact} · {r.email}</div>
+              <div style={{ fontSize: 15, color: "#8a8074" }}>{r.contact} · {r.email}</div>
               <div style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
                 {r.brands.map((bid) => <Badge key={bid}>{brands.find((b) => b.id === bid)?.name}</Badge>)}
               </div>
             </div>
             <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={() => decide(r.id, "approved")} style={{ display: "flex", alignItems: "center", gap: 5, background: "#4a6b3d", color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 13, fontWeight: 500 }}>
+              <button onClick={() => decide(r.id, "approved")} style={{ display: "flex", alignItems: "center", gap: 5, background: "#4a6b3d", color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 15, fontWeight: 500 }}>
                 <Check size={14} /> Approve
               </button>
-              <button onClick={() => decide(r.id, "declined")} style={{ display: "flex", alignItems: "center", gap: 5, background: "none", border: "1px solid #ddd5cb", borderRadius: 8, padding: "8px 14px", fontSize: 13 }}>
+              <button onClick={() => decide(r.id, "declined")} style={{ display: "flex", alignItems: "center", gap: 5, background: "none", border: "1px solid #ddd5cb", borderRadius: 8, padding: "8px 14px", fontSize: 15 }}>
                 <X size={14} /> Decline
               </button>
             </div>
@@ -218,10 +218,10 @@ function AdminApprovals({ requests, patch, brands }) {
       </div>
       {decided.length > 0 && (
         <>
-          <h3 style={{ fontSize: 14, fontWeight: 600, color: "#6b6155", margin: "0 0 10px" }}>Recently decided</h3>
+          <h3 style={{ fontSize: 16, fontWeight: 600, color: "#6b6155", margin: "0 0 10px" }}>Recently decided</h3>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {decided.map((r) => (
-              <div key={r.id} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "#8a8074", padding: "8px 4px", borderBottom: "1px solid #e4dfd6" }}>
+              <div key={r.id} style={{ display: "flex", justifyContent: "space-between", fontSize: 15, color: "#8a8074", padding: "8px 4px", borderBottom: "1px solid #e4dfd6" }}>
                 <span>{r.company}</span>
                 <Badge tone={r.status === "approved" ? "gold" : "muted"}>{r.status}</Badge>
               </div>
@@ -238,7 +238,7 @@ function AdminDashboard({ brands, requests, customers }) {
   const totalModules = brands.reduce((s, b) => s + b.modules.length, 0);
   return (
     <div>
-      <h2 style={{ fontSize: 20, fontWeight: 600, color: navy[900], margin: "0 0 16px" }}>Overview</h2>
+      <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: "0 0 16px" }}>Overview</h2>
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 24 }}>
         <StatCard label="Brands" value={brands.length} icon={ShieldCheck} />
         <StatCard label="Total modules" value={totalModules} icon={PlayCircle} />
@@ -247,7 +247,7 @@ function AdminDashboard({ brands, requests, customers }) {
       </div>
       <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 12, padding: 18 }}>
         <div style={{ fontWeight: 600, color: navy[900], marginBottom: 10 }}>What's real vs. simulated in this shell</div>
-        <div style={{ fontSize: 14, color: "#6b6155", lineHeight: 1.7 }}>
+        <div style={{ fontSize: 16, color: "#6b6155", lineHeight: 1.7 }}>
           Brands, modules, quizzes, approvals, and learner progress all save for real — reload this page and it's
           still here. Video upload and approval emails are placeholders for now; those need real file storage and
           an email service, which come with the full build.
@@ -345,21 +345,21 @@ export function AdminAssistant({ data, patch }) {
 
   return (
     <div>
-      <h2 style={{ fontSize: 20, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>AI assistant</h2>
-      <p style={{ color: "#8a8074", fontSize: 14, margin: "0 0 16px" }}>Make changes by describing them — it edits brands, modules, quizzes, and approvals for you.</p>
+      <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>AI assistant</h2>
+      <p style={{ color: "#8a8074", fontSize: 16, margin: "0 0 16px" }}>Make changes by describing them — it edits brands, modules, quizzes, and approvals for you.</p>
 
       <div ref={scrollRef} style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 12, padding: 16, height: 320, overflowY: "auto", marginBottom: 12, display: "flex", flexDirection: "column", gap: 10 }}>
         {log.map((entry, i) => (
           <div key={i} style={{
             alignSelf: entry.role === "user" ? "flex-end" : "flex-start",
-            maxWidth: "80%", fontSize: 13.5, lineHeight: 1.5, padding: "9px 13px", borderRadius: 10,
+            maxWidth: "80%", fontSize: 15.5, lineHeight: 1.5, padding: "9px 13px", borderRadius: 10,
             background: entry.role === "user" ? navy[700] : navy[50],
             color: entry.role === "user" ? "#fff" : navy[900],
           }}>
             {entry.text}
           </div>
         ))}
-        {busy && <div style={{ alignSelf: "flex-start", fontSize: 13, color: "#a39a8d", display: "flex", alignItems: "center", gap: 6 }}><Loader2 size={13} className="spin" /> Working on it…</div>}
+        {busy && <div style={{ alignSelf: "flex-start", fontSize: 15, color: "#a39a8d", display: "flex", alignItems: "center", gap: 6 }}><Loader2 size={13} className="spin" /> Working on it…</div>}
       </div>
 
       <div style={{ display: "flex", gap: 8 }}>
@@ -368,13 +368,13 @@ export function AdminAssistant({ data, patch }) {
           onChange={(e) => setInstruction(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") send(); }}
           placeholder="Describe the change you want…"
-          style={{ flex: 1, padding: "10px 12px", border: "1px solid #ddd5cb", borderRadius: 8, fontSize: 14 }}
+          style={{ flex: 1, padding: "10px 12px", border: "1px solid #ddd5cb", borderRadius: 8, fontSize: 16 }}
         />
-        <button onClick={send} disabled={busy} style={{ display: "flex", alignItems: "center", gap: 6, background: navy[700], color: "#fff", border: "none", borderRadius: 8, padding: "10px 16px", fontSize: 14, fontWeight: 500, opacity: busy ? 0.6 : 1 }}>
+        <button onClick={send} disabled={busy} style={{ display: "flex", alignItems: "center", gap: 6, background: navy[700], color: "#fff", border: "none", borderRadius: 8, padding: "10px 16px", fontSize: 16, fontWeight: 500, opacity: busy ? 0.6 : 1 }}>
           <Send size={15} /> Send
         </button>
       </div>
-      <div style={{ fontSize: 11, color: "#a39a8d", marginTop: 8 }}>Preview-only feature — this needs a real backend to run on the live site.</div>
+      <div style={{ fontSize: 13, color: "#a39a8d", marginTop: 8 }}>Preview-only feature — this needs a real backend to run on the live site.</div>
     </div>
   );
 }
@@ -382,20 +382,20 @@ export function AdminAssistant({ data, patch }) {
 function CustomerProfile({ customer, brands, onBack }) {
   return (
     <div>
-      <button onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, color: navy[700], marginBottom: 16, background: "none" }}>
+      <button onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 15, color: navy[700], marginBottom: 16, background: "none" }}>
         <ChevronLeft size={15} /> All customers
       </button>
 
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 20, flexWrap: "wrap", gap: 10 }}>
         <div>
-          <div style={{ fontSize: 12, color: navy[700], fontWeight: 600, letterSpacing: 0.5, marginBottom: 4 }}>{customer.customerNumber}</div>
-          <h2 style={{ fontSize: 20, fontWeight: 600, color: navy[900], margin: 0 }}>{customer.company}</h2>
-          <div style={{ fontSize: 13, color: "#8a8074", marginTop: 4 }}>{customer.mainContact} · {customer.mainEmail}</div>
+          <div style={{ fontSize: 14, color: navy[700], fontWeight: 600, letterSpacing: 0.5, marginBottom: 4 }}>{customer.customerNumber}</div>
+          <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: 0 }}>{customer.company}</h2>
+          <div style={{ fontSize: 15, color: "#8a8074", marginTop: 4 }}>{customer.mainContact} · {customer.mainEmail}</div>
         </div>
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, color: "#6b6155" }}>Brand access & progress</div>
+        <div style={{ fontSize: 15, fontWeight: 600, color: "#6b6155" }}>Brand access & progress</div>
         {customer.approvedBrands.map((bid) => {
           const b = brands.find((x) => x.id === bid);
           if (!b) return null;
@@ -404,7 +404,7 @@ function CustomerProfile({ customer, brands, onBack }) {
           return (
             <div key={bid} style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: "14px 16px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                <div style={{ fontWeight: 500, color: navy[900], fontSize: 14 }}>{b.name}</div>
+                <div style={{ fontWeight: 500, color: navy[900], fontSize: 16 }}>{b.name}</div>
                 <Badge tone={pct === 100 ? "gold" : "navy"}>{done} / {b.modules.length} complete</Badge>
               </div>
               <div style={{ height: 6, background: "#e4dfd6", borderRadius: 999, overflow: "hidden" }}>
@@ -413,25 +413,25 @@ function CustomerProfile({ customer, brands, onBack }) {
             </div>
           );
         })}
-        {customer.approvedBrands.length === 0 && <div style={{ fontSize: 13, color: "#a39a8d" }}>No brand access approved yet.</div>}
+        {customer.approvedBrands.length === 0 && <div style={{ fontSize: 15, color: "#a39a8d" }}>No brand access approved yet.</div>}
       </div>
 
       <div>
-        <div style={{ fontSize: 13, fontWeight: 600, color: "#6b6155", marginBottom: 10 }}>Staff on this account</div>
+        <div style={{ fontSize: 15, fontWeight: 600, color: "#6b6155", marginBottom: 10 }}>Staff on this account</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, background: navy[50], border: "1px solid #e4dfd6", borderRadius: 10, padding: "12px 14px" }}>
             <Users size={16} color={navy[700]} />
-            <div style={{ flex: 1, fontWeight: 500, fontSize: 14, color: navy[900] }}>{customer.mainContact} <span style={{ fontWeight: 400, color: "#8a8074" }}>(main account holder)</span></div>
+            <div style={{ flex: 1, fontWeight: 500, fontSize: 16, color: navy[900] }}>{customer.mainContact} <span style={{ fontWeight: 400, color: "#8a8074" }}>(main account holder)</span></div>
           </div>
           {customer.staff.map((s, i) => (
             <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: "12px 14px" }}>
               <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 500, fontSize: 14, color: navy[900] }}>{s.name}</div>
-                <div style={{ fontSize: 12, color: "#8a8074" }}>{s.email}</div>
+                <div style={{ fontWeight: 500, fontSize: 16, color: navy[900] }}>{s.name}</div>
+                <div style={{ fontSize: 14, color: "#8a8074" }}>{s.email}</div>
               </div>
             </div>
           ))}
-          {customer.staff.length === 0 && <div style={{ fontSize: 13, color: "#a39a8d" }}>No additional staff added yet.</div>}
+          {customer.staff.length === 0 && <div style={{ fontSize: 15, color: "#a39a8d" }}>No additional staff added yet.</div>}
         </div>
       </div>
     </div>
@@ -455,8 +455,8 @@ function AdminCustomers({ customers, brands }) {
 
   return (
     <div>
-      <h2 style={{ fontSize: 20, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Customers</h2>
-      <p style={{ color: "#8a8074", fontSize: 14, margin: "0 0 16px" }}>Every approved account, organised by salon name and customer number.</p>
+      <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Customers</h2>
+      <p style={{ color: "#8a8074", fontSize: 16, margin: "0 0 16px" }}>Every approved account, organised by salon name and customer number.</p>
 
       <div style={{ position: "relative", marginBottom: 16 }}>
         <Search size={15} color="#a39a8d" style={{ position: "absolute", left: 12, top: 11 }} />
@@ -464,7 +464,7 @@ function AdminCustomers({ customers, brands }) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search by salon name or customer number…"
-          style={{ width: "100%", padding: "9px 12px 9px 34px", border: "1px solid #ddd5cb", borderRadius: 8, fontSize: 14 }}
+          style={{ width: "100%", padding: "9px 12px 9px 34px", border: "1px solid #ddd5cb", borderRadius: 8, fontSize: 16 }}
         />
       </div>
 
@@ -473,13 +473,13 @@ function AdminCustomers({ customers, brands }) {
           <button key={c.id} onClick={() => setOpenId(c.id)} style={{ display: "flex", alignItems: "center", gap: 12, textAlign: "left", background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: "13px 16px" }}>
             <Building2 size={18} color={navy[500]} />
             <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 500, color: navy[900], fontSize: 14 }}>{c.company}</div>
-              <div style={{ fontSize: 12, color: "#8a8074" }}>{c.customerNumber} · {c.approvedBrands.length} brand{c.approvedBrands.length !== 1 ? "s" : ""} · {c.staff.length + 1} user{c.staff.length !== 0 ? "s" : ""}</div>
+              <div style={{ fontWeight: 500, color: navy[900], fontSize: 16 }}>{c.company}</div>
+              <div style={{ fontSize: 14, color: "#8a8074" }}>{c.customerNumber} · {c.approvedBrands.length} brand{c.approvedBrands.length !== 1 ? "s" : ""} · {c.staff.length + 1} user{c.staff.length !== 0 ? "s" : ""}</div>
             </div>
             <ChevronRight size={16} color="#a39a8d" />
           </button>
         ))}
-        {filtered.length === 0 && <div style={{ fontSize: 13, color: "#a39a8d" }}>No customers match that search.</div>}
+        {filtered.length === 0 && <div style={{ fontSize: 15, color: "#a39a8d" }}>No customers match that search.</div>}
       </div>
     </div>
   );
@@ -499,9 +499,9 @@ function AdminView({ data, patch }) {
     <div style={{ display: "flex", gap: 24 }}>
       <div style={{ width: 190, flexShrink: 0 }}>
         {tabs.map((t) => (
-          <button key={t.id} onClick={() => setTab(t.id)} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left", padding: "9px 12px", borderRadius: 8, fontSize: 14, marginBottom: 4, background: tab === t.id ? navy[100] : "transparent", color: tab === t.id ? navy[900] : "#6b6155", fontWeight: tab === t.id ? 500 : 400, border: "none" }}>
+          <button key={t.id} onClick={() => setTab(t.id)} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left", padding: "9px 12px", borderRadius: 8, fontSize: 16, marginBottom: 4, background: tab === t.id ? navy[100] : "transparent", color: tab === t.id ? navy[900] : "#6b6155", fontWeight: tab === t.id ? 500 : 400, border: "none" }}>
             <t.icon size={16} /> {t.label}
-            {t.count > 0 && <span style={{ marginLeft: "auto", background: navy[700], color: "#fff", fontSize: 11, borderRadius: 999, padding: "1px 7px" }}>{t.count}</span>}
+            {t.count > 0 && <span style={{ marginLeft: "auto", background: navy[700], color: "#fff", fontSize: 13, borderRadius: 999, padding: "1px 7px" }}>{t.count}</span>}
           </button>
         ))}
       </div>
@@ -523,7 +523,7 @@ export default function AdminMock() {
   }
   return (
     <div>
-      <div style={{ background: "#fdf6e3", border: "1px solid #eddfad", color: "#8a6d1f", fontSize: 13, padding: "9px 14px", borderRadius: 8, marginBottom: 18 }}>
+      <div style={{ background: "#fdf6e3", border: "1px solid #eddfad", color: "#8a6d1f", fontSize: 15, padding: "9px 14px", borderRadius: 8, marginBottom: 18 }}>
         Demo data only for now — brands, modules and approvals reset on reload. Login is real; this screen is wired to the live database in the next build step.
       </div>
       <AdminView data={data} patch={patch} />
