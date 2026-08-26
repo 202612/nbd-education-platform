@@ -140,7 +140,7 @@ declare
   v_brand_id uuid;
   v_type text;
 begin
-  select brand_id, type into v_brand_id, v_type from brand_steps where id = p_step_id;
+  select brand_steps.brand_id, brand_steps.type into v_brand_id, v_type from brand_steps where brand_steps.id = p_step_id;
   if v_brand_id is null then
     raise exception 'Step not found';
   end if;
