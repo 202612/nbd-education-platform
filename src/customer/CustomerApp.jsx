@@ -359,31 +359,68 @@ function CustomerDashboard({ brands, completedStepIds, onStepCompleted, particip
   const [openBrandId, setOpenBrandId] = useState(null);
   const brand = brands.find((b) => b.id === openBrandId);
   if (brand) return <CustomerBrandDetail brand={brand} completedStepIds={completedStepIds} onStepCompleted={onStepCompleted} participantName={participantName} onBack={() => setOpenBrandId(null)} />;
+  const totalSteps = brands.reduce((s, b) => s + b.steps.length, 0);
+  const totalDone = brands.reduce((s, b) => s + b.steps.filter((st) => completedStepIds.has(st.id)).length, 0);
+  const certifiedCount = brands.filter((b) => b.steps.length > 0 && b.steps.every((st) => completedStepIds.has(st.id))).length;
+  const overallPct = totalSteps ? Math.round((totalDone / totalSteps) * 100) : 0;
+
   return (
     <div>
-      <h2 style={{ fontSize: 24, fontWeight: 700, color: navy[900], margin: "0 0 4px" }}>Welcome back{participantName ? `, ${participantName.split(" ")[0]}` : ""}</h2>
-      <p style={{ color: "#8a8074", fontSize: 16, margin: "0 0 20px" }}>Your training, for the brands you stock.</p>
+      <div
+        style={{
+          background: `linear-gradient(120deg, ${navy[700]} 0%, ${navy[500]} 100%)`,
+          borderRadius: 18,
+          padding: "36px 40px",
+          marginBottom: 28,
+          color: "#fff",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: 24,
+        }}
+      >
+        <div>
+          <h2 style={{ fontSize: 28, fontWeight: 700, margin: "0 0 6px" }}>Welcome back{participantName ? `, ${participantName.split(" ")[0]}` : ""}</h2>
+          <p style={{ fontSize: 17, margin: 0, opacity: 0.9 }}>Your training, for the brands you stock.</p>
+        </div>
+        <div style={{ display: "flex", gap: 32 }}>
+          <div>
+            <div style={{ fontSize: 32, fontWeight: 700 }}>{brands.length}</div>
+            <div style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: 1, opacity: 0.85 }}>Brand{brands.length === 1 ? "" : "s"}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 32, fontWeight: 700 }}>{overallPct}%</div>
+            <div style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: 1, opacity: 0.85 }}>Complete</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 32, fontWeight: 700 }}>{certifiedCount}</div>
+            <div style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: 1, opacity: 0.85 }}>Certified</div>
+          </div>
+        </div>
+      </div>
+
       {brands.length === 0 && <div style={{ color: "#8a8074", fontSize: 16 }}>No brands approved on this account yet.</div>}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
         {brands.map((b) => {
           const done = b.steps.filter((s) => completedStepIds.has(s.id)).length;
           const pct = b.steps.length ? Math.round((done / b.steps.length) * 100) : 0;
           return (
-            <button key={b.id} onClick={() => setOpenBrandId(b.id)} style={{ textAlign: "left", background: "#fff", border: "1px solid #e4dfd6", borderRadius: 14, padding: 0, overflow: "hidden" }}>
-              <div style={{ height: 100, display: "flex", alignItems: "center", justifyContent: "center", background: navy[50], padding: 16 }}>
+            <button key={b.id} onClick={() => setOpenBrandId(b.id)} style={{ textAlign: "left", background: "#fff", border: "1px solid #e4dfd6", borderRadius: 16, padding: 0, overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+              <div style={{ height: 140, display: "flex", alignItems: "center", justifyContent: "center", background: navy[50], padding: 24 }}>
                 {b.logo_url ? (
                   <img src={b.logo_url} alt={b.name} style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }} />
                 ) : (
-                  <div style={{ fontWeight: 700, fontSize: 22, color: navy[700] }}>{b.name}</div>
+                  <div style={{ fontWeight: 700, fontSize: 24, color: navy[700] }}>{b.name}</div>
                 )}
               </div>
-              <div style={{ padding: 16 }}>
-                <div style={{ fontWeight: 700, color: navy[900], marginBottom: 4 }}>{b.name}</div>
-                <div style={{ fontSize: 15, color: "#8a8074", marginBottom: 10 }}>{done} of {b.steps.length} steps complete</div>
-                <div style={{ height: 6, background: "#e4dfd6", borderRadius: 999, overflow: "hidden" }}>
+              <div style={{ padding: 20 }}>
+                <div style={{ fontWeight: 700, fontSize: 17, color: navy[900], marginBottom: 6 }}>{b.name}</div>
+                <div style={{ fontSize: 15, color: "#8a8074", marginBottom: 12 }}>{done} of {b.steps.length} steps complete</div>
+                <div style={{ height: 8, background: "#e4dfd6", borderRadius: 999, overflow: "hidden" }}>
                   <div style={{ height: "100%", width: `${pct}%`, background: pct === 100 ? "#4a6b3d" : navy[500] }} />
                 </div>
-                {pct === 100 && b.steps.length > 0 && <div style={{ marginTop: 10 }}><Badge tone="gold">Certified</Badge></div>}
+                {pct === 100 && b.steps.length > 0 && <div style={{ marginTop: 12 }}><Badge tone="gold">Certified</Badge></div>}
               </div>
             </button>
           );

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { supabase } from "./lib/supabaseClient.js";
-import { navy, cream, Logo, WORDMARK_SRC } from "./lib/ui.jsx";
+import { navy, cream, grey, Logo, WORDMARK_SRC } from "./lib/ui.jsx";
 import Login from "./components/Login.jsx";
 import ApplyForAccess from "./components/ApplyForAccess.jsx";
 import AdminApp from "./admin/AdminApp.jsx";
@@ -9,23 +9,25 @@ import CustomerApp from "./customer/CustomerApp.jsx";
 
 function Shell({ children, onSignOut, roleLabel }) {
   return (
-    <div style={{ fontFamily: "'Lato', -apple-system, sans-serif", background: cream, minHeight: 600, padding: 24 }}>
-      <div style={{ maxWidth: 920, margin: "0 auto" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <Logo size={44} />
-            <div style={{ width: 1, height: 32, background: "#e4dfd6" }} />
+    <div style={{ fontFamily: "'Lato', -apple-system, sans-serif", background: cream, minHeight: "100vh" }}>
+      <div style={{ background: "#fff", borderBottom: "1px solid #e4dfd6" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "20px 32px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+            <Logo size={64} />
+            <div style={{ width: 1, height: 48, background: "#e4dfd6" }} />
             <div>
-              <div style={{ fontSize: 13, color: "#a39a8d", letterSpacing: 1, textTransform: "uppercase" }}>{roleLabel}</div>
-              <img src={WORDMARK_SRC} alt="National Beauty Distribution Ireland" style={{ height: 22, marginTop: 4 }} />
+              <img src={WORDMARK_SRC} alt="National Beauty Distribution Ireland" style={{ height: 44, display: "block" }} />
+              <div style={{ fontSize: 13, color: grey, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 700, marginTop: 6 }}>{roleLabel}</div>
             </div>
           </div>
           {onSignOut && (
-            <button onClick={onSignOut} style={{ background: "none", border: "1px solid #e4dfd6", borderRadius: 999, padding: "7px 16px", fontSize: 15, color: "#6b6155" }}>
+            <button onClick={onSignOut} style={{ background: "none", border: `1px solid ${navy[700]}`, color: navy[700], borderRadius: 999, padding: "9px 20px", fontSize: 15, fontWeight: 700 }}>
               Sign out
             </button>
           )}
         </div>
+      </div>
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px" }}>
         {children}
       </div>
     </div>
