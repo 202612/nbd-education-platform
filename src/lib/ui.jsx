@@ -40,8 +40,8 @@ export function AuthHero({ eyebrow, headline, subtitle }) {
         textAlign: "center",
       }}
     >
-      <div style={{ display: "flex", justifyContent: "center", marginBottom: 28 }}>
-        <img src={WORDMARK_SRC} alt="National Beauty Distribution" style={{ height: 30, filter: "brightness(0) invert(1)" }} />
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: 40 }}>
+        <img src={WORDMARK_SRC} alt="National Beauty Distribution" style={{ height: "clamp(64px, 11vw, 120px)", filter: "brightness(0) invert(1)" }} />
       </div>
       <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: navy[500], marginBottom: 18 }}>
         {eyebrow}
