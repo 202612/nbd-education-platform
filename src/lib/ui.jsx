@@ -26,36 +26,6 @@ export function StatCard({ label, value, icon: Icon }) {
   );
 }
 
-// Crops the icon mark out of the full wordmark image using plain CSS
-// positioning rather than a separately-cropped file — the mark sits inside
-// a known region of WORDMARK_SRC (2134x834 source), so it's scaled up and
-// shifted into a fixed, clipped box to isolate just that region.
-export function Logo({ size = 40 }) {
-  const sourceW = 2134;
-  const sourceH = 834;
-  const cropW = 450;
-  const cropH = 450;
-  const cropLeft = 727;
-  const cropTop = 190;
-  const scale = size / cropH;
-  return (
-    <div style={{ height: size, width: size, overflow: "hidden", position: "relative", flexShrink: 0 }}>
-      <img
-        src={WORDMARK_SRC}
-        alt="National Beauty Distribution"
-        style={{
-          position: "absolute",
-          height: sourceH * scale,
-          width: sourceW * scale,
-          left: -cropLeft * scale,
-          top: -cropTop * scale,
-          maxWidth: "none",
-        }}
-      />
-    </div>
-  );
-}
-
 export function AuthHero({ eyebrow, headline, subtitle }) {
   return (
     <div
@@ -66,7 +36,9 @@ export function AuthHero({ eyebrow, headline, subtitle }) {
       }}
     >
       <div style={{ display: "flex", justifyContent: "center", marginBottom: 40 }}>
-        <img src={WORDMARK_SRC} alt="National Beauty Distribution" style={{ height: "clamp(64px, 11vw, 120px)", filter: "brightness(0) invert(1)" }} />
+        <div style={{ background: "#fff", borderRadius: 16, padding: "clamp(14px, 2vw, 22px) clamp(24px, 4vw, 40px)", display: "inline-flex" }}>
+          <img src={WORDMARK_SRC} alt="National Beauty Distribution" style={{ height: "clamp(56px, 9vw, 100px)", display: "block" }} />
+        </div>
       </div>
       <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: navy[500], marginBottom: 18 }}>
         {eyebrow}

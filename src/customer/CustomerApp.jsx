@@ -5,7 +5,7 @@ import {
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { supabase } from "../lib/supabaseClient.js";
-import { navy, gold, Badge, Logo } from "../lib/ui.jsx";
+import { navy, gold, Badge, WORDMARK_SRC } from "../lib/ui.jsx";
 
 function formatDate(isoString) {
   if (!isoString) return "";
@@ -268,7 +268,7 @@ function CertificateStep({ step, brand, participantName, onComplete, onBack }) {
               has successfully completed the <strong>{brand.name}</strong> training programme
             </div>
             <div style={{ fontSize: 15, color: "#a39a8d", marginBottom: 16 }}>{formatDate(issuedAt)}</div>
-            <Logo size={28} />
+            <img src={WORDMARK_SRC} alt="National Beauty Distribution" style={{ height: 22 }} />
           </div>
 
           <div style={{ textAlign: "center" }}>
