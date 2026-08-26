@@ -9,7 +9,7 @@ import CustomerApp from "./customer/CustomerApp.jsx";
 
 function Shell({ children, onSignOut, roleLabel }) {
   return (
-    <div style={{ fontFamily: "-apple-system, sans-serif", background: cream, minHeight: 600, padding: 24 }}>
+    <div style={{ fontFamily: "'Lato', -apple-system, sans-serif", background: cream, minHeight: 600, padding: 24 }}>
       <div style={{ maxWidth: 920, margin: "0 auto" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24, flexWrap: "wrap", gap: 12 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>

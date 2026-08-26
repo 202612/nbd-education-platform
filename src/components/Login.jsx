@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
-import { navy, Logo } from "../lib/ui.jsx";
+import { navy, cream, grey, AuthHero } from "../lib/ui.jsx";
 
 export default function Login({ onSwitchToApply }) {
   const [mode, setMode] = useState("signin"); // "signin" | "signup"
@@ -40,65 +40,70 @@ export default function Login({ onSwitchToApply }) {
   }
 
   return (
-    <div style={{ maxWidth: 380, margin: "80px auto", padding: "0 16px" }}>
-      <div style={{ display: "flex", justifyContent: "center", marginBottom: 28 }}>
-        <Logo size={48} />
+    <div style={{ fontFamily: "'Lato', -apple-system, sans-serif", background: cream, minHeight: "100vh" }}>
+      <AuthHero
+        eyebrow="National Beauty Distribution"
+        headline="Education Portal"
+        subtitle="Sign in to continue your brand training and certification"
+      />
+
+      <div style={{ maxWidth: 400, margin: "0 auto", padding: "48px 20px 80px" }}>
+        <h2 style={{ fontSize: 22, fontWeight: 700, color: navy[900], margin: "0 0 4px", textAlign: "center" }}>
+          {mode === "signin" ? "Sign in" : "Create your password"}
+        </h2>
+        <p style={{ color: grey, fontSize: 14, margin: "0 0 28px", textAlign: "center" }}>
+          {mode === "signin"
+            ? "For approved account holders, staff, and admins."
+            : "First time here? Use the email your admin set up for you and choose a password."}
+        </p>
+
+        <form onSubmit={submit}>
+          <label style={{ fontSize: 13, color: grey, display: "block", marginBottom: 4, fontWeight: 700 }}>Email</label>
+          <input
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            style={{ width: "100%", padding: "11px 12px", border: "1px solid #d8d8d8", borderRadius: 6, marginBottom: 14, fontSize: 15, boxSizing: "border-box", fontFamily: "inherit" }}
+          />
+          <label style={{ fontSize: 13, color: grey, display: "block", marginBottom: 4, fontWeight: 700 }}>Password</label>
+          <input
+            type="password"
+            autoComplete={mode === "signin" ? "current-password" : "new-password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            style={{ width: "100%", padding: "11px 12px", border: "1px solid #d8d8d8", borderRadius: 6, marginBottom: 20, fontSize: 15, boxSizing: "border-box", fontFamily: "inherit" }}
+          />
+
+          {error && <div style={{ color: "#a3372f", fontSize: 13, marginBottom: 16 }}>{error}</div>}
+          {notice && <div style={{ color: navy[700], fontSize: 13, marginBottom: 16 }}>{notice}</div>}
+
+          <button
+            type="submit"
+            disabled={busy}
+            style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "13px 16px", fontSize: 15, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", opacity: busy ? 0.7 : 1, fontFamily: "inherit" }}
+          >
+            {busy && <Loader2 size={14} className="spin" />}
+            {mode === "signin" ? "Sign in" : "Create password & continue"}
+          </button>
+        </form>
+
+        <button
+          onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setError(""); setNotice(""); }}
+          style={{ display: "block", width: "100%", textAlign: "center", background: "none", border: "none", color: navy[700], fontSize: 14, marginTop: 20, fontFamily: "inherit" }}
+        >
+          {mode === "signin" ? "First time signing in? Create your password" : "Already have a password? Sign in"}
+        </button>
+
+        {mode === "signin" && (
+          <button
+            onClick={onSwitchToApply}
+            style={{ display: "block", width: "100%", textAlign: "center", background: "none", border: "none", color: grey, fontSize: 13, marginTop: 10, fontFamily: "inherit" }}
+          >
+            New customer? Request training access
+          </button>
+        )}
       </div>
-      <h2 style={{ fontSize: 20, fontWeight: 600, color: navy[900], margin: "0 0 4px", textAlign: "center" }}>
-        {mode === "signin" ? "Sign in" : "Create your password"}
-      </h2>
-      <p style={{ color: "#8a8074", fontSize: 13, margin: "0 0 24px", textAlign: "center" }}>
-        {mode === "signin"
-          ? "For approved account holders, staff, and admins."
-          : "First time here? Use the email your admin set up for you and choose a password."}
-      </p>
-
-      <form onSubmit={submit}>
-        <label style={{ fontSize: 13, color: "#6b6155", display: "block", marginBottom: 4 }}>Email</label>
-        <input
-          type="email"
-          autoComplete="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          style={{ width: "100%", padding: "9px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 14, boxSizing: "border-box" }}
-        />
-        <label style={{ fontSize: 13, color: "#6b6155", display: "block", marginBottom: 4 }}>Password</label>
-        <input
-          type="password"
-          autoComplete={mode === "signin" ? "current-password" : "new-password"}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          style={{ width: "100%", padding: "9px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 18, fontSize: 14, boxSizing: "border-box" }}
-        />
-
-        {error && <div style={{ color: "#a3372f", fontSize: 13, marginBottom: 14 }}>{error}</div>}
-        {notice && <div style={{ color: "#4d6b2c", fontSize: 13, marginBottom: 14 }}>{notice}</div>}
-
-        <button
-          type="submit"
-          disabled={busy}
-          style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: navy[700], color: "#fff", border: "none", borderRadius: 8, padding: "11px 16px", fontSize: 14, fontWeight: 500, opacity: busy ? 0.7 : 1 }}
-        >
-          {busy && <Loader2 size={14} className="spin" />}
-          {mode === "signin" ? "Sign in" : "Create password & continue"}
-        </button>
-      </form>
-
-      <button
-        onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setError(""); setNotice(""); }}
-        style={{ display: "block", width: "100%", textAlign: "center", background: "none", border: "none", color: navy[700], fontSize: 13, marginTop: 16 }}
-      >
-        {mode === "signin" ? "First time signing in? Create your password" : "Already have a password? Sign in"}
-      </button>
-
-      {mode === "signin" && (
-        <button
-          onClick={onSwitchToApply}
-          style={{ display: "block", width: "100%", textAlign: "center", background: "none", border: "none", color: "#8a8074", fontSize: 13, marginTop: 10 }}
-        >
-          New customer? Request training access
-        </button>
-      )}
 
       <style>{`.spin { animation: spin 1s linear infinite; } @keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
