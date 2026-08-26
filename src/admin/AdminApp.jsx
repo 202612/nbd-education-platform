@@ -470,7 +470,7 @@ function AdminBrandsLive() {
   const [error, setError] = useState("");
 
   async function load() {
-    const { data } = await supabase.from("brands").select("id,name,tagline,brand_steps(id)").order("name");
+    const { data } = await supabase.from("brands").select("id,name,tagline,logo_url,brand_steps(id)").order("name");
     setBrands(data || []);
   }
   useEffect(() => { load(); }, []);
@@ -494,6 +494,11 @@ function AdminBrandsLive() {
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
         {brands.map((b) => (
           <button key={b.id} onClick={() => setActiveBrandId(b.id)} style={{ display: "flex", alignItems: "center", gap: 12, textAlign: "left", background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: "13px 16px" }}>
+            {b.logo_url ? (
+              <img src={b.logo_url} alt={b.name} style={{ height: 32, width: 32, objectFit: "contain", borderRadius: 6, flexShrink: 0 }} />
+            ) : (
+              <div style={{ height: 32, width: 32, borderRadius: 6, background: navy[50], flexShrink: 0 }} />
+            )}
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 500, color: navy[900], fontSize: 14 }}>{b.name}</div>
               <div style={{ fontSize: 12, color: "#8a8074" }}>{b.tagline} · {b.brand_steps.length} step{b.brand_steps.length === 1 ? "" : "s"}</div>

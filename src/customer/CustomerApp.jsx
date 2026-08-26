@@ -332,7 +332,14 @@ function CustomerBrandDetail({ brand, completedStepIds, onStepCompleted, partici
       <button onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 13, color: navy[700], marginBottom: 14, background: "none" }}>
         <ChevronLeft size={15} /> All brands
       </button>
-      <h3 style={{ fontSize: 18, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>{brand.name}</h3>
+      <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 6 }}>
+        {brand.logo_url && (
+          <div style={{ height: 56, width: 56, flexShrink: 0, borderRadius: 10, background: navy[50], display: "flex", alignItems: "center", justifyContent: "center", padding: 8 }}>
+            <img src={brand.logo_url} alt={brand.name} style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }} />
+          </div>
+        )}
+        <h3 style={{ fontSize: 22, fontWeight: 700, color: navy[900], margin: 0 }}>{brand.name}</h3>
+      </div>
       <p style={{ color: "#8a8074", fontSize: 14, margin: "0 0 18px" }}>{doneCount} of {steps.length} steps complete</p>
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {steps.map((s, i) => {
@@ -354,21 +361,30 @@ function CustomerDashboard({ brands, completedStepIds, onStepCompleted, particip
   if (brand) return <CustomerBrandDetail brand={brand} completedStepIds={completedStepIds} onStepCompleted={onStepCompleted} participantName={participantName} onBack={() => setOpenBrandId(null)} />;
   return (
     <div>
-      <h2 style={{ fontSize: 20, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Your training</h2>
-      <p style={{ color: "#8a8074", fontSize: 14, margin: "0 0 20px" }}>Only the brands you stock are shown here.</p>
+      <h2 style={{ fontSize: 22, fontWeight: 700, color: navy[900], margin: "0 0 4px" }}>Welcome back{participantName ? `, ${participantName.split(" ")[0]}` : ""}</h2>
+      <p style={{ color: "#8a8074", fontSize: 14, margin: "0 0 20px" }}>Your training, for the brands you stock.</p>
       {brands.length === 0 && <div style={{ color: "#8a8074", fontSize: 14 }}>No brands approved on this account yet.</div>}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
         {brands.map((b) => {
           const done = b.steps.filter((s) => completedStepIds.has(s.id)).length;
           const pct = b.steps.length ? Math.round((done / b.steps.length) * 100) : 0;
           return (
-            <button key={b.id} onClick={() => setOpenBrandId(b.id)} style={{ textAlign: "left", background: "#fff", border: "1px solid #e4dfd6", borderRadius: 12, padding: 16 }}>
-              <div style={{ fontWeight: 600, color: navy[900], marginBottom: 4 }}>{b.name}</div>
-              <div style={{ fontSize: 13, color: "#8a8074", marginBottom: 10 }}>{done} of {b.steps.length} steps complete</div>
-              <div style={{ height: 6, background: "#e4dfd6", borderRadius: 999, overflow: "hidden" }}>
-                <div style={{ height: "100%", width: `${pct}%`, background: pct === 100 ? "#4a6b3d" : navy[500] }} />
+            <button key={b.id} onClick={() => setOpenBrandId(b.id)} style={{ textAlign: "left", background: "#fff", border: "1px solid #e4dfd6", borderRadius: 14, padding: 0, overflow: "hidden" }}>
+              <div style={{ height: 100, display: "flex", alignItems: "center", justifyContent: "center", background: navy[50], padding: 16 }}>
+                {b.logo_url ? (
+                  <img src={b.logo_url} alt={b.name} style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }} />
+                ) : (
+                  <div style={{ fontWeight: 700, fontSize: 20, color: navy[700] }}>{b.name}</div>
+                )}
               </div>
-              {pct === 100 && b.steps.length > 0 && <div style={{ marginTop: 10 }}><Badge tone="gold">Certified</Badge></div>}
+              <div style={{ padding: 16 }}>
+                <div style={{ fontWeight: 700, color: navy[900], marginBottom: 4 }}>{b.name}</div>
+                <div style={{ fontSize: 13, color: "#8a8074", marginBottom: 10 }}>{done} of {b.steps.length} steps complete</div>
+                <div style={{ height: 6, background: "#e4dfd6", borderRadius: 999, overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${pct}%`, background: pct === 100 ? "#4a6b3d" : navy[500] }} />
+                </div>
+                {pct === 100 && b.steps.length > 0 && <div style={{ marginTop: 10 }}><Badge tone="gold">Certified</Badge></div>}
+              </div>
             </button>
           );
         })}
