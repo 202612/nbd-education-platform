@@ -209,12 +209,36 @@ function VideoStep({ step, onComplete, onBack }) {
 
 // ================= CERTIFICATE STEP =================
 
+// Waits for any <img> inside el to finish loading, so html2canvas doesn't
+// snapshot the certificate before the brand logo / wordmark have painted.
+async function waitForImages(el) {
+  const imgs = Array.from(el.querySelectorAll("img"));
+  await Promise.all(
+    imgs.map((img) =>
+      img.complete && img.naturalWidth > 0
+        ? Promise.resolve()
+        : new Promise((res) => { img.onload = res; img.onerror = res; })
+    )
+  );
+}
+
+async function buildCertificatePdf(el) {
+  await waitForImages(el);
+  const canvas = await html2canvas(el, { scale: 2, backgroundColor: "#ffffff", useCORS: true });
+  const imgData = canvas.toDataURL("image/png");
+  const pdf = new jsPDF({ orientation: "landscape", unit: "px", format: [canvas.width, canvas.height] });
+  pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
+  return pdf;
+}
+
 function CertificateStep({ step, brand, participantName, onComplete, onBack }) {
   const [claiming, setClaiming] = useState(true);
   const [issuedAt, setIssuedAt] = useState(null);
   const [error, setError] = useState("");
   const [downloading, setDownloading] = useState(false);
   const certRef = useRef(null);
+  const claimRef = useRef(null);
+  const savedCopyRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -222,6 +246,7 @@ function CertificateStep({ step, brand, participantName, onComplete, onBack }) {
       if (cancelled) return;
       setClaiming(false);
       if (rpcError) { setError(rpcError.message); return; }
+      claimRef.current = data;
       setIssuedAt(data.issued_at);
       onComplete();
     });
@@ -229,13 +254,38 @@ function CertificateStep({ step, brand, participantName, onComplete, onBack }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step.id]);
 
+  // Once the certificate has rendered, quietly upload a copy to Storage so
+  // there's a server-side record even if the learner never hits Download.
+  useEffect(() => {
+    if (claiming || error || !issuedAt || savedCopyRef.current) return;
+    const claim = claimRef.current;
+    if (!claim || claim.pdf_stored) { savedCopyRef.current = true; return; }
+    savedCopyRef.current = true;
+    let cancelled = false;
+    (async () => {
+      try {
+        // let the layout settle for one frame before snapshotting
+        await new Promise((r) => setTimeout(r, 150));
+        if (cancelled || !certRef.current) return;
+        const pdf = await buildCertificatePdf(certRef.current);
+        const path = `${claim.user_id}/${claim.brand_id}.pdf`;
+        const { error: upErr } = await supabase.storage
+          .from("certificates")
+          .upload(path, pdf.output("blob"), { contentType: "application/pdf", upsert: true });
+        if (upErr || cancelled) return;
+        await supabase.rpc("record_certificate_pdf", { p_brand_id: claim.brand_id, p_path: path });
+      } catch {
+        // A failed background copy shouldn't disrupt the learner — they can
+        // still download it themselves, and the row stays flagged as not stored.
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [claiming, error, issuedAt]);
+
   async function downloadPdf() {
     if (!certRef.current) return;
     setDownloading(true);
-    const canvas = await html2canvas(certRef.current, { scale: 2, backgroundColor: "#ffffff" });
-    const imgData = canvas.toDataURL("image/png");
-    const pdf = new jsPDF({ orientation: "landscape", unit: "px", format: [canvas.width, canvas.height] });
-    pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
+    const pdf = await buildCertificatePdf(certRef.current);
     pdf.save(`${brand.name.replace(/\s+/g, "-")}-certificate-${participantName.replace(/\s+/g, "-")}.pdf`);
     setDownloading(false);
   }

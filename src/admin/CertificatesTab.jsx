@@ -28,13 +28,14 @@ export default function CertificatesTab() {
     (async () => {
       const { data, error: err } = await supabase
         .from("certificates")
-        .select("id, issued_at, brands(name), app_users(name, email, accounts(company_name, customer_number))")
+        .select("id, issued_at, pdf_path, brands(name), app_users(name, email, accounts(company_name, customer_number))")
         .order("issued_at", { ascending: false });
       if (cancelled) return;
       if (err) { setError(err.message); setRows([]); return; }
       setRows((data || []).map((c) => ({
         id: c.id,
         issuedAt: c.issued_at,
+        pdfPath: c.pdf_path || null,
         learner: c.app_users?.name || "—",
         email: c.app_users?.email || "",
         salon: c.app_users?.accounts?.company_name || "—",
@@ -53,6 +54,17 @@ export default function CertificatesTab() {
       [r.learner, r.email, r.salon, r.customerNumber, r.brand].some((v) => v.toLowerCase().includes(q))
     );
   }, [rows, query]);
+
+  const [opening, setOpening] = useState(null);
+  async function openStoredPdf(row) {
+    setOpening(row.id);
+    const { data, error: err } = await supabase.storage
+      .from("certificates")
+      .createSignedUrl(row.pdfPath, 60);
+    setOpening(null);
+    if (err || !data?.signedUrl) { setError(err?.message || "Couldn't open that file"); return; }
+    window.open(data.signedUrl, "_blank", "noopener");
+  }
 
   function downloadCsv() {
     const blob = new Blob([toCsv(filtered)], { type: "text/csv;charset=utf-8;" });
@@ -115,6 +127,7 @@ export default function CertificatesTab() {
                     <th style={th}>Salon</th>
                     <th style={th}>Brand</th>
                     <th style={th}>Date issued</th>
+                    <th style={th}>Stored copy</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -130,6 +143,15 @@ export default function CertificatesTab() {
                       </td>
                       <td style={td}>{r.brand}</td>
                       <td style={{ ...td, whiteSpace: "nowrap" }}>{fmtDate(r.issuedAt)}</td>
+                      <td style={td}>
+                        {r.pdfPath ? (
+                          <button className="nbd-btn nbd-btn--outline nbd-btn--sm" onClick={() => openStoredPdf(r)} disabled={opening === r.id}>
+                            <Download size={13} /> {opening === r.id ? "Opening…" : "PDF"}
+                          </button>
+                        ) : (
+                          <span style={{ fontSize: 12.5, color: "#a39a8d" }}>Not stored</span>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
