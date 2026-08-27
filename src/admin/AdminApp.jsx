@@ -7,6 +7,7 @@ import { supabase } from "../lib/supabaseClient.js";
 import { navy, Badge, StatCard } from "../lib/ui.jsx";
 import { AdminAssistant } from "./AdminMock.jsx";
 import DesignTab from "./DesignTab.jsx";
+import CertificatesTab from "./CertificatesTab.jsx";
 
 // ================= BRANDS & STEPS =================
 
@@ -60,6 +61,9 @@ const ADMIN_BTN_CSS = `
 .nbd-actions button:hover:not(:disabled) { background: #f2f7e9; color: #5e8f1e; }
 .nbd-actions button:disabled { opacity: .3; cursor: default; }
 .nbd-actions button.nbd-danger:hover:not(:disabled) { background: #fdecea; color: #c0392b; }
+
+.spin { animation: nbd-spin 1s linear infinite; }
+@keyframes nbd-spin { to { transform: rotate(360deg); } }
 `;
 
 function AddQuizForm({ initial, submitLabel, onCancel, onSave }) {
@@ -1049,6 +1053,7 @@ export default function AdminApp() {
     { id: "assistant", label: "AI assistant", icon: Sparkles },
     { id: "brands", label: "Brands & modules", icon: PlayCircle },
     { id: "approvals", label: "Approvals", icon: Clock },
+    { id: "certificates", label: "Certificates", icon: Award },
     { id: "design", label: "Design", icon: Palette },
   ];
   return (
@@ -1067,6 +1072,7 @@ export default function AdminApp() {
         {tab === "assistant" && <AdminAssistantPreview />}
         {tab === "brands" && <AdminBrandsLive />}
         {tab === "approvals" && <AdminApprovalsLive />}
+        {tab === "certificates" && <CertificatesTab />}
         {tab === "design" && <DesignTab />}
       </div>
     </div>
