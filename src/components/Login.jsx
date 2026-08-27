@@ -41,11 +41,7 @@ export default function Login({ onSwitchToApply }) {
 
   return (
     <div style={{ fontFamily: "'Lato', -apple-system, sans-serif", background: cream, minHeight: "100vh" }}>
-      <AuthHero
-        eyebrow="National Beauty Distribution"
-        headline="Education Portal"
-        subtitle="Sign in to continue your brand training and certification"
-      />
+      <AuthHero />
 
       <div style={{ maxWidth: 400, margin: "0 auto", padding: "48px 20px 80px" }}>
         <h2 style={{ fontSize: 24, fontWeight: 700, color: navy[900], margin: "0 0 4px", textAlign: "center" }}>

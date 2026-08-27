@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
 import {
   ShieldCheck, Building2, Clock, PlayCircle, CheckCircle2, Award, Plus, Trash2, Check, X,
-  ChevronRight, ChevronLeft, ArrowUp, ArrowDown, Search, Loader2, Sparkles, Users, Image as ImageIcon, Pencil,
+  ChevronRight, ChevronLeft, ArrowUp, ArrowDown, Search, Loader2, Sparkles, Users, Image as ImageIcon, Pencil, Palette,
 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
 import { navy, Badge, StatCard } from "../lib/ui.jsx";
 import { AdminAssistant } from "./AdminMock.jsx";
+import DesignTab from "./DesignTab.jsx";
 
 // ================= BRANDS & STEPS =================
 
@@ -1000,6 +1001,7 @@ export default function AdminApp() {
     { id: "assistant", label: "AI assistant", icon: Sparkles },
     { id: "brands", label: "Brands & modules", icon: PlayCircle },
     { id: "approvals", label: "Approvals", icon: Clock },
+    { id: "design", label: "Design", icon: Palette },
   ];
   return (
     <div style={{ display: "flex", gap: 24 }}>
@@ -1016,6 +1018,7 @@ export default function AdminApp() {
         {tab === "assistant" && <AdminAssistantPreview />}
         {tab === "brands" && <AdminBrandsLive />}
         {tab === "approvals" && <AdminApprovalsLive />}
+        {tab === "design" && <DesignTab />}
       </div>
     </div>
   );

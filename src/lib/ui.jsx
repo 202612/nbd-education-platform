@@ -1,3 +1,6 @@
+import React, { useEffect, useState } from "react";
+import { supabase } from "./supabaseClient.js";
+
 // Shared brand tokens and small presentational atoms, ported from nbd_education_platform.jsx (the shell prototype).
 // Real NBD brand colors: #a8cb63 (light green), #5e8f1e (deep green), #666666 (grey).
 export const navy = { 50: "#f2f7e9", 100: "#e3edc8", 300: "#c3dd8f", 500: "#a8cb63", 700: "#5e8f1e", 900: "#333333" };
@@ -31,47 +34,114 @@ export function Logo({ size = 40 }) {
   return <img src={MARK_SRC} alt="National Beauty Distribution" style={{ height: size, width: "auto", display: "block", flexShrink: 0 }} />;
 }
 
-export function AuthHero({ eyebrow, headline, subtitle }) {
+const DEFAULT_SITE_SETTINGS = {
+  logo_url: null,
+  logo_position_x: 50,
+  logo_position_y: 50,
+  logo_zoom: 1,
+  background_url: null,
+  background_position_x: 50,
+  background_position_y: 50,
+  background_zoom: 1,
+  eyebrow: "National Beauty Distribution",
+  headline: "Education Portal",
+  subtitle: "Training, certification and brand education for our stockists",
+};
+
+export function useSiteSettings() {
+  const [settings, setSettings] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  async function reload() {
+    const { data } = await supabase.from("site_settings").select("*").eq("id", 1).single();
+    setSettings(data || DEFAULT_SITE_SETTINGS);
+    setLoading(false);
+  }
+
+  useEffect(() => { reload(); }, []);
+
+  return { settings: settings || DEFAULT_SITE_SETTINGS, loading, reload };
+}
+
+// The hero banner shown at the top of the sign-in and request-access
+// screens. Everything here (logo, background, heading text) is editable
+// from Admin → Design — the form section below it is separate and fixed.
+export function AuthHero() {
+  const { settings } = useSiteSettings();
+
+  const backgroundStyle = settings.background_url
+    ? {
+        backgroundImage: `url(${settings.background_url})`,
+        backgroundSize: `${settings.background_zoom * 100}%`,
+        backgroundPosition: `${settings.background_position_x}% ${settings.background_position_y}%`,
+        backgroundRepeat: "no-repeat",
+      }
+    : { background: "linear-gradient(160deg, #565b52 0%, #6b6f63 55%, #71805c 100%)" };
+
   return (
     <div
       style={{
-        background: "linear-gradient(160deg, #565b52 0%, #6b6f63 55%, #71805c 100%)",
+        ...backgroundStyle,
         padding: "clamp(48px, 8vw, 96px) 24px clamp(56px, 9vw, 108px)",
         textAlign: "center",
+        position: "relative",
       }}
     >
-      <div style={{ display: "flex", justifyContent: "center", marginBottom: 40 }}>
-        <div style={{ background: "#fff", borderRadius: 16, padding: "clamp(14px, 2vw, 22px) clamp(24px, 4vw, 40px)", display: "inline-flex" }}>
-          <img src={WORDMARK_SRC} alt="National Beauty Distribution" style={{ height: "clamp(56px, 9vw, 100px)", display: "block" }} />
+      {settings.background_url && (
+        <div style={{ position: "absolute", inset: 0, background: "rgba(20,20,18,0.45)" }} />
+      )}
+      <div style={{ position: "relative" }}>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 40 }}>
+          <div style={{ background: "#fff", borderRadius: 16, padding: "clamp(14px, 2vw, 22px) clamp(24px, 4vw, 40px)", display: "inline-flex", overflow: "hidden" }}>
+            {settings.logo_url ? (
+              <div style={{ height: "clamp(56px, 9vw, 100px)", width: "clamp(140px, 22vw, 250px)", overflow: "hidden", position: "relative" }}>
+                <img
+                  src={settings.logo_url}
+                  alt="Logo"
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "contain",
+                    objectPosition: `${settings.logo_position_x}% ${settings.logo_position_y}%`,
+                    transform: `scale(${settings.logo_zoom})`,
+                  }}
+                />
+              </div>
+            ) : (
+              <img src={WORDMARK_SRC} alt="National Beauty Distribution" style={{ height: "clamp(56px, 9vw, 100px)", display: "block" }} />
+            )}
+          </div>
         </div>
-      </div>
-      <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: navy[50], marginBottom: 18 }}>
-        {eyebrow}
-      </div>
-      <h1
-        style={{
-          fontFamily: "'Lato', -apple-system, sans-serif",
-          fontWeight: 300,
-          fontSize: "clamp(36px, 6vw, 64px)",
-          color: "#fff",
-          margin: "0 0 20px",
-          lineHeight: 1.08,
-        }}
-      >
-        {headline}
-      </h1>
-      <div
-        style={{
-          fontSize: "clamp(12px, 1.6vw, 15px)",
-          letterSpacing: 2,
-          textTransform: "uppercase",
-          color: "#c9c9c9",
-          maxWidth: 640,
-          margin: "0 auto",
-          lineHeight: 1.7,
-        }}
-      >
-        {subtitle}
+        <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: navy[50], marginBottom: 18 }}>
+          {settings.eyebrow}
+        </div>
+        <h1
+          style={{
+            fontFamily: "'Lato', -apple-system, sans-serif",
+            fontWeight: 300,
+            fontSize: "clamp(36px, 6vw, 64px)",
+            color: "#fff",
+            margin: "0 0 20px",
+            lineHeight: 1.08,
+          }}
+        >
+          {settings.headline}
+        </h1>
+        <div
+          style={{
+            fontSize: "clamp(12px, 1.6vw, 15px)",
+            letterSpacing: 2,
+            textTransform: "uppercase",
+            color: "#e5e5e5",
+            maxWidth: 640,
+            margin: "0 auto",
+            lineHeight: 1.7,
+          }}
+        >
+          {settings.subtitle}
+        </div>
       </div>
     </div>
   );
