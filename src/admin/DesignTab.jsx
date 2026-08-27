@@ -52,7 +52,7 @@ function LogoEditor({ draft, setDraft, onUpload, uploading }) {
         </div>
 
         <div style={{ flex: 1, minWidth: 220 }}>
-          <label style={{ display: "inline-flex", alignItems: "center", gap: 6, background: navy[50], border: "1px solid #e4dfd6", borderRadius: 6, padding: "8px 14px", fontSize: 13, color: navy[700], cursor: "pointer", marginBottom: 16 }}>
+          <label className="nbd-btn nbd-btn--outline nbd-btn--sm" style={{ marginBottom: 16 }}>
             {uploading ? <Loader2 size={14} className="spin" /> : <Upload size={14} />}
             {uploading ? "Uploading…" : "Upload logo file"}
             <input type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" onChange={onUpload} disabled={uploading} style={{ display: "none" }} />
@@ -93,7 +93,7 @@ function BackgroundEditor({ draft, setDraft, onUpload, uploading }) {
         </div>
       </div>
 
-      <label style={{ display: "inline-flex", alignItems: "center", gap: 6, background: navy[50], border: "1px solid #e4dfd6", borderRadius: 6, padding: "8px 14px", fontSize: 13, color: navy[700], cursor: "pointer", marginBottom: 16 }}>
+      <label className="nbd-btn nbd-btn--outline nbd-btn--sm" style={{ marginBottom: 16 }}>
         {uploading ? <Loader2 size={14} className="spin" /> : <Upload size={14} />}
         {uploading ? "Uploading…" : "Upload background image"}
         <input type="file" accept="image/png,image/jpeg,image/webp" onChange={onUpload} disabled={uploading} style={{ display: "none" }} />
@@ -167,7 +167,7 @@ export default function DesignTab() {
       {error && <div style={{ color: "#a3372f", fontSize: 13, marginBottom: 14 }}>{error}</div>}
       {notice && <div style={{ color: "#4d6b2c", fontSize: 13, marginBottom: 14 }}>{notice}</div>}
 
-      <button onClick={save} disabled={saving} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "10px 22px", fontSize: 14, fontWeight: 700, opacity: saving ? 0.7 : 1 }}>
+      <button className="nbd-btn nbd-btn--primary" onClick={save} disabled={saving} style={{ padding: "10px 22px" }}>
         {saving ? "Saving…" : "Save changes"}
       </button>
     </div>

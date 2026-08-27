@@ -16,6 +16,52 @@ const STEP_TYPES = [
   { type: "certificate", label: "Certificate", icon: Award },
 ];
 
+// Shared button styling for every admin screen. Injected once at the AdminApp
+// root. :hover / :active need real CSS, hence classes rather than inline styles.
+const ADMIN_BTN_CSS = `
+.nbd-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  font: inherit; font-size: 14px; font-weight: 600; line-height: 1;
+  border-radius: 8px; padding: 8px 14px; cursor: pointer;
+  border: 1px solid transparent; background: none;
+  transition: background .12s ease, border-color .12s ease, color .12s ease, box-shadow .12s ease;
+}
+.nbd-btn:disabled { opacity: .4; cursor: default; }
+.nbd-btn--ghost { color: #5e8f1e; padding: 6px 10px; margin-left: -10px; }
+.nbd-btn--ghost:hover:not(:disabled) { background: #f2f7e9; }
+.nbd-btn--outline { color: #333333; border-color: #ddd5cb; background: #fff; }
+.nbd-btn--outline:hover:not(:disabled) { border-color: #a8cb63; background: #f2f7e9; color: #5e8f1e; }
+.nbd-btn--primary { color: #fff; background: #5e8f1e; }
+.nbd-btn--primary:hover:not(:disabled) { background: #517d1a; box-shadow: 0 1px 4px rgba(94,143,30,.35); }
+.nbd-btn--danger { color: #a3372f; border-color: #f0c9c2; background: #fff; }
+.nbd-btn--danger:hover:not(:disabled) { background: #fdecea; border-color: #e0a89f; }
+.nbd-btn--danger-solid { color: #fff; background: #a3372f; }
+.nbd-btn--danger-solid:hover:not(:disabled) { background: #8a2f28; }
+.nbd-btn--danger-solid:disabled { opacity: .5; }
+.nbd-btn--sm { font-size: 13px; padding: 5px 10px; }
+
+.nbd-linkbtn { background: none; border: none; padding: 0; font: inherit; font-size: 14px; font-weight: 600; color: #5e8f1e; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+.nbd-linkbtn:hover { color: #517d1a; text-decoration: underline; }
+
+.nbd-iconbtn { background: none; border: none; cursor: pointer; color: #a39a8d; display: inline-flex; padding: 4px; border-radius: 6px; transition: background .12s ease, color .12s ease; }
+.nbd-iconbtn:hover { background: #fdecea; color: #c0392b; }
+
+.nbd-rowcard { display: flex; align-items: center; gap: 12px; text-align: left; width: 100%; background: #fff; border: 1px solid #e4dfd6; border-radius: 10px; padding: 13px 16px; cursor: pointer; transition: border-color .12s ease, box-shadow .12s ease, background .12s ease; }
+.nbd-rowcard:hover { border-color: #a8cb63; background: #f7faf0; box-shadow: 0 1px 4px rgba(94,143,30,.12); }
+
+.nbd-actions { display: inline-flex; align-items: center; border: 1px solid #e4dfd6; border-radius: 8px; overflow: hidden; background: #fff; }
+.nbd-actions button {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 32px; background: none; border: none;
+  border-left: 1px solid #efe8dc; color: #6b6155; cursor: pointer;
+  transition: background .12s ease, color .12s ease;
+}
+.nbd-actions button:first-child { border-left: none; }
+.nbd-actions button:hover:not(:disabled) { background: #f2f7e9; color: #5e8f1e; }
+.nbd-actions button:disabled { opacity: .3; cursor: default; }
+.nbd-actions button.nbd-danger:hover:not(:disabled) { background: #fdecea; color: #c0392b; }
+`;
+
 function AddQuizForm({ initial, submitLabel, onCancel, onSave }) {
   const [title, setTitle] = useState(initial?.title || "");
   const [questions, setQuestions] = useState(initial?.questions || [{ text: "", options: ["", "", ""], correct: 0 }]);
@@ -68,23 +114,23 @@ function AddQuizForm({ initial, submitLabel, onCancel, onSave }) {
         <div key={qi} style={{ border: "1px solid #e4dfd6", borderRadius: 8, padding: 12, marginBottom: 10 }}>
           <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
             <input value={q.text} onChange={(e) => updateQuestion(qi, { text: e.target.value })} placeholder={`Question ${qi + 1}`} style={{ flex: 1, padding: "7px 9px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 15 }} />
-            <button onClick={() => removeQuestion(qi)} style={{ background: "none" }}><Trash2 size={14} color="#a39a8d" /></button>
+            <button className="nbd-iconbtn" onClick={() => removeQuestion(qi)} title="Remove question"><Trash2 size={14} /></button>
           </div>
           {q.options.map((opt, oi) => (
             <div key={oi} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
               <input type="radio" name={`correct-${qi}`} checked={q.correct === oi} onChange={() => updateQuestion(qi, { correct: oi })} title="Correct answer" />
               <input value={opt} onChange={(e) => updateOption(qi, oi, e.target.value)} placeholder={`Option ${oi + 1}`} style={{ flex: 1, padding: "6px 9px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 15 }} />
-              {q.options.length > 2 && <button onClick={() => removeOption(qi, oi)} style={{ background: "none" }}><X size={13} color="#a39a8d" /></button>}
+              {q.options.length > 2 && <button className="nbd-iconbtn" onClick={() => removeOption(qi, oi)} title="Remove option"><X size={13} /></button>}
             </div>
           ))}
-          <button onClick={() => addOption(qi)} style={{ fontSize: 14, color: navy[700], background: "none" }}>+ Add option</button>
+          <button className="nbd-linkbtn" onClick={() => addOption(qi)}>+ Add option</button>
         </div>
       ))}
-      <button onClick={addQuestion} style={{ fontSize: 15, color: navy[700], background: "none", marginBottom: 14 }}>+ Add question</button>
+      <button className="nbd-linkbtn" onClick={addQuestion} style={{ marginBottom: 14 }}>+ Add question</button>
       {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 10 }}>{error}</div>}
       <div style={{ display: "flex", gap: 8 }}>
-        <button onClick={save} disabled={saving} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 15, opacity: saving ? 0.7 : 1 }}>{saving ? "Saving…" : (submitLabel || "Save quiz step")}</button>
-        <button onClick={onCancel} style={{ background: "none", border: "1px solid #ddd5cb", borderRadius: 6, padding: "8px 16px", fontSize: 15 }}>Cancel</button>
+        <button className="nbd-btn nbd-btn--primary" onClick={save} disabled={saving}>{saving ? "Saving…" : (submitLabel || "Save quiz step")}</button>
+        <button className="nbd-btn nbd-btn--outline" onClick={onCancel}>Cancel</button>
       </div>
     </div>
   );
@@ -148,8 +194,8 @@ function AddVideoForm({ brandId, initial, submitLabel, onCancel, onSave }) {
       />
       {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 10 }}>{error}</div>}
       <div style={{ display: "flex", gap: 8 }}>
-        <button onClick={save} disabled={saving || uploading} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 15, opacity: saving || uploading ? 0.7 : 1 }}>{saving ? "Saving…" : (submitLabel || "Save video step")}</button>
-        <button onClick={onCancel} style={{ background: "none", border: "1px solid #ddd5cb", borderRadius: 6, padding: "8px 16px", fontSize: 15 }}>Cancel</button>
+        <button className="nbd-btn nbd-btn--primary" onClick={save} disabled={saving || uploading}>{saving ? "Saving…" : (submitLabel || "Save video step")}</button>
+        <button className="nbd-btn nbd-btn--outline" onClick={onCancel}>Cancel</button>
       </div>
       <style>{`.spin { animation: spin 1s linear infinite; } @keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
@@ -180,8 +226,8 @@ function AddCertificateForm({ initial, submitLabel, onCancel, onSave }) {
       </p>
       {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 10 }}>{error}</div>}
       <div style={{ display: "flex", gap: 8 }}>
-        <button onClick={save} disabled={saving} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 15, opacity: saving ? 0.7 : 1 }}>{saving ? "Saving…" : (submitLabel || "Save certificate step")}</button>
-        <button onClick={onCancel} style={{ background: "none", border: "1px solid #ddd5cb", borderRadius: 6, padding: "8px 16px", fontSize: 15 }}>Cancel</button>
+        <button className="nbd-btn nbd-btn--primary" onClick={save} disabled={saving}>{saving ? "Saving…" : (submitLabel || "Save certificate step")}</button>
+        <button className="nbd-btn nbd-btn--outline" onClick={onCancel}>Cancel</button>
       </div>
     </div>
   );
@@ -203,10 +249,12 @@ function StepCard({ step, index, count, onMove, onDelete, onEdit }) {
           {step.type === "quiz" ? ` · ${step.quiz_questions?.length || 0} question${step.quiz_questions?.length === 1 ? "" : "s"}` : ""}
         </div>
       </div>
-      <button onClick={() => onEdit(step)} style={{ background: "none" }}><Pencil size={15} color="#6b6155" /></button>
-      <button onClick={() => onMove(index, -1)} disabled={index === 0} style={{ background: "none", opacity: index === 0 ? 0.3 : 1 }}><ArrowUp size={15} color="#6b6155" /></button>
-      <button onClick={() => onMove(index, 1)} disabled={index === count - 1} style={{ background: "none", opacity: index === count - 1 ? 0.3 : 1 }}><ArrowDown size={15} color="#6b6155" /></button>
-      <button onClick={() => onDelete(step.id)} style={{ background: "none" }}><Trash2 size={15} color="#a39a8d" /></button>
+      <div className="nbd-actions">
+        <button onClick={() => onEdit(step)} title="Edit step"><Pencil size={15} /></button>
+        <button onClick={() => onMove(index, -1)} disabled={index === 0} title="Move up"><ArrowUp size={15} /></button>
+        <button onClick={() => onMove(index, 1)} disabled={index === count - 1} title="Move down"><ArrowDown size={15} /></button>
+        <button onClick={() => onDelete(step.id)} className="nbd-danger" title="Delete step"><Trash2 size={15} /></button>
+      </div>
     </div>
   );
 }
@@ -239,7 +287,7 @@ function BrandLogoUpload({ brand, onChanged }) {
         </div>
       )}
       <div>
-        <label style={{ fontSize: 14, color: navy[700], background: navy[50], border: "1px solid #e4dfd6", borderRadius: 6, padding: "5px 10px", cursor: "pointer" }}>
+        <label className="nbd-btn nbd-btn--outline nbd-btn--sm">
           {uploading ? "Uploading…" : brand.logo_url ? "Replace logo" : "Upload logo"}
           <input type="file" accept="image/*" onChange={handleFile} disabled={uploading} style={{ display: "none" }} />
         </label>
@@ -272,8 +320,8 @@ function EditBrandDetails({ brand, onChanged }) {
     return (
       <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 4 }}>
         <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: 0 }}>{brand.name}</h2>
-        <button onClick={() => { setName(brand.name); setTagline(brand.tagline || ""); setEditing(true); }} style={{ display: "flex", alignItems: "center", gap: 4, background: "none", color: navy[700], fontSize: 14 }}>
-          <Pencil size={12} /> Edit
+        <button className="nbd-btn nbd-btn--outline nbd-btn--sm" onClick={() => { setName(brand.name); setTagline(brand.tagline || ""); setEditing(true); }}>
+          <Pencil size={13} /> Edit
         </button>
       </div>
     );
@@ -287,8 +335,8 @@ function EditBrandDetails({ brand, onChanged }) {
       <input value={tagline} onChange={(e) => setTagline(e.target.value)} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 16, boxSizing: "border-box" }} />
       {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 10 }}>{error}</div>}
       <div style={{ display: "flex", gap: 8 }}>
-        <button onClick={save} disabled={saving} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "7px 14px", fontSize: 15, opacity: saving ? 0.7 : 1 }}>{saving ? "Saving…" : "Save"}</button>
-        <button onClick={() => setEditing(false)} style={{ background: "none", border: "1px solid #ddd5cb", borderRadius: 6, padding: "7px 14px", fontSize: 15 }}>Cancel</button>
+        <button className="nbd-btn nbd-btn--primary" onClick={save} disabled={saving}>{saving ? "Saving…" : "Save"}</button>
+        <button className="nbd-btn nbd-btn--outline" onClick={() => setEditing(false)}>Cancel</button>
       </div>
     </div>
   );
@@ -419,7 +467,7 @@ function BrandStepsEditor({ brandId, onBack }) {
 
   return (
     <div>
-      <button onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 15, color: navy[700], marginBottom: 14, background: "none" }}>
+      <button className="nbd-btn nbd-btn--ghost" onClick={onBack} style={{ marginBottom: 14 }}>
         <ChevronLeft size={15} /> All brands
       </button>
       <EditBrandDetails brand={brand} onChanged={load} />
@@ -451,7 +499,7 @@ function BrandStepsEditor({ brandId, onBack }) {
       {!editingStep && !addingType && (
         <div style={{ display: "flex", gap: 8 }}>
           {STEP_TYPES.map((t) => (
-            <button key={t.type} onClick={() => setAddingType(t.type)} style={{ display: "flex", alignItems: "center", gap: 6, background: "#fff", border: "1px solid #ddd5cb", borderRadius: 8, padding: "8px 14px", fontSize: 15, color: navy[900] }}>
+            <button key={t.type} className="nbd-btn nbd-btn--outline" onClick={() => setAddingType(t.type)}>
               <Plus size={14} /> <t.icon size={14} /> {t.label}
             </button>
           ))}
@@ -494,7 +542,7 @@ function AdminBrandsLive() {
       <p style={{ color: "#8a8074", fontSize: 16, margin: "0 0 18px" }}>Each brand is a sequence of steps customers work through in order.</p>
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
         {brands.map((b) => (
-          <button key={b.id} onClick={() => setActiveBrandId(b.id)} style={{ display: "flex", alignItems: "center", gap: 12, textAlign: "left", background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: "13px 16px" }}>
+          <button key={b.id} className="nbd-rowcard" onClick={() => setActiveBrandId(b.id)}>
             {b.logo_url ? (
               <img src={b.logo_url} alt={b.name} style={{ height: 32, width: 32, objectFit: "contain", borderRadius: 6, flexShrink: 0 }} />
             ) : (
@@ -514,12 +562,12 @@ function AdminBrandsLive() {
           <input value={newBrandTagline} onChange={(e) => setNewBrandTagline(e.target.value)} placeholder="Tagline (optional)" style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 16, boxSizing: "border-box" }} />
           {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 10 }}>{error}</div>}
           <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={addBrand} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 15 }}>Add brand</button>
-            <button onClick={() => { setShowAdd(false); setError(""); }} style={{ background: "none", border: "1px solid #ddd5cb", borderRadius: 6, padding: "8px 16px", fontSize: 15 }}>Cancel</button>
+            <button className="nbd-btn nbd-btn--primary" onClick={addBrand}>Add brand</button>
+            <button className="nbd-btn nbd-btn--outline" onClick={() => { setShowAdd(false); setError(""); }}>Cancel</button>
           </div>
         </div>
       ) : (
-        <button onClick={() => setShowAdd(true)} style={{ display: "flex", alignItems: "center", gap: 6, background: "#fff", border: "1px solid #ddd5cb", borderRadius: 8, padding: "8px 14px", fontSize: 15, color: navy[900] }}>
+        <button className="nbd-btn nbd-btn--outline" onClick={() => setShowAdd(true)}>
           <Plus size={14} /> Add brand
         </button>
       )}
@@ -594,10 +642,10 @@ function AdminApprovalsLive() {
               ))}
             </div>
             <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={() => approve(a)} disabled={busyId === a.id} style={{ display: "flex", alignItems: "center", gap: 5, background: "#4a6b3d", color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 15, fontWeight: 500, opacity: busyId === a.id ? 0.7 : 1 }}>
+              <button className="nbd-btn nbd-btn--primary" onClick={() => approve(a)} disabled={busyId === a.id}>
                 <Check size={14} /> Approve
               </button>
-              <button onClick={() => decline(a)} disabled={busyId === a.id} style={{ display: "flex", alignItems: "center", gap: 5, background: "none", border: "1px solid #ddd5cb", borderRadius: 8, padding: "8px 14px", fontSize: 15, opacity: busyId === a.id ? 0.7 : 1 }}>
+              <button className="nbd-btn nbd-btn--outline" onClick={() => decline(a)} disabled={busyId === a.id}>
                 <X size={14} /> Decline
               </button>
             </div>
@@ -642,8 +690,8 @@ function EditAccountDetails({ account, onSaved }) {
     return (
       <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 4 }}>
         <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: 0 }}>{account.company_name}</h2>
-        <button onClick={() => setEditing(true)} style={{ display: "flex", alignItems: "center", gap: 4, background: "none", color: navy[700], fontSize: 14 }}>
-          <Pencil size={12} /> Edit
+        <button className="nbd-btn nbd-btn--outline nbd-btn--sm" onClick={() => setEditing(true)}>
+          <Pencil size={13} /> Edit
         </button>
       </div>
     );
@@ -662,8 +710,8 @@ function EditAccountDetails({ account, onSaved }) {
       <p style={{ fontSize: 14, color: "#a39a8d", margin: "0 0 12px" }}>Changing the email here doesn't change how they sign in — that's still tied to their original login.</p>
       {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 10 }}>{error}</div>}
       <div style={{ display: "flex", gap: 8 }}>
-        <button onClick={save} disabled={saving} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "7px 14px", fontSize: 15, opacity: saving ? 0.7 : 1 }}>{saving ? "Saving…" : "Save"}</button>
-        <button onClick={() => setEditing(false)} style={{ background: "none", border: "1px solid #ddd5cb", borderRadius: 6, padding: "7px 14px", fontSize: 15 }}>Cancel</button>
+        <button className="nbd-btn nbd-btn--primary" onClick={save} disabled={saving}>{saving ? "Saving…" : "Save"}</button>
+        <button className="nbd-btn nbd-btn--outline" onClick={() => setEditing(false)}>Cancel</button>
       </div>
     </div>
   );
@@ -695,8 +743,8 @@ function EditBrandAccess({ account, brands, onSaved }) {
 
   if (!editing) {
     return (
-      <button onClick={() => { setSelected(new Set(account.approved_brand_ids)); setEditing(true); }} style={{ display: "flex", alignItems: "center", gap: 4, background: "none", color: navy[700], fontSize: 14, marginBottom: 10 }}>
-        <Pencil size={12} /> Edit brand access
+      <button className="nbd-btn nbd-btn--outline nbd-btn--sm" onClick={() => { setSelected(new Set(account.approved_brand_ids)); setEditing(true); }} style={{ marginBottom: 10 }}>
+        <Pencil size={13} /> Edit brand access
       </button>
     );
   }
@@ -713,8 +761,8 @@ function EditBrandAccess({ account, brands, onSaved }) {
       </div>
       {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 10 }}>{error}</div>}
       <div style={{ display: "flex", gap: 8 }}>
-        <button onClick={save} disabled={saving} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "7px 14px", fontSize: 15, opacity: saving ? 0.7 : 1 }}>{saving ? "Saving…" : "Save"}</button>
-        <button onClick={() => setEditing(false)} style={{ background: "none", border: "1px solid #ddd5cb", borderRadius: 6, padding: "7px 14px", fontSize: 15 }}>Cancel</button>
+        <button className="nbd-btn nbd-btn--primary" onClick={save} disabled={saving}>{saving ? "Saving…" : "Save"}</button>
+        <button className="nbd-btn nbd-btn--outline" onClick={() => setEditing(false)}>Cancel</button>
       </div>
     </div>
   );
@@ -737,7 +785,7 @@ function DeleteAccount({ account, onDeleted }) {
 
   if (!confirming) {
     return (
-      <button onClick={() => setConfirming(true)} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "1px solid #f0c9c2", color: "#a3372f", borderRadius: 8, padding: "8px 14px", fontSize: 15 }}>
+      <button className="nbd-btn nbd-btn--danger" onClick={() => setConfirming(true)}>
         <Trash2 size={14} /> Delete account
       </button>
     );
@@ -759,13 +807,13 @@ function DeleteAccount({ account, onDeleted }) {
       {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 10 }}>{error}</div>}
       <div style={{ display: "flex", gap: 8 }}>
         <button
+          className="nbd-btn nbd-btn--danger-solid"
           onClick={del}
           disabled={busy || typed.trim() !== account.company_name}
-          style={{ background: "#a3372f", color: "#fff", border: "none", borderRadius: 6, padding: "7px 14px", fontSize: 15, opacity: busy || typed.trim() !== account.company_name ? 0.5 : 1 }}
         >
           {busy ? "Deleting…" : "Permanently delete"}
         </button>
-        <button onClick={() => { setConfirming(false); setTyped(""); setError(""); }} style={{ background: "none", border: "1px solid #ddd5cb", borderRadius: 6, padding: "7px 14px", fontSize: 15 }}>Cancel</button>
+        <button className="nbd-btn nbd-btn--outline" onClick={() => { setConfirming(false); setTyped(""); setError(""); }}>Cancel</button>
       </div>
     </div>
   );
@@ -807,7 +855,7 @@ function CustomerProfileLive({ account: initialAccount, brands, onBack, onDelete
 
   return (
     <div>
-      <button onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 15, color: navy[700], marginBottom: 16, background: "none" }}>
+      <button className="nbd-btn nbd-btn--ghost" onClick={onBack} style={{ marginBottom: 16 }}>
         <ChevronLeft size={15} /> All customers
       </button>
       <div style={{ fontSize: 14, color: navy[700], fontWeight: 600, letterSpacing: 0.5, marginBottom: 4 }}>{account.customer_number}</div>
@@ -903,7 +951,7 @@ function AdminCustomersLive() {
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {filtered.map((a) => (
-          <button key={a.id} onClick={() => setOpenId(a.id)} style={{ display: "flex", alignItems: "center", gap: 12, textAlign: "left", background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: "13px 16px" }}>
+          <button key={a.id} className="nbd-rowcard" onClick={() => setOpenId(a.id)}>
             <Building2 size={18} color={navy[500]} />
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 500, color: navy[900], fontSize: 16 }}>{a.company_name}</div>
@@ -1005,6 +1053,7 @@ export default function AdminApp() {
   ];
   return (
     <div style={{ display: "flex", gap: 24 }}>
+      <style>{ADMIN_BTN_CSS}</style>
       <div style={{ width: 190, flexShrink: 0 }}>
         {tabs.map((t) => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left", padding: "9px 12px", borderRadius: 8, fontSize: 16, marginBottom: 4, background: tab === t.id ? navy[100] : "transparent", color: tab === t.id ? navy[900] : "#6b6155", fontWeight: tab === t.id ? 500 : 400, border: "none" }}>
