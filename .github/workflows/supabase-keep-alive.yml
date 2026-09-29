@@ -1,0 +1,31 @@
+name: Supabase keep-alive
+
+# Free-tier Supabase projects auto-pause after 7 days with no activity. This
+# pings a public, read-only endpoint twice a week so the project never gets
+# close to that limit — no paid plan needed.
+#
+# Uses the anon/publishable key, the same one already shipped in the app's
+# built JS bundle (it's meant to be public; real access control is via
+# Postgres row-level security, not secrecy of this key). Nothing here can
+# write data — it's a read against a public table.
+
+on:
+  schedule:
+    - cron: "0 9 * * 1,4" # Monday and Thursday, 09:00 UTC
+  workflow_dispatch: {} # lets you trigger it manually from the Actions tab to test
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase REST endpoint
+        run: |
+          status=$(curl -s -o /dev/null -w "%{http_code}" \
+            "https://qeatsipduolkpshcdgcs.supabase.co/rest/v1/site_settings?select=id&limit=1" \
+            -H "apikey: sb_publishable_qNrT4gWR4FegquqRa7ytRg_Mq9SPJDO" \
+            -H "Authorization: Bearer sb_publishable_qNrT4gWR4FegquqRa7ytRg_Mq9SPJDO")
+          echo "Supabase responded with HTTP $status"
+          if [ "$status" -ge 400 ]; then
+            echo "::error::Unexpected status from Supabase — project may need attention"
+            exit 1
+          fi
