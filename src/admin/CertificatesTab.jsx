@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Loader2, Search, Download, Award } from "lucide-react";
+import { Loader2, Search, Download, Award, Upload } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
 import { navy } from "../lib/ui.jsx";
 
-// Read-only record of every certificate the platform has issued. Admins have
-// full RLS access to `certificates`, so this is a plain nested select — no
-// RPC, no migration.
+// Record of every certificate the platform has issued. Admins have full RLS
+// access to `certificates` and to the `certificates` storage bucket, so both
+// reading the list and manually attaching a PDF are plain Supabase calls —
+// no RPC, no migration.
 
 function fmtDate(iso) {
   return new Date(iso).toLocaleDateString("en-IE", { day: "2-digit", month: "short", year: "numeric" });
@@ -28,12 +29,14 @@ export default function CertificatesTab() {
     (async () => {
       const { data, error: err } = await supabase
         .from("certificates")
-        .select("id, issued_at, pdf_path, brands(name), app_users(name, email, accounts(company_name, customer_number))")
+        .select("id, user_id, brand_id, issued_at, pdf_path, brands(name), app_users(name, email, accounts(company_name, customer_number))")
         .order("issued_at", { ascending: false });
       if (cancelled) return;
       if (err) { setError(err.message); setRows([]); return; }
       setRows((data || []).map((c) => ({
         id: c.id,
+        userId: c.user_id,
+        brandId: c.brand_id,
         issuedAt: c.issued_at,
         pdfPath: c.pdf_path || null,
         learner: c.app_users?.name || "—",
@@ -64,6 +67,23 @@ export default function CertificatesTab() {
     setOpening(null);
     if (err || !data?.signedUrl) { setError(err?.message || "Couldn't open that file"); return; }
     window.open(data.signedUrl, "_blank", "noopener");
+  }
+
+  const [uploadingId, setUploadingId] = useState(null);
+  async function uploadPdf(row, file) {
+    if (!file) return;
+    if (file.type !== "application/pdf") { setError("Please choose a PDF file."); return; }
+    setUploadingId(row.id);
+    setError("");
+    const path = `${row.userId}/${row.brandId}.pdf`;
+    const { error: upErr } = await supabase.storage
+      .from("certificates")
+      .upload(path, file, { contentType: "application/pdf", upsert: true });
+    if (upErr) { setUploadingId(null); setError(upErr.message); return; }
+    const { error: rowErr } = await supabase.from("certificates").update({ pdf_path: path }).eq("id", row.id);
+    setUploadingId(null);
+    if (rowErr) { setError(rowErr.message); return; }
+    setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, pdfPath: path } : r)));
   }
 
   function downloadCsv() {
@@ -144,13 +164,26 @@ export default function CertificatesTab() {
                       <td style={td}>{r.brand}</td>
                       <td style={{ ...td, whiteSpace: "nowrap" }}>{fmtDate(r.issuedAt)}</td>
                       <td style={td}>
-                        {r.pdfPath ? (
-                          <button className="nbd-btn nbd-btn--outline nbd-btn--sm" onClick={() => openStoredPdf(r)} disabled={opening === r.id}>
-                            <Download size={13} /> {opening === r.id ? "Opening…" : "PDF"}
-                          </button>
-                        ) : (
-                          <span style={{ fontSize: 12.5, color: "#a39a8d" }}>Not stored</span>
-                        )}
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                          {r.pdfPath ? (
+                            <button className="nbd-btn nbd-btn--outline nbd-btn--sm" onClick={() => openStoredPdf(r)} disabled={opening === r.id}>
+                              <Download size={13} /> {opening === r.id ? "Opening…" : "PDF"}
+                            </button>
+                          ) : (
+                            <span style={{ fontSize: 12.5, color: "#a39a8d" }}>Not stored</span>
+                          )}
+                          <label className="nbd-btn nbd-btn--outline nbd-btn--sm" title={r.pdfPath ? "Replace the stored PDF" : "Manually attach a PDF for this certificate"}>
+                            {uploadingId === r.id ? <Loader2 size={13} className="spin" /> : <Upload size={13} />}
+                            {uploadingId === r.id ? "Uploading…" : r.pdfPath ? "Replace" : "Add PDF"}
+                            <input
+                              type="file"
+                              accept="application/pdf"
+                              onChange={(e) => { uploadPdf(r, e.target.files?.[0]); e.target.value = ""; }}
+                              disabled={uploadingId === r.id}
+                              style={{ display: "none" }}
+                            />
+                          </label>
+                        </div>
                       </td>
                     </tr>
                   ))}

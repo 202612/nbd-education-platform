@@ -206,16 +206,44 @@ function AddVideoForm({ brandId, initial, submitLabel, onCancel, onSave }) {
   );
 }
 
-function AddCertificateForm({ initial, submitLabel, onCancel, onSave }) {
+const CERT_PREVIEW_WIDTH = 900; // matches the certificate width used on the learner's screen, so font size/position line up 1:1
+
+function AddCertificateForm({ brandId, initial, submitLabel, onCancel, onSave }) {
   const [title, setTitle] = useState(initial?.title || "Certificate of Participation");
+  const [templateUrl, setTemplateUrl] = useState(initial?.cert_template_url || null);
+  const [nameX, setNameX] = useState(initial?.cert_name_x ?? 50);
+  const [nameY, setNameY] = useState(initial?.cert_name_y ?? 55);
+  const [fontSize, setFontSize] = useState(initial?.cert_name_font_size ?? 34);
+  const [color, setColor] = useState(initial?.cert_name_color || "#1a2b3d");
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+
+  async function uploadTemplate(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setError("");
+    const path = `${brandId}/${Date.now()}-${file.name}`;
+    const { error: upErr } = await supabase.storage.from("certificate-templates").upload(path, file);
+    if (upErr) { setUploading(false); setError(upErr.message); return; }
+    const { data } = supabase.storage.from("certificate-templates").getPublicUrl(path);
+    setTemplateUrl(data.publicUrl);
+    setUploading(false);
+  }
 
   async function save() {
     if (!title.trim()) { setError("Give the certificate a title"); return; }
     setSaving(true);
     setError("");
-    const err = await onSave({ title: title.trim() });
+    const err = await onSave({
+      title: title.trim(),
+      cert_template_url: templateUrl,
+      cert_name_x: nameX,
+      cert_name_y: nameY,
+      cert_name_font_size: fontSize,
+      cert_name_color: color,
+    });
     setSaving(false);
     if (err) setError(err);
   }
@@ -225,9 +253,68 @@ function AddCertificateForm({ initial, submitLabel, onCancel, onSave }) {
       <label style={{ fontSize: 15, color: "#6b6155", display: "block", marginBottom: 4 }}>Certificate title</label>
       <input value={title} onChange={(e) => setTitle(e.target.value)} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 14, fontSize: 16, boxSizing: "border-box" }} />
       <p style={{ fontSize: 14, color: "#a39a8d", margin: "0 0 14px" }}>
-        Awarded automatically once every earlier step in this brand is complete. The certificate is generated for
-        each learner with their name and the date filled in — set the brand's logo above so it appears on it.
+        Awarded automatically once every earlier step in this brand is complete, with the learner's name and the
+        date filled in. By default it uses the built-in design below — upload your own artwork instead if you'd
+        rather use a design you made yourself.
       </p>
+
+      <div style={{ border: "1px solid #e4dfd6", borderRadius: 8, padding: 14, marginBottom: 14 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+          <div style={{ fontWeight: 700, color: navy[900], fontSize: 14 }}>Certificate artwork</div>
+          <label className="nbd-btn nbd-btn--outline nbd-btn--sm">
+            {uploading ? <Loader2 size={13} className="spin" /> : <ImageIcon size={13} />}
+            {uploading ? "Uploading…" : templateUrl ? "Replace image" : "Upload image"}
+            <input type="file" accept="image/png,image/jpeg,image/webp" onChange={uploadTemplate} disabled={uploading} style={{ display: "none" }} />
+          </label>
+        </div>
+
+        {templateUrl ? (
+          <>
+            <p style={{ fontSize: 13, color: "#a39a8d", margin: "0 0 12px" }}>
+              Drag the marker onto the blank line where the learner's name should print. Everything else on your
+              design stays exactly as uploaded.
+            </p>
+            <div
+              style={{
+                position: "relative", width: "100%", maxWidth: CERT_PREVIEW_WIDTH, margin: "0 auto 14px",
+                border: "1px solid #e4dfd6", borderRadius: 4, overflow: "hidden", cursor: "crosshair", userSelect: "none",
+              }}
+              onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                setNameX(Math.round(((e.clientX - rect.left) / rect.width) * 1000) / 10);
+                setNameY(Math.round(((e.clientY - rect.top) / rect.height) * 1000) / 10);
+              }}
+            >
+              <img src={templateUrl} alt="Certificate template" style={{ display: "block", width: "100%" }} />
+              <div
+                style={{
+                  position: "absolute", left: `${nameX}%`, top: `${nameY}%`, transform: "translate(-50%, -50%)",
+                  fontSize, color, fontFamily: "Georgia, 'Times New Roman', serif", fontWeight: 600,
+                  whiteSpace: "nowrap", pointerEvents: "none", textShadow: "0 0 1px rgba(255,255,255,0.6)",
+                }}
+              >
+                Jane Doe
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+              <label style={{ fontSize: 13, color: "#6b6155" }}>
+                Name size
+                <input type="range" min={16} max={64} value={fontSize} onChange={(e) => setFontSize(Number(e.target.value))} style={{ display: "block", width: 140 }} />
+              </label>
+              <label style={{ fontSize: 13, color: "#6b6155" }}>
+                Name colour
+                <input type="color" value={color} onChange={(e) => setColor(e.target.value)} style={{ display: "block", marginTop: 4 }} />
+              </label>
+              <button className="nbd-btn nbd-btn--outline nbd-btn--sm" style={{ alignSelf: "flex-end" }} onClick={() => setTemplateUrl(null)}>
+                Remove artwork — use built-in design
+              </button>
+            </div>
+          </>
+        ) : (
+          <p style={{ fontSize: 13, color: "#a39a8d", margin: 0 }}>No custom artwork uploaded — this brand uses the built-in certificate design.</p>
+        )}
+      </div>
+
       {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 10 }}>{error}</div>}
       <div style={{ display: "flex", gap: 8 }}>
         <button className="nbd-btn nbd-btn--primary" onClick={save} disabled={saving}>{saving ? "Saving…" : (submitLabel || "Save certificate step")}</button>
@@ -359,7 +446,7 @@ function BrandStepsEditor({ brandId, onBack }) {
     setBrand(b);
     const { data: s } = await supabase
       .from("brand_steps")
-      .select("id,type,title,video_url,video_storage_path,duration,order_index,quiz_questions(id)")
+      .select("id,type,title,video_url,video_storage_path,duration,order_index,cert_template_url,cert_name_x,cert_name_y,cert_name_font_size,cert_name_color,quiz_questions(id)")
       .eq("brand_id", brandId)
       .order("order_index");
     setSteps(s || []);
@@ -391,9 +478,12 @@ function BrandStepsEditor({ brandId, onBack }) {
     return null;
   }
 
-  async function saveCertificate({ title }) {
+  async function saveCertificate({ title, cert_template_url, cert_name_x, cert_name_y, cert_name_font_size, cert_name_color }) {
     const order_index = await nextOrderIndex();
-    const { error: err } = await supabase.from("brand_steps").insert({ brand_id: brandId, type: "certificate", title, order_index });
+    const { error: err } = await supabase.from("brand_steps").insert({
+      brand_id: brandId, type: "certificate", title, order_index,
+      cert_template_url, cert_name_x, cert_name_y, cert_name_font_size, cert_name_color,
+    });
     if (err) return err.message;
     setAddingType(null);
     await load();
@@ -442,8 +532,10 @@ function BrandStepsEditor({ brandId, onBack }) {
     return null;
   }
 
-  async function updateCertificate({ title }) {
-    const { error: err } = await supabase.from("brand_steps").update({ title }).eq("id", editingStep.id);
+  async function updateCertificate({ title, cert_template_url, cert_name_x, cert_name_y, cert_name_font_size, cert_name_color }) {
+    const { error: err } = await supabase.from("brand_steps").update({
+      title, cert_template_url, cert_name_x, cert_name_y, cert_name_font_size, cert_name_color,
+    }).eq("id", editingStep.id);
     if (err) return err.message;
     cancelEdit();
     await load();
@@ -493,12 +585,12 @@ function BrandStepsEditor({ brandId, onBack }) {
         <AddQuizForm initial={editingQuizData} submitLabel="Save changes" onCancel={cancelEdit} onSave={updateQuiz} />
       )}
       {editingStep && editingStep.type === "certificate" && (
-        <AddCertificateForm initial={editingStep} submitLabel="Save changes" onCancel={cancelEdit} onSave={updateCertificate} />
+        <AddCertificateForm brandId={brandId} initial={editingStep} submitLabel="Save changes" onCancel={cancelEdit} onSave={updateCertificate} />
       )}
 
       {!editingStep && addingType === "video" && <AddVideoForm brandId={brandId} onCancel={() => setAddingType(null)} onSave={saveVideo} />}
       {!editingStep && addingType === "quiz" && <AddQuizForm onCancel={() => setAddingType(null)} onSave={saveQuiz} />}
-      {!editingStep && addingType === "certificate" && <AddCertificateForm onCancel={() => setAddingType(null)} onSave={saveCertificate} />}
+      {!editingStep && addingType === "certificate" && <AddCertificateForm brandId={brandId} onCancel={() => setAddingType(null)} onSave={saveCertificate} />}
 
       {!editingStep && !addingType && (
         <div style={{ display: "flex", gap: 8 }}>

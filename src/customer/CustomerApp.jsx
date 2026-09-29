@@ -301,25 +301,44 @@ function CertificateStep({ step, brand, participantName, onComplete, onBack }) {
 
       {!claiming && !error && (
         <>
-          <div
-            ref={certRef}
-            style={{
-              width: 900, maxWidth: "100%", aspectRatio: "1.41 / 1", margin: "0 auto 18px", background: "#fff",
-              border: `6px solid ${gold}`, borderRadius: 4, padding: "5% 8%",
-              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center",
-              boxSizing: "border-box",
-            }}
-          >
-            {brand.logo_url && <img src={brand.logo_url} alt={brand.name} style={{ maxHeight: 64, maxWidth: 220, objectFit: "contain", marginBottom: 24 }} />}
-            <div style={{ fontSize: 15, letterSpacing: 3, color: "#8a8074", textTransform: "uppercase", marginBottom: 18 }}>Certificate of Participation</div>
-            <div style={{ fontSize: 16, color: "#6b6155", marginBottom: 8 }}>This certifies that</div>
-            <div style={{ fontSize: 34, fontWeight: 600, color: navy[900], marginBottom: 18, fontFamily: "Georgia, 'Times New Roman', serif" }}>{participantName}</div>
-            <div style={{ fontSize: 16, color: "#6b6155", marginBottom: 28, maxWidth: 480 }}>
-              has successfully completed the <strong>{brand.name}</strong> training programme
+          {step.cert_template_url ? (
+            <div
+              ref={certRef}
+              style={{ position: "relative", width: 900, maxWidth: "100%", margin: "0 auto 18px" }}
+            >
+              <img src={step.cert_template_url} alt={`${brand.name} certificate`} style={{ display: "block", width: "100%" }} />
+              <div
+                style={{
+                  position: "absolute", left: `${step.cert_name_x ?? 50}%`, top: `${step.cert_name_y ?? 55}%`,
+                  transform: "translate(-50%, -50%)", whiteSpace: "nowrap",
+                  fontSize: step.cert_name_font_size ?? 34, color: step.cert_name_color || "#1a2b3d",
+                  fontFamily: "Georgia, 'Times New Roman', serif", fontWeight: 600,
+                }}
+              >
+                {participantName}
+              </div>
             </div>
-            <div style={{ fontSize: 15, color: "#a39a8d", marginBottom: 16 }}>{formatDate(issuedAt)}</div>
-            <img src={WORDMARK_SRC} alt="National Beauty Distribution" style={{ height: 22 }} />
-          </div>
+          ) : (
+            <div
+              ref={certRef}
+              style={{
+                width: 900, maxWidth: "100%", aspectRatio: "1.41 / 1", margin: "0 auto 18px", background: "#fff",
+                border: `6px solid ${gold}`, borderRadius: 4, padding: "5% 8%",
+                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center",
+                boxSizing: "border-box",
+              }}
+            >
+              {brand.logo_url && <img src={brand.logo_url} alt={brand.name} style={{ maxHeight: 64, maxWidth: 220, objectFit: "contain", marginBottom: 24 }} />}
+              <div style={{ fontSize: 15, letterSpacing: 3, color: "#8a8074", textTransform: "uppercase", marginBottom: 18 }}>Certificate of Participation</div>
+              <div style={{ fontSize: 16, color: "#6b6155", marginBottom: 8 }}>This certifies that</div>
+              <div style={{ fontSize: 34, fontWeight: 600, color: navy[900], marginBottom: 18, fontFamily: "Georgia, 'Times New Roman', serif" }}>{participantName}</div>
+              <div style={{ fontSize: 16, color: "#6b6155", marginBottom: 28, maxWidth: 480 }}>
+                has successfully completed the <strong>{brand.name}</strong> training programme
+              </div>
+              <div style={{ fontSize: 15, color: "#a39a8d", marginBottom: 16 }}>{formatDate(issuedAt)}</div>
+              <img src={WORDMARK_SRC} alt="National Beauty Distribution" style={{ height: 22 }} />
+            </div>
+          )}
 
           <div style={{ textAlign: "center" }}>
             <button
@@ -658,7 +677,7 @@ export default function CustomerApp({ user, account }) {
       if (account.status !== "approved") return;
       const { data, error } = await supabase
         .from("brands")
-        .select("id,name,tagline,logo_url,steps:brand_steps(id,type,title,video_url,video_storage_path,duration,order_index)");
+        .select("id,name,tagline,logo_url,steps:brand_steps(id,type,title,video_url,video_storage_path,duration,order_index,cert_template_url,cert_name_x,cert_name_y,cert_name_font_size,cert_name_color)");
       if (cancelled) return;
       if (error) { setLoadError(error.message); return; }
       setBrands(data || []);
