@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
 import {
   ShieldCheck, Building2, Clock, PlayCircle, CheckCircle2, Award, Plus, Trash2, Check, X,
-  ChevronRight, ChevronLeft, ArrowUp, ArrowDown, Search, Loader2, Sparkles, Users, Image as ImageIcon, Pencil, Palette,
+  ChevronRight, ChevronLeft, ArrowUp, ArrowDown, Search, Loader2, Sparkles, Users, Image as ImageIcon, Pencil, Palette, Eye,
 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
 import { navy, Badge, StatCard } from "../lib/ui.jsx";
 import { AdminAssistant } from "./AdminMock.jsx";
 import DesignTab from "./DesignTab.jsx";
 import CertificatesTab from "./CertificatesTab.jsx";
+import PreviewAsCustomer from "./PreviewAsCustomer.jsx";
 
 // ================= BRANDS & STEPS =================
 
@@ -440,6 +441,7 @@ function BrandStepsEditor({ brandId, onBack }) {
   const [editingStep, setEditingStep] = useState(null);
   const [editingQuizData, setEditingQuizData] = useState(null);
   const [error, setError] = useState("");
+  const [previewing, setPreviewing] = useState(false);
 
   async function load() {
     const { data: b } = await supabase.from("brands").select("id,name,tagline,logo_url").eq("id", brandId).single();
@@ -561,11 +563,20 @@ function BrandStepsEditor({ brandId, onBack }) {
     return <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#8a8074", fontSize: 16 }}><Loader2 size={16} /> Loading…</div>;
   }
 
+  if (previewing) {
+    return <PreviewAsCustomer brand={brand} onBack={() => setPreviewing(false)} />;
+  }
+
   return (
     <div>
-      <button className="nbd-btn nbd-btn--ghost" onClick={onBack} style={{ marginBottom: 14 }}>
-        <ChevronLeft size={15} /> All brands
-      </button>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 10 }}>
+        <button className="nbd-btn nbd-btn--ghost" onClick={onBack} style={{ marginBottom: 14 }}>
+          <ChevronLeft size={15} /> All brands
+        </button>
+        <button className="nbd-btn nbd-btn--outline" onClick={() => setPreviewing(true)}>
+          <Eye size={14} /> Preview as customer
+        </button>
+      </div>
       <EditBrandDetails brand={brand} onChanged={load} />
       <p style={{ color: "#8a8074", fontSize: 16, margin: "0 0 18px" }}>Build the sequence customers work through, in order — video, quiz, or certificate steps.</p>
 
