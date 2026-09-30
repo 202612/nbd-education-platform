@@ -84,7 +84,7 @@ export function AuthHero() {
     <div
       style={{
         ...backgroundStyle,
-        padding: "clamp(48px, 8vw, 96px) 24px clamp(56px, 9vw, 108px)",
+        padding: "clamp(36px, 5vw, 64px) 24px clamp(40px, 6vw, 72px)",
         textAlign: "center",
         position: "relative",
       }}
@@ -123,7 +123,7 @@ export function AuthHero() {
           style={{
             fontFamily: "'Lato', -apple-system, sans-serif",
             fontWeight: 300,
-            fontSize: "clamp(36px, 6vw, 64px)",
+            fontSize: "clamp(26px, 4vw, 42px)",
             color: navy[900],
             margin: "0 0 20px",
             lineHeight: 1.08,

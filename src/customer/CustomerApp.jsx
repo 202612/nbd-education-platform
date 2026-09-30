@@ -403,7 +403,7 @@ function CustomerBrandDetail({ brand, completedStepIds, onStepCompleted, partici
       </button>
       <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 6 }}>
         {brand.logo_url && (
-          <div style={{ height: 56, width: 56, flexShrink: 0, borderRadius: 10, background: navy[50], display: "flex", alignItems: "center", justifyContent: "center", padding: 8 }}>
+          <div style={{ height: 56, width: 56, flexShrink: 0, borderRadius: 10, background: navy[500], display: "flex", alignItems: "center", justifyContent: "center", padding: 8 }}>
             <img src={brand.logo_url} alt={brand.name} style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }} />
           </div>
         )}
@@ -476,11 +476,11 @@ function CustomerDashboard({ brands, completedStepIds, onStepCompleted, particip
           const pct = b.steps.length ? Math.round((done / b.steps.length) * 100) : 0;
           return (
             <button key={b.id} onClick={() => setOpenBrandId(b.id)} style={{ textAlign: "left", background: "#fff", border: "1px solid #e4dfd6", borderRadius: 16, padding: 0, overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
-              <div style={{ height: 140, display: "flex", alignItems: "center", justifyContent: "center", background: navy[50], padding: 24 }}>
+              <div style={{ height: 140, display: "flex", alignItems: "center", justifyContent: "center", background: navy[500], padding: 24 }}>
                 {b.logo_url ? (
                   <img src={b.logo_url} alt={b.name} style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }} />
                 ) : (
-                  <div style={{ fontWeight: 700, fontSize: 24, color: navy[700] }}>{b.name}</div>
+                  <div style={{ fontWeight: 700, fontSize: 24, color: "#fff" }}>{b.name}</div>
                 )}
               </div>
               <div style={{ padding: 20 }}>
