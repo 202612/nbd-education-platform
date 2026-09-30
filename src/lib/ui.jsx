@@ -70,6 +70,18 @@ export function useSiteSettings() {
 // from Admin → Design — the form section below it is separate and fixed.
 export function AuthHero() {
   const { settings } = useSiteSettings();
+  const [brandLogos, setBrandLogos] = useState([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    supabase
+      .from("brands")
+      .select("id,name,logo_url")
+      .not("logo_url", "is", null)
+      .order("name")
+      .then(({ data }) => { if (!cancelled) setBrandLogos(data || []); });
+    return () => { cancelled = true; };
+  }, []);
 
   const backgroundStyle = settings.background_url
     ? {
@@ -144,6 +156,44 @@ export function AuthHero() {
         >
           {settings.subtitle}
         </div>
+
+        {brandLogos.length > 0 && (
+          <div
+            style={{
+              marginTop: "clamp(32px, 5vw, 48px)",
+              background: navy[500],
+              borderRadius: 16,
+              padding: "clamp(18px, 3vw, 28px) clamp(16px, 3vw, 32px)",
+              display: "flex",
+              flexWrap: "wrap",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: "clamp(20px, 4vw, 40px)",
+              maxWidth: 900,
+              margin: "clamp(32px, 5vw, 48px) auto 0",
+            }}
+          >
+            {brandLogos.map((b) => (
+              <div
+                key={b.id}
+                title={b.name}
+                style={{
+                  background: "#fff",
+                  borderRadius: 8,
+                  padding: "clamp(8px, 1.2vw, 12px) clamp(12px, 1.8vw, 18px)",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <img
+                  src={b.logo_url}
+                  alt={b.name}
+                  style={{ height: "clamp(20px, 3vw, 30px)", maxWidth: 100, objectFit: "contain", display: "block" }}
+                />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
