@@ -78,27 +78,27 @@ export default function ApplyForAccess({ onSwitchToLogin }) {
 
         <form onSubmit={submit}>
           <label style={labelStyle}>NBD customer number</label>
-          <input value={customerNumber} onChange={(e) => setCustomerNumber(e.target.value)} placeholder="e.g. CU-1001" style={inputStyle} />
+          <input required value={customerNumber} onChange={(e) => setCustomerNumber(e.target.value)} placeholder="e.g. CU-1001" style={inputStyle} />
 
           <label style={labelStyle}>Salon / business name</label>
-          <input value={company} onChange={(e) => setCompany(e.target.value)} style={inputStyle} />
+          <input required value={company} onChange={(e) => setCompany(e.target.value)} style={inputStyle} />
 
           <div style={{ display: "flex", gap: 10 }}>
             <div style={{ flex: 1 }}>
               <label style={labelStyle}>First name</label>
-              <input value={firstName} onChange={(e) => setFirstName(e.target.value)} style={inputStyle} />
+              <input required value={firstName} onChange={(e) => setFirstName(e.target.value)} style={inputStyle} />
             </div>
             <div style={{ flex: 1 }}>
               <label style={labelStyle}>Last name</label>
-              <input value={lastName} onChange={(e) => setLastName(e.target.value)} style={inputStyle} />
+              <input required value={lastName} onChange={(e) => setLastName(e.target.value)} style={inputStyle} />
             </div>
           </div>
 
           <label style={labelStyle}>Email</label>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} style={inputStyle} />
+          <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} style={inputStyle} />
 
           <label style={labelStyle}>Choose a password</label>
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} style={{ ...inputStyle, marginBottom: 22 }} />
+          <input required type="password" value={password} onChange={(e) => setPassword(e.target.value)} style={{ ...inputStyle, marginBottom: 22 }} />
 
           <div style={{ fontSize: 15, color: grey, fontWeight: 700, marginBottom: 10 }}>Which brands do you stock?</div>
           {!brands && <div style={{ fontSize: 15, color: "#999", marginBottom: 18 }}>Loading brands…</div>}

@@ -929,7 +929,12 @@ function DeleteAccount({ account, onDeleted }) {
 function CustomerProfileLive({ account: initialAccount, brands, onBack, onDeleted }) {
   const [account, setAccount] = useState(initialAccount);
   const [team, setTeam] = useState(null);
-  const [progressByBrand, setProgressByBrand] = useState({});
+  // completedByUser: { [userId]: Set(stepId) } — every team member's own
+  // real progress, not just the main holder's, so admin can see the whole
+  // team's stats exactly like a customer would see their own dashboard.
+  const [completedByUser, setCompletedByUser] = useState({});
+
+  const approvedBrands = account.approved_brand_ids.map((bid) => brands.find((b) => b.id === bid)).filter(Boolean);
 
   async function refreshAccount() {
     const { data } = await supabase.from("accounts").select("*").eq("id", account.id).single();
@@ -939,26 +944,32 @@ function CustomerProfileLive({ account: initialAccount, brands, onBack, onDelete
   useEffect(() => {
     let cancelled = false;
     async function load() {
-      const { data: users } = await supabase.from("app_users").select("id,name,email,role").eq("account_id", account.id);
+      const { data: users } = await supabase.from("app_users").select("id,name,email,role").eq("account_id", account.id).order("role", { ascending: false });
+      if (cancelled || !users) return;
+      setTeam(users);
+      if (users.length === 0) return;
+      const { data: rows } = await supabase.from("step_progress").select("user_id,step_id").in("user_id", users.map((u) => u.id));
       if (cancelled) return;
-      setTeam(users || []);
-      const holder = (users || []).find((u) => u.role === "holder");
-      if (!holder) return;
-      const { data: done } = await supabase.from("step_progress").select("step_id").eq("user_id", holder.id);
-      const completed = new Set((done || []).map((r) => r.step_id));
-      const map = {};
-      for (const bid of account.approved_brand_ids) {
-        const brand = brands.find((b) => b.id === bid);
-        if (!brand) continue;
-        const total = brand.brand_steps.length;
-        const doneCount = brand.brand_steps.filter((s) => completed.has(s.id)).length;
-        map[bid] = { done: doneCount, total };
+      const byUser = {};
+      for (const u of users) byUser[u.id] = new Set();
+      for (const row of rows || []) {
+        if (!byUser[row.user_id]) byUser[row.user_id] = new Set();
+        byUser[row.user_id].add(row.step_id);
       }
-      setProgressByBrand(map);
+      setCompletedByUser(byUser);
     }
     load();
     return () => { cancelled = true; };
   }, [account.id]);
+
+  function progressFor(userId, brand) {
+    const completed = completedByUser[userId] || new Set();
+    const total = brand.brand_steps.length;
+    const done = brand.brand_steps.filter((s) => completed.has(s.id)).length;
+    return { done, total, pct: total ? Math.round((done / total) * 100) : 0 };
+  }
+
+  const holder = (team || []).find((u) => u.role === "holder");
 
   return (
     <div>
@@ -969,28 +980,65 @@ function CustomerProfileLive({ account: initialAccount, brands, onBack, onDelete
       <EditAccountDetails account={account} onSaved={refreshAccount} />
       <div style={{ fontSize: 15, color: "#8a8074", marginTop: 4, marginBottom: 20 }}>{account.main_contact_name} · {account.main_contact_email}</div>
 
-      <div style={{ fontSize: 15, fontWeight: 600, color: "#6b6155", marginBottom: 10 }}>Brand access & progress</div>
+      <div style={{ fontSize: 15, fontWeight: 600, color: "#6b6155", marginBottom: 10 }}>Brand access & main holder's progress</div>
       <EditBrandAccess account={account} brands={brands} onSaved={refreshAccount} />
-      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
-        {account.approved_brand_ids.map((bid) => {
-          const brand = brands.find((b) => b.id === bid);
-          if (!brand) return null;
-          const p = progressByBrand[bid] || { done: 0, total: brand.brand_steps.length };
-          const pct = p.total ? Math.round((p.done / p.total) * 100) : 0;
+      <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 28 }}>
+        {approvedBrands.map((brand) => {
+          const p = holder ? progressFor(holder.id, brand) : { done: 0, total: brand.brand_steps.length, pct: 0 };
           return (
-            <div key={bid} style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: "14px 16px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                <div style={{ fontWeight: 500, color: navy[900], fontSize: 16 }}>{brand.name}</div>
-                <Badge tone={pct === 100 ? "gold" : "navy"}>{p.done} / {p.total} complete</Badge>
+            <div key={brand.id} style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: "14px 16px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, justifyContent: "space-between", marginBottom: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  {brand.logo_url && <img src={brand.logo_url} alt={brand.name} style={{ height: 24, width: 24, objectFit: "contain" }} />}
+                  <div style={{ fontWeight: 500, color: navy[900], fontSize: 16 }}>{brand.name}</div>
+                </div>
+                <Badge tone={p.pct === 100 ? "gold" : "navy"}>{p.done} / {p.total} complete</Badge>
               </div>
               <div style={{ height: 6, background: "#e4dfd6", borderRadius: 999, overflow: "hidden" }}>
-                <div style={{ height: "100%", width: `${pct}%`, background: pct === 100 ? "#4a6b3d" : navy[500] }} />
+                <div style={{ height: "100%", width: `${p.pct}%`, background: p.pct === 100 ? "#4a6b3d" : navy[500] }} />
               </div>
             </div>
           );
         })}
-        {account.approved_brand_ids.length === 0 && <div style={{ fontSize: 15, color: "#a39a8d" }}>No brand access approved yet.</div>}
+        {approvedBrands.length === 0 && <div style={{ fontSize: 15, color: "#a39a8d" }}>No brand access approved yet.</div>}
       </div>
+
+      <div style={{ fontSize: 15, fontWeight: 600, color: "#6b6155", marginBottom: 10 }}>Team performance</div>
+      <p style={{ fontSize: 14, color: "#8a8074", margin: "0 0 12px" }}>Every team member's own real progress, same as they'd see on their own dashboard.</p>
+      {approvedBrands.length === 0 || !team ? (
+        <div style={{ fontSize: 15, color: "#a39a8d", marginBottom: 24 }}>{!team ? "Loading…" : "No brand access approved yet."}</div>
+      ) : (
+        <div className="nbd-table-wrap" style={{ overflowX: "auto", marginBottom: 28 }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+            <thead>
+              <tr>
+                <th style={{ textAlign: "left", padding: "8px 12px", color: "#8a8074", fontSize: 13, textTransform: "uppercase", letterSpacing: 0.5, borderBottom: "1px solid #e4dfd6" }}>Team member</th>
+                {approvedBrands.map((brand) => (
+                  <th key={brand.id} style={{ textAlign: "left", padding: "8px 12px", color: "#8a8074", fontSize: 13, textTransform: "uppercase", letterSpacing: 0.5, borderBottom: "1px solid #e4dfd6", whiteSpace: "nowrap" }}>{brand.name}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {team.map((u) => (
+                <tr key={u.id}>
+                  <td style={{ padding: "10px 12px", borderBottom: "1px solid #f0ece3" }}>
+                    <div style={{ fontWeight: 600, color: navy[900] }}>{u.name}{u.role === "holder" ? " (holder)" : ""}</div>
+                    <div style={{ fontSize: 13, color: "#a39a8d" }}>{u.email}</div>
+                  </td>
+                  {approvedBrands.map((brand) => {
+                    const p = progressFor(u.id, brand);
+                    return (
+                      <td key={brand.id} style={{ padding: "10px 12px", borderBottom: "1px solid #f0ece3", whiteSpace: "nowrap" }}>
+                        <Badge tone={p.pct === 100 ? "gold" : p.done > 0 ? "navy" : "muted"}>{p.done} / {p.total}</Badge>
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       <div style={{ fontSize: 15, fontWeight: 600, color: "#6b6155", marginBottom: 10 }}>Team</div>
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
