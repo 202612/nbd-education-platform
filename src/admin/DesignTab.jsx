@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Loader2, Upload } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
 import { navy, grey, useSiteSettings } from "../lib/ui.jsx";
@@ -109,6 +109,126 @@ function BackgroundEditor({ draft, setDraft, onUpload, uploading }) {
   );
 }
 
+function BrandLogoRow({ brand, onChange, onMove, isFirst, isLast }) {
+  return (
+    <div style={{ display: "flex", alignItems: "flex-start", gap: 16, padding: "14px 0", borderBottom: "1px solid #eee2d3" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+        <button className="nbd-btn nbd-btn--ghost nbd-btn--sm" disabled={isFirst} onClick={() => onMove(-1)} style={{ padding: "2px 8px" }}>↑</button>
+        <button className="nbd-btn nbd-btn--ghost nbd-btn--sm" disabled={isLast} onClick={() => onMove(1)} style={{ padding: "2px 8px" }}>↓</button>
+      </div>
+
+      <div style={{ width: 90, height: 44, background: navy[100], borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <img src={brand.logo_url} alt={brand.name} style={{ height: Math.min(brand.hero_size, 40), maxWidth: 80, objectFit: "contain" }} />
+      </div>
+
+      <div style={{ flex: 1, minWidth: 200 }}>
+        <div style={{ fontWeight: 700, color: navy[900], fontSize: 14, marginBottom: 8 }}>{brand.name}</div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
+          <label style={{ fontSize: 13, color: grey, display: "flex", alignItems: "center", gap: 6 }}>
+            <input type="checkbox" checked={brand.hero_visible} onChange={(e) => onChange({ hero_visible: e.target.checked })} />
+            Show on landing page
+          </label>
+          <label style={{ fontSize: 13, color: grey, display: "flex", alignItems: "center", gap: 6 }}>
+            Side:
+            <select value={brand.hero_side} onChange={(e) => onChange({ hero_side: e.target.value })} style={{ padding: "3px 6px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 13 }}>
+              <option value="left">Left</option>
+              <option value="right">Right</option>
+            </select>
+          </label>
+        </div>
+        <div style={{ display: "flex", gap: 24, marginTop: 10, flexWrap: "wrap" }}>
+          <div style={{ minWidth: 160 }}>
+            <Slider label="Size" value={brand.hero_size} onChange={(v) => onChange({ hero_size: v })} min={20} max={90} />
+          </div>
+          <div style={{ minWidth: 160 }}>
+            <Slider label="Vertical offset" value={brand.hero_offset_y} onChange={(v) => onChange({ hero_offset_y: v })} min={-60} max={60} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BrandHeroLogos() {
+  const [brands, setBrands] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [notice, setNotice] = useState("");
+
+  async function reload() {
+    const { data } = await supabase
+      .from("brands")
+      .select("id,name,logo_url,hero_visible,hero_side,hero_size,hero_offset_y,hero_order")
+      .not("logo_url", "is", null)
+      .order("hero_order");
+    setBrands(data || []);
+  }
+
+  useEffect(() => { reload(); }, []);
+
+  function updateLocal(id, fields) {
+    setBrands((list) => list.map((b) => (b.id === id ? { ...b, ...fields } : b)));
+  }
+
+  function move(id, dir) {
+    setBrands((list) => {
+      const idx = list.findIndex((b) => b.id === id);
+      const swapWith = idx + dir;
+      if (swapWith < 0 || swapWith >= list.length) return list;
+      const next = [...list];
+      [next[idx], next[swapWith]] = [next[swapWith], next[idx]];
+      return next;
+    });
+  }
+
+  async function save() {
+    setSaving(true);
+    setNotice("");
+    await Promise.all(
+      brands.map((b, i) =>
+        supabase
+          .from("brands")
+          .update({ hero_visible: b.hero_visible, hero_side: b.hero_side, hero_size: b.hero_size, hero_offset_y: b.hero_offset_y, hero_order: i })
+          .eq("id", b.id)
+      )
+    );
+    setSaving(false);
+    setNotice("Saved — changes are live on the landing page now.");
+    reload();
+  }
+
+  if (!brands) return <div style={{ color: grey, fontSize: 14 }}>Loading…</div>;
+
+  return (
+    <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 20, marginBottom: 20 }}>
+      <div style={{ fontWeight: 700, color: navy[900], marginBottom: 4 }}>Brand logos on the landing page</div>
+      <p style={{ fontSize: 13, color: grey, margin: "0 0 14px" }}>
+        Choose which side each brand's logo sits on, how big it is, and its vertical position. Use the arrows to reorder within a side.
+      </p>
+
+      {brands.length === 0 ? (
+        <div style={{ color: "#a39a8d", fontSize: 14 }}>No brands have a logo uploaded yet.</div>
+      ) : (
+        brands.map((b, i) => (
+          <BrandLogoRow
+            key={b.id}
+            brand={b}
+            isFirst={i === 0}
+            isLast={i === brands.length - 1}
+            onChange={(fields) => updateLocal(b.id, fields)}
+            onMove={(dir) => move(b.id, dir)}
+          />
+        ))
+      )}
+
+      {notice && <div style={{ color: "#4d6b2c", fontSize: 13, margin: "14px 0 0" }}>{notice}</div>}
+
+      <button className="nbd-btn nbd-btn--primary" onClick={save} disabled={saving} style={{ marginTop: 16, padding: "10px 22px" }}>
+        {saving ? "Saving…" : "Save brand logo layout"}
+      </button>
+    </div>
+  );
+}
+
 export default function DesignTab() {
   const { settings, loading, reload } = useSiteSettings();
   const [draft, setDraft] = useState(null);
@@ -153,6 +273,7 @@ export default function DesignTab() {
 
       <LogoEditor draft={draft} setDraft={setDraft} uploading={uploadingLogo} onUpload={(e) => e.target.files[0] && uploadFile(e.target.files[0], setUploadingLogo, "logo_url")} />
       <BackgroundEditor draft={draft} setDraft={setDraft} uploading={uploadingBg} onUpload={(e) => e.target.files[0] && uploadFile(e.target.files[0], setUploadingBg, "background_url")} />
+      <BrandHeroLogos />
 
       <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 20, marginBottom: 20 }}>
         <div style={{ fontWeight: 700, color: navy[900], marginBottom: 14 }}>Heading text</div>

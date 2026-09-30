@@ -76,9 +76,10 @@ export function AuthHero() {
     let cancelled = false;
     supabase
       .from("brands")
-      .select("id,name,logo_url")
+      .select("id,name,logo_url,hero_visible,hero_side,hero_size,hero_offset_y,hero_order")
       .not("logo_url", "is", null)
-      .order("name")
+      .eq("hero_visible", true)
+      .order("hero_order")
       .then(({ data }) => { if (!cancelled) setBrandLogos(data || []); });
     return () => { cancelled = true; };
   }, []);
@@ -92,11 +93,8 @@ export function AuthHero() {
       }
     : { background: navy[100] };
 
-  const logoOffsets = [0, 28, -18, 14, -26, 18, -12, 24];
-
-  const mid = Math.ceil(brandLogos.length / 2);
-  const leftLogos = brandLogos.slice(0, mid);
-  const rightLogos = brandLogos.slice(mid);
+  const leftLogos = brandLogos.filter((b) => b.hero_side !== "right");
+  const rightLogos = brandLogos.filter((b) => b.hero_side === "right");
 
   const logoCluster = (logos, justify) => (
     <div
@@ -111,17 +109,17 @@ export function AuthHero() {
         maxWidth: 340,
       }}
     >
-      {logos.map((b, i) => (
+      {logos.map((b) => (
         <img
           key={b.id}
           src={b.logo_url}
           alt={b.name}
           title={b.name}
           style={{
-            height: "clamp(38px, 5.5vw, 58px)",
+            height: `${b.hero_size || 44}px`,
             maxWidth: 130,
             objectFit: "contain",
-            transform: `translateY(${logoOffsets[i % logoOffsets.length]}px)`,
+            transform: `translateY(${b.hero_offset_y || 0}px)`,
           }}
         />
       ))}
