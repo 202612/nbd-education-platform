@@ -564,7 +564,53 @@ function CustomerDashboard({ brands, completedStepIds, onStepCompleted, particip
 
 // ================= TEAM =================
 
-function TeamProgressTable({ team, brands, teamProgress }) {
+function ReadOnlyStepRow({ step, done }) {
+  const Icon = STEP_ICON[step.type];
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 12, background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: "11px 14px" }}>
+      {done ? <CheckCircle2 size={16} color="#4a6b3d" /> : <Icon size={16} color="#a39a8d" />}
+      <div style={{ flex: 1 }}>
+        <div style={{ fontWeight: 500, color: navy[900], fontSize: 15 }}>{step.title}</div>
+        <div style={{ fontSize: 13, color: "#8a8074" }}>{STEP_LABEL[step.type]}</div>
+      </div>
+      {done && <Badge tone="gold">Done</Badge>}
+    </div>
+  );
+}
+
+// Full step-by-step view of one team member's progress, exactly as detailed
+// as their own Training tab — this is the holder's "full access to all
+// views," read-only (no writes happen from here, unlike admin test mode).
+function EmployeeDetail({ user, brands, completedStepIds, onBack }) {
+  return (
+    <div style={{ marginBottom: 28 }}>
+      <button onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 15, color: navy[700], marginBottom: 14, background: "none", border: "none", cursor: "pointer" }}>
+        <ChevronLeft size={15} /> Back to team progress
+      </button>
+      <h3 style={{ fontSize: 19, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>{user.name}'s progress</h3>
+      <p style={{ color: "#8a8074", fontSize: 15, margin: "0 0 20px" }}>{user.email}</p>
+      {brands.map((brand) => {
+        const steps = [...brand.steps].sort((a, b) => a.order_index - b.order_index);
+        const done = steps.filter((s) => completedStepIds.has(s.id)).length;
+        return (
+          <div key={brand.id} style={{ marginBottom: 22 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+              {brand.logo_url && <img src={brand.logo_url} alt={brand.name} style={{ height: 28, maxWidth: 90, objectFit: "contain" }} />}
+              <div style={{ fontWeight: 600, color: navy[900], fontSize: 16 }}>{brand.name}</div>
+              <Badge tone={done === steps.length && steps.length > 0 ? "gold" : "navy"}>{done} / {steps.length}</Badge>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {steps.map((s) => <ReadOnlyStepRow key={s.id} step={s} done={completedStepIds.has(s.id)} />)}
+              {steps.length === 0 && <div style={{ color: "#a39a8d", fontSize: 14 }}>No steps added yet.</div>}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function TeamProgressTable({ team, brands, teamProgress, onSelectUser }) {
   function progressFor(userId, brand) {
     const completed = teamProgress[userId] || new Set();
     const total = brand.steps.length;
@@ -577,7 +623,7 @@ function TeamProgressTable({ team, brands, teamProgress }) {
   return (
     <div style={{ marginBottom: 28 }}>
       <h3 style={{ fontSize: 17, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Team progress</h3>
-      <p style={{ color: "#8a8074", fontSize: 15, margin: "0 0 14px" }}>Where everyone on your team stands, by brand.</p>
+      <p style={{ color: "#8a8074", fontSize: 15, margin: "0 0 14px" }}>Where everyone on your team stands, by brand. Click a name for their full step-by-step breakdown.</p>
       <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
           <thead>
@@ -592,8 +638,10 @@ function TeamProgressTable({ team, brands, teamProgress }) {
             {team.map((u) => (
               <tr key={u.id}>
                 <td style={{ padding: "10px 12px", borderBottom: "1px solid #f0ece3" }}>
-                  <div style={{ fontWeight: 600, color: navy[900] }}>{u.name}{u.role === "holder" ? " (you)" : ""}</div>
-                  <div style={{ fontSize: 13, color: "#a39a8d" }}>{u.email}</div>
+                  <button onClick={() => onSelectUser(u)} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}>
+                    <div style={{ fontWeight: 600, color: navy[700], textDecoration: "underline" }}>{u.name}{u.role === "holder" ? " (you)" : ""}</div>
+                    <div style={{ fontSize: 13, color: "#a39a8d" }}>{u.email}</div>
+                  </button>
                 </td>
                 {brands.map((brand) => {
                   const p = progressFor(u.id, brand);
@@ -617,6 +665,7 @@ function CustomerTeam({ team, currentUserId, onAdd, onRemove, brands = [], teamP
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [viewingUser, setViewingUser] = useState(null);
 
   async function add() {
     if (!name.trim() || !email.trim()) { setError("Enter a name and email first"); return; }
@@ -628,12 +677,23 @@ function CustomerTeam({ team, currentUserId, onAdd, onRemove, brands = [], teamP
     setName(""); setEmail("");
   }
 
+  if (isHolder && viewingUser) {
+    return (
+      <EmployeeDetail
+        user={viewingUser}
+        brands={brands}
+        completedStepIds={teamProgress[viewingUser.id] || new Set()}
+        onBack={() => setViewingUser(null)}
+      />
+    );
+  }
+
   return (
     <div>
       <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Team</h2>
       <p style={{ color: "#8a8074", fontSize: 16, margin: "0 0 20px" }}>Add staff to your account. They sign in with the exact email you enter here, choosing their own password the first time.</p>
 
-      {isHolder && <TeamProgressTable team={team} brands={brands} teamProgress={teamProgress} />}
+      {isHolder && <TeamProgressTable team={team} brands={brands} teamProgress={teamProgress} onSelectUser={setViewingUser} />}
       <div style={{ display: "flex", gap: 8, marginBottom: 18, flexWrap: "wrap" }}>
         <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Staff name" style={{ flex: 1, minWidth: 140, padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 16 }} />
         <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" style={{ flex: 1, minWidth: 140, padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 16 }} />
