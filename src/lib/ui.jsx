@@ -48,6 +48,9 @@ const DEFAULT_SITE_SETTINGS = {
   eyebrow: "National Beauty Distribution",
   headline: "Education Portal",
   subtitle: "Training, certification and brand education for our stockists",
+  eyebrow_size: 15,
+  headline_size: 42,
+  subtitle_size: 15,
 };
 
 export function useSiteSettings() {
@@ -162,14 +165,14 @@ export function AuthHero() {
             <img src={WORDMARK_SRC} alt="National Beauty Distribution" style={{ height: "clamp(68px, 11vw, 130px)", display: "block" }} />
           )}
         </div>
-        <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: navy[700], marginBottom: 18 }}>
+        <div style={{ fontSize: settings.eyebrow_size || 15, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: navy[700], marginBottom: 18 }}>
           {settings.eyebrow}
         </div>
         <h1
           style={{
             fontFamily: "'Lato', -apple-system, sans-serif",
             fontWeight: 300,
-            fontSize: "clamp(26px, 4vw, 42px)",
+            fontSize: `${settings.headline_size || 42}px`,
             color: navy[900],
             margin: "0 0 20px",
             lineHeight: 1.08,
@@ -179,7 +182,7 @@ export function AuthHero() {
         </h1>
         <div
           style={{
-            fontSize: "clamp(12px, 1.6vw, 15px)",
+            fontSize: settings.subtitle_size || 15,
             letterSpacing: 2,
             textTransform: "uppercase",
             color: grey,

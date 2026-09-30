@@ -270,7 +270,7 @@ function BrandHeroLogos({ draft, setDraft }) {
             contentEditable
             suppressContentEditableWarning
             onBlur={(e) => setDraft((d) => ({ ...d, eyebrow: e.currentTarget.textContent }))}
-            style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: navy[700], marginBottom: 6, opacity: 0.8, cursor: "text", outline: "none", borderRadius: 4 }}
+            style={{ fontSize: draft.eyebrow_size || 15, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: navy[700], marginBottom: 6, opacity: 0.8, cursor: "text", outline: "none", borderRadius: 4 }}
           >
             {draft.eyebrow}
           </div>
@@ -278,9 +278,17 @@ function BrandHeroLogos({ draft, setDraft }) {
             contentEditable
             suppressContentEditableWarning
             onBlur={(e) => setDraft((d) => ({ ...d, headline: e.currentTarget.textContent }))}
-            style={{ fontFamily: "'Lato', sans-serif", fontWeight: 300, fontSize: 22, color: navy[900], opacity: 0.8, cursor: "text", outline: "none", borderRadius: 4 }}
+            style={{ fontFamily: "'Lato', sans-serif", fontWeight: 300, fontSize: draft.headline_size || 42, color: navy[900], opacity: 0.8, cursor: "text", outline: "none", borderRadius: 4 }}
           >
             {draft.headline}
+          </div>
+          <div
+            contentEditable
+            suppressContentEditableWarning
+            onBlur={(e) => setDraft((d) => ({ ...d, subtitle: e.currentTarget.textContent }))}
+            style={{ fontSize: draft.subtitle_size || 15, letterSpacing: 1, textTransform: "uppercase", color: grey, opacity: 0.8, cursor: "text", outline: "none", borderRadius: 4, marginTop: 6 }}
+          >
+            {draft.subtitle}
           </div>
         </div>
 
@@ -295,6 +303,18 @@ function BrandHeroLogos({ draft, setDraft }) {
             onResize={(id, size) => updateLocal(id, { hero_size: size })}
           />
         ))}
+      </div>
+
+      <div style={{ display: "flex", gap: 24, flexWrap: "wrap", marginBottom: 8 }}>
+        <div style={{ minWidth: 160 }}>
+          <Slider label="Eyebrow text size" value={draft.eyebrow_size || 15} onChange={(v) => setDraft((d) => ({ ...d, eyebrow_size: v }))} min={10} max={28} />
+        </div>
+        <div style={{ minWidth: 160 }}>
+          <Slider label="Headline text size" value={draft.headline_size || 42} onChange={(v) => setDraft((d) => ({ ...d, headline_size: v }))} min={20} max={90} />
+        </div>
+        <div style={{ minWidth: 160 }}>
+          <Slider label="Subheading text size" value={draft.subtitle_size || 15} onChange={(v) => setDraft((d) => ({ ...d, subtitle_size: v }))} min={10} max={28} />
+        </div>
       </div>
 
       <div style={{ fontWeight: 700, color: navy[900], fontSize: 14, margin: "20px 0 10px" }}>Brand logo files</div>
