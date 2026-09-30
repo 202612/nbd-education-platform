@@ -30,7 +30,7 @@ function LogoEditor({ draft, setDraft, onUpload, uploading }) {
       <p style={{ fontSize: 13, color: grey, margin: "0 0 14px" }}>Shown in the white card on the hero banner. Upload a PNG, JPG, SVG, or WebP — PDFs can't display directly in a browser.</p>
 
       <div style={{ display: "flex", gap: 24, flexWrap: "wrap", alignItems: "flex-start" }}>
-        <div style={{ background: "linear-gradient(160deg, #201b15, #29331b)", borderRadius: 12, padding: 20, display: "flex", justifyContent: "center" }}>
+        <div style={{ background: "linear-gradient(160deg, #f8f8f8, #eaf2dc)", borderRadius: 12, padding: 20, display: "flex", justifyContent: "center" }}>
           <div style={{ background: "#fff", borderRadius: 12, padding: "16px 24px", display: "inline-flex" }}>
             <div style={{ height: 70, width: 200, overflow: "hidden", position: "relative" }}>
               {draft.logo_url ? (
@@ -79,7 +79,7 @@ function BackgroundEditor({ draft, setDraft, onUpload, uploading }) {
         backgroundPosition: `${draft.background_position_x}% ${draft.background_position_y}%`,
         backgroundRepeat: "no-repeat",
       }
-    : { background: "linear-gradient(160deg, #201b15, #29331b)" };
+    : { background: "linear-gradient(160deg, #f8f8f8, #eaf2dc)" };
 
   return (
     <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 20, marginBottom: 20 }}>

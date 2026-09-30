@@ -78,7 +78,7 @@ export function AuthHero() {
         backgroundPosition: `${settings.background_position_x}% ${settings.background_position_y}%`,
         backgroundRepeat: "no-repeat",
       }
-    : { background: "linear-gradient(160deg, #201b15 0%, #2a2319 55%, #29331b 100%)" };
+    : { background: "linear-gradient(160deg, #f8f8f8 0%, #f1f5e8 55%, #eaf2dc 100%)" };
 
   return (
     <div
@@ -90,12 +90,12 @@ export function AuthHero() {
       }}
     >
       {settings.background_url && (
-        <div style={{ position: "absolute", inset: 0, background: "rgba(20,20,18,0.45)" }} />
+        <div style={{ position: "absolute", inset: 0, background: "rgba(255,255,255,0.55)" }} />
       )}
       <div style={{ position: "relative" }}>
         <div style={{ display: "flex", justifyContent: "center", marginBottom: 40 }}>
           {settings.logo_url ? (
-            <div style={{ background: "#fff", borderRadius: 16, padding: "clamp(14px, 2vw, 22px) clamp(24px, 4vw, 40px)", display: "inline-flex", overflow: "hidden" }}>
+            <div style={{ background: "#fff", borderRadius: 16, padding: "clamp(14px, 2vw, 22px) clamp(24px, 4vw, 40px)", display: "inline-flex", overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
               <div style={{ height: "clamp(56px, 9vw, 100px)", width: "clamp(140px, 22vw, 250px)", overflow: "hidden", position: "relative" }}>
                 <img
                   src={settings.logo_url}
@@ -113,10 +113,10 @@ export function AuthHero() {
               </div>
             </div>
           ) : (
-            <img src={WORDMARK_WHITE_SRC} alt="National Beauty Distribution" style={{ height: "clamp(56px, 9vw, 100px)", display: "block" }} />
+            <img src={WORDMARK_SRC} alt="National Beauty Distribution" style={{ height: "clamp(56px, 9vw, 100px)", display: "block" }} />
           )}
         </div>
-        <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: navy[50], marginBottom: 18 }}>
+        <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: navy[700], marginBottom: 18 }}>
           {settings.eyebrow}
         </div>
         <h1
@@ -124,7 +124,7 @@ export function AuthHero() {
             fontFamily: "'Lato', -apple-system, sans-serif",
             fontWeight: 300,
             fontSize: "clamp(36px, 6vw, 64px)",
-            color: "#fff",
+            color: navy[900],
             margin: "0 0 20px",
             lineHeight: 1.08,
           }}
@@ -136,7 +136,7 @@ export function AuthHero() {
             fontSize: "clamp(12px, 1.6vw, 15px)",
             letterSpacing: 2,
             textTransform: "uppercase",
-            color: "#e5e5e5",
+            color: grey,
             maxWidth: 640,
             margin: "0 auto",
             lineHeight: 1.7,
