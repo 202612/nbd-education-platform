@@ -3,8 +3,8 @@ import { Loader2 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
 import { navy, cream, grey, AuthHero } from "../lib/ui.jsx";
 
-export default function Login({ onSwitchToApply }) {
-  const [mode, setMode] = useState("signin"); // "signin" | "signup"
+export default function Login({ onSwitchToApply, initialMode = "signin" }) {
+  const [mode, setMode] = useState(initialMode); // "signin" | "signup"
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -50,7 +50,7 @@ export default function Login({ onSwitchToApply }) {
         <p style={{ color: grey, fontSize: 16, margin: "0 0 28px", textAlign: "center" }}>
           {mode === "signin"
             ? "For approved account holders, staff, and admins."
-            : "First time here? Use the email your admin set up for you and choose a password."}
+            : "Part of a team? Use the exact email your account manager added you with, and choose a password."}
         </p>
 
         <form onSubmit={submit}>
@@ -88,7 +88,7 @@ export default function Login({ onSwitchToApply }) {
           onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setError(""); setNotice(""); }}
           style={{ display: "block", width: "100%", textAlign: "center", background: "none", border: "none", color: navy[700], fontSize: 16, marginTop: 20, fontFamily: "inherit" }}
         >
-          {mode === "signin" ? "First time signing in? Create your password" : "Already have a password? Sign in"}
+          {mode === "signin" ? "Part of a team? Create your password" : "Already have a password? Sign in"}
         </button>
 
         {mode === "signin" && (

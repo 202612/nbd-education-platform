@@ -47,7 +47,7 @@ export default function App() {
   const [identity, setIdentity] = useState(null); // { kind, admin } | { kind, user, account } | { kind: "unrecognized" }
   const [resolving, setResolving] = useState(false);
   const [resolveError, setResolveError] = useState("");
-  const [authScreen, setAuthScreen] = useState("apply"); // "login" | "apply" — new customers land here first; staff/admin sign in via the link on that screen
+  const [authScreen, setAuthScreen] = useState("apply"); // "login" | "apply" | "team" — new customers land here first; staff/admin sign in via the link on that screen, "team" is a shortcut straight into password creation
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
@@ -77,9 +77,15 @@ export default function App() {
 
   if (session === undefined) return <CenteredLoader label="Loading…" />;
   if (!session) {
-    return authScreen === "apply"
-      ? <ApplyForAccess onSwitchToLogin={() => setAuthScreen("login")} />
-      : <Login onSwitchToApply={() => setAuthScreen("apply")} />;
+    if (authScreen === "apply") {
+      return <ApplyForAccess onSwitchToLogin={() => setAuthScreen("login")} onSwitchToTeam={() => setAuthScreen("team")} />;
+    }
+    return (
+      <Login
+        onSwitchToApply={() => setAuthScreen("apply")}
+        initialMode={authScreen === "team" ? "signup" : "signin"}
+      />
+    );
   }
   if (resolving || identity === null) return <CenteredLoader label="Checking your account…" />;
   if (resolveError) {

@@ -661,20 +661,21 @@ function TeamProgressTable({ team, brands, teamProgress, onSelectUser }) {
 }
 
 function CustomerTeam({ team, currentUserId, onAdd, onRemove, brands = [], teamProgress = {}, isHolder = false }) {
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [viewingUser, setViewingUser] = useState(null);
 
   async function add() {
-    if (!name.trim() || !email.trim()) { setError("Enter a name and email first"); return; }
+    if (!firstName.trim() || !lastName.trim() || !email.trim()) { setError("Enter a first name, last name, and email first"); return; }
     setBusy(true);
     setError("");
-    const err = await onAdd({ name: name.trim(), email: email.trim() });
+    const err = await onAdd({ name: `${firstName.trim()} ${lastName.trim()}`, email: email.trim() });
     setBusy(false);
     if (err) { setError(err); return; }
-    setName(""); setEmail("");
+    setFirstName(""); setLastName(""); setEmail("");
   }
 
   if (isHolder && viewingUser) {
@@ -695,7 +696,8 @@ function CustomerTeam({ team, currentUserId, onAdd, onRemove, brands = [], teamP
 
       {isHolder && <TeamProgressTable team={team} brands={brands} teamProgress={teamProgress} onSelectUser={setViewingUser} />}
       <div style={{ display: "flex", gap: 8, marginBottom: 18, flexWrap: "wrap" }}>
-        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Staff name" style={{ flex: 1, minWidth: 140, padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 16 }} />
+        <input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First name" style={{ flex: 1, minWidth: 120, padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 16 }} />
+        <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last name" style={{ flex: 1, minWidth: 120, padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 16 }} />
         <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" style={{ flex: 1, minWidth: 140, padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 16 }} />
         <button onClick={add} disabled={busy} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 15, opacity: busy ? 0.7 : 1 }}>Add</button>
       </div>

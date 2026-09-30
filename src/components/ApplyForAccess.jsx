@@ -3,7 +3,7 @@ import { Loader2 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
 import { navy, cream, grey, AuthHero } from "../lib/ui.jsx";
 
-export default function ApplyForAccess({ onSwitchToLogin }) {
+export default function ApplyForAccess({ onSwitchToLogin, onSwitchToTeam }) {
   const [brands, setBrands] = useState(null);
   const [customerNumber, setCustomerNumber] = useState("");
   const [company, setCompany] = useState("");
@@ -71,6 +71,17 @@ export default function ApplyForAccess({ onSwitchToLogin }) {
       <AuthHero />
 
       <div style={{ maxWidth: 480, margin: "0 auto", padding: "48px 20px 80px" }}>
+        <button
+          onClick={onSwitchToTeam}
+          style={{
+            display: "block", width: "100%", textAlign: "center", background: "#fff", border: `1px solid ${navy[300]}`,
+            borderRadius: 8, padding: "14px 16px", marginBottom: 28, fontFamily: "inherit", cursor: "pointer",
+          }}
+        >
+          <div style={{ fontSize: 16, fontWeight: 700, color: navy[900] }}>Logging in as part of a team?</div>
+          <div style={{ fontSize: 14, color: grey, marginTop: 2 }}>If your account manager already added you, create your password here →</div>
+        </button>
+
         <h2 style={{ fontSize: 24, fontWeight: 700, color: navy[900], margin: "0 0 4px", textAlign: "center" }}>Request training access</h2>
         <p style={{ color: grey, fontSize: 16, margin: "0 0 28px", textAlign: "center" }}>
           Tell us about your salon — we'll set up access to the brands you stock once approved.
