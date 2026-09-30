@@ -160,37 +160,23 @@ export function AuthHero() {
         {brandLogos.length > 0 && (
           <div
             style={{
-              marginTop: "clamp(32px, 5vw, 48px)",
-              background: navy[500],
-              borderRadius: 16,
-              padding: "clamp(18px, 3vw, 28px) clamp(16px, 3vw, 32px)",
               display: "flex",
               flexWrap: "wrap",
               justifyContent: "center",
               alignItems: "center",
-              gap: "clamp(20px, 4vw, 40px)",
+              gap: "clamp(24px, 5vw, 48px)",
               maxWidth: 900,
               margin: "clamp(32px, 5vw, 48px) auto 0",
             }}
           >
             {brandLogos.map((b) => (
-              <div
+              <img
                 key={b.id}
+                src={b.logo_url}
+                alt={b.name}
                 title={b.name}
-                style={{
-                  background: "#fff",
-                  borderRadius: 8,
-                  padding: "clamp(8px, 1.2vw, 12px) clamp(12px, 1.8vw, 18px)",
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
-                <img
-                  src={b.logo_url}
-                  alt={b.name}
-                  style={{ height: "clamp(20px, 3vw, 30px)", maxWidth: 100, objectFit: "contain", display: "block" }}
-                />
-              </div>
+                style={{ height: "clamp(24px, 3.5vw, 36px)", maxWidth: 110, objectFit: "contain" }}
+              />
             ))}
           </div>
         )}
