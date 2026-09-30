@@ -65,9 +65,14 @@ export function useSiteSettings() {
   return { settings: settings || DEFAULT_SITE_SETTINGS, loading, reload };
 }
 
+// Fixed stage height so brand-logo x/y percentages line up between this
+// component and the drag-and-drop preview in Admin → Design.
+export const HERO_STAGE_HEIGHT = "clamp(420px, 46vw, 520px)";
+
 // The hero banner shown at the top of the sign-in and request-access
-// screens. Everything here (logo, background, heading text) is editable
-// from Admin → Design — the form section below it is separate and fixed.
+// screens. Everything here (logo, background, heading text, brand logo
+// placement) is editable from Admin → Design — the form section below it
+// is separate and fixed.
 export function AuthHero() {
   const { settings } = useSiteSettings();
   const [brandLogos, setBrandLogos] = useState([]);
@@ -76,10 +81,9 @@ export function AuthHero() {
     let cancelled = false;
     supabase
       .from("brands")
-      .select("id,name,logo_url,hero_visible,hero_side,hero_size,hero_offset_y,hero_order")
+      .select("id,name,logo_url,hero_visible,hero_size,hero_x,hero_y")
       .not("logo_url", "is", null)
       .eq("hero_visible", true)
-      .order("hero_order")
       .then(({ data }) => { if (!cancelled) setBrandLogos(data || []); });
     return () => { cancelled = true; };
   }, []);
@@ -93,118 +97,99 @@ export function AuthHero() {
       }
     : { background: navy[100] };
 
-  const leftLogos = brandLogos.filter((b) => b.hero_side !== "right");
-  const rightLogos = brandLogos.filter((b) => b.hero_side === "right");
-
-  const logoCluster = (logos, justify) => (
+  return (
     <div
       style={{
-        display: "flex",
-        flexWrap: "wrap",
-        justifyContent: justify,
-        alignItems: "center",
-        columnGap: "clamp(20px, 2.8vw, 34px)",
-        rowGap: "clamp(24px, 3.5vw, 38px)",
-        flex: "1 1 220px",
-        maxWidth: 340,
+        ...backgroundStyle,
+        padding: "0 24px",
+        position: "relative",
+        height: HERO_STAGE_HEIGHT,
+        overflow: "hidden",
       }}
     >
-      {logos.map((b) => (
+      {settings.background_url && (
+        <div style={{ position: "absolute", inset: 0, background: "rgba(255,255,255,0.55)" }} />
+      )}
+
+      {brandLogos.map((b) => (
         <img
           key={b.id}
           src={b.logo_url}
           alt={b.name}
           title={b.name}
           style={{
+            position: "absolute",
+            left: `${b.hero_x}%`,
+            top: `${b.hero_y}%`,
+            transform: "translate(-50%, -50%)",
             height: `${b.hero_size || 44}px`,
             maxWidth: 130,
             objectFit: "contain",
-            transform: `translateY(${b.hero_offset_y || 0}px)`,
           }}
         />
       ))}
-    </div>
-  );
 
-  return (
-    <div
-      style={{
-        ...backgroundStyle,
-        padding: "clamp(36px, 5vw, 64px) 24px clamp(40px, 6vw, 72px)",
-        textAlign: "center",
-        position: "relative",
-      }}
-    >
-      {settings.background_url && (
-        <div style={{ position: "absolute", inset: 0, background: "rgba(255,255,255,0.55)" }} />
-      )}
       <div
         style={{
-          position: "relative",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "clamp(12px, 3vw, 36px)",
-          flexWrap: "wrap",
+          position: "absolute",
+          left: "50%",
+          top: "50%",
+          transform: "translate(-50%, -50%)",
+          width: "clamp(300px, 68vw, 620px)",
+          textAlign: "center",
         }}
       >
-        {leftLogos.length > 0 && logoCluster(leftLogos, "flex-end")}
-
-        <div style={{ flex: "0 1 620px" }}>
-          <div style={{ display: "flex", justifyContent: "center", marginBottom: 40 }}>
-            {settings.logo_url ? (
-              <div style={{ background: "#fff", borderRadius: 16, padding: "clamp(16px, 2.4vw, 26px) clamp(28px, 5vw, 48px)", display: "inline-flex", overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
-                <div style={{ height: "clamp(68px, 11vw, 130px)", width: "clamp(170px, 26vw, 300px)", overflow: "hidden", position: "relative" }}>
-                  <img
-                    src={settings.logo_url}
-                    alt="Logo"
-                    style={{
-                      position: "absolute",
-                      inset: 0,
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "contain",
-                      objectPosition: `${settings.logo_position_x}% ${settings.logo_position_y}%`,
-                      transform: `scale(${settings.logo_zoom})`,
-                    }}
-                  />
-                </div>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 40 }}>
+          {settings.logo_url ? (
+            <div style={{ background: "#fff", borderRadius: 16, padding: "clamp(16px, 2.4vw, 26px) clamp(28px, 5vw, 48px)", display: "inline-flex", overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+              <div style={{ height: "clamp(68px, 11vw, 130px)", width: "clamp(170px, 26vw, 300px)", overflow: "hidden", position: "relative" }}>
+                <img
+                  src={settings.logo_url}
+                  alt="Logo"
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "contain",
+                    objectPosition: `${settings.logo_position_x}% ${settings.logo_position_y}%`,
+                    transform: `scale(${settings.logo_zoom})`,
+                  }}
+                />
               </div>
-            ) : (
-              <img src={WORDMARK_SRC} alt="National Beauty Distribution" style={{ height: "clamp(68px, 11vw, 130px)", display: "block" }} />
-            )}
-          </div>
-          <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: navy[700], marginBottom: 18 }}>
-            {settings.eyebrow}
-          </div>
-          <h1
-            style={{
-              fontFamily: "'Lato', -apple-system, sans-serif",
-              fontWeight: 300,
-              fontSize: "clamp(26px, 4vw, 42px)",
-              color: navy[900],
-              margin: "0 0 20px",
-              lineHeight: 1.08,
-            }}
-          >
-            {settings.headline}
-          </h1>
-          <div
-            style={{
-              fontSize: "clamp(12px, 1.6vw, 15px)",
-              letterSpacing: 2,
-              textTransform: "uppercase",
-              color: grey,
-              maxWidth: 640,
-              margin: "0 auto",
-              lineHeight: 1.7,
-            }}
-          >
-            {settings.subtitle}
-          </div>
+            </div>
+          ) : (
+            <img src={WORDMARK_SRC} alt="National Beauty Distribution" style={{ height: "clamp(68px, 11vw, 130px)", display: "block" }} />
+          )}
         </div>
-
-        {rightLogos.length > 0 && logoCluster(rightLogos, "flex-start")}
+        <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: navy[700], marginBottom: 18 }}>
+          {settings.eyebrow}
+        </div>
+        <h1
+          style={{
+            fontFamily: "'Lato', -apple-system, sans-serif",
+            fontWeight: 300,
+            fontSize: "clamp(26px, 4vw, 42px)",
+            color: navy[900],
+            margin: "0 0 20px",
+            lineHeight: 1.08,
+          }}
+        >
+          {settings.headline}
+        </h1>
+        <div
+          style={{
+            fontSize: "clamp(12px, 1.6vw, 15px)",
+            letterSpacing: 2,
+            textTransform: "uppercase",
+            color: grey,
+            maxWidth: 640,
+            margin: "0 auto",
+            lineHeight: 1.7,
+          }}
+        >
+          {settings.subtitle}
+        </div>
       </div>
     </div>
   );

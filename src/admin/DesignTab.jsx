@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Loader2, Upload } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
-import { navy, grey, useSiteSettings } from "../lib/ui.jsx";
+import { navy, gold, grey, useSiteSettings } from "../lib/ui.jsx";
 
 function Slider({ label, value, onChange, min = 0, max = 100, step = 1 }) {
   return (
@@ -109,57 +109,88 @@ function BackgroundEditor({ draft, setDraft, onUpload, uploading }) {
   );
 }
 
-function BrandLogoRow({ brand, onChange, onMove, isFirst, isLast }) {
+function DraggableLogo({ brand, selected, stageRef, onSelect, onMove, onResize }) {
+  function startDrag(e) {
+    e.preventDefault();
+    onSelect(brand.id);
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    function handleMove(ev) {
+      const rect = stage.getBoundingClientRect();
+      const x = Math.min(97, Math.max(3, ((ev.clientX - rect.left) / rect.width) * 100));
+      const y = Math.min(94, Math.max(6, ((ev.clientY - rect.top) / rect.height) * 100));
+      onMove(brand.id, x, y);
+    }
+    function handleUp() {
+      window.removeEventListener("pointermove", handleMove);
+      window.removeEventListener("pointerup", handleUp);
+    }
+    window.addEventListener("pointermove", handleMove);
+    window.addEventListener("pointerup", handleUp);
+  }
+
+  function startResize(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const startY = e.clientY;
+    const startSize = brand.hero_size;
+
+    function handleMove(ev) {
+      const next = Math.min(90, Math.max(20, Math.round(startSize + (ev.clientY - startY) * 0.5)));
+      onResize(brand.id, next);
+    }
+    function handleUp() {
+      window.removeEventListener("pointermove", handleMove);
+      window.removeEventListener("pointerup", handleUp);
+    }
+    window.addEventListener("pointermove", handleMove);
+    window.addEventListener("pointerup", handleUp);
+  }
+
   return (
-    <div style={{ display: "flex", alignItems: "flex-start", gap: 16, padding: "14px 0", borderBottom: "1px solid #eee2d3" }}>
-      <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-        <button className="nbd-btn nbd-btn--ghost nbd-btn--sm" disabled={isFirst} onClick={() => onMove(-1)} style={{ padding: "2px 8px" }}>↑</button>
-        <button className="nbd-btn nbd-btn--ghost nbd-btn--sm" disabled={isLast} onClick={() => onMove(1)} style={{ padding: "2px 8px" }}>↓</button>
-      </div>
-
-      <div style={{ width: 90, height: 44, background: navy[100], borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-        <img src={brand.logo_url} alt={brand.name} style={{ height: Math.min(brand.hero_size, 40), maxWidth: 80, objectFit: "contain" }} />
-      </div>
-
-      <div style={{ flex: 1, minWidth: 200 }}>
-        <div style={{ fontWeight: 700, color: navy[900], fontSize: 14, marginBottom: 8 }}>{brand.name}</div>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
-          <label style={{ fontSize: 13, color: grey, display: "flex", alignItems: "center", gap: 6 }}>
-            <input type="checkbox" checked={brand.hero_visible} onChange={(e) => onChange({ hero_visible: e.target.checked })} />
-            Show on landing page
-          </label>
-          <label style={{ fontSize: 13, color: grey, display: "flex", alignItems: "center", gap: 6 }}>
-            Side:
-            <select value={brand.hero_side} onChange={(e) => onChange({ hero_side: e.target.value })} style={{ padding: "3px 6px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 13 }}>
-              <option value="left">Left</option>
-              <option value="right">Right</option>
-            </select>
-          </label>
-        </div>
-        <div style={{ display: "flex", gap: 24, marginTop: 10, flexWrap: "wrap" }}>
-          <div style={{ minWidth: 160 }}>
-            <Slider label="Size" value={brand.hero_size} onChange={(v) => onChange({ hero_size: v })} min={20} max={90} />
-          </div>
-          <div style={{ minWidth: 160 }}>
-            <Slider label="Vertical offset" value={brand.hero_offset_y} onChange={(v) => onChange({ hero_offset_y: v })} min={-60} max={60} />
-          </div>
-        </div>
-      </div>
+    <div
+      onPointerDown={startDrag}
+      style={{
+        position: "absolute",
+        left: `${brand.hero_x}%`,
+        top: `${brand.hero_y}%`,
+        transform: "translate(-50%, -50%)",
+        cursor: "grab",
+        padding: 6,
+        borderRadius: 8,
+        border: selected ? `2px dashed ${gold}` : "2px dashed transparent",
+      }}
+    >
+      <img src={brand.logo_url} alt={brand.name} draggable={false} style={{ height: brand.hero_size, maxWidth: 130, objectFit: "contain", pointerEvents: "none" }} />
+      {selected && (
+        <div
+          onPointerDown={startResize}
+          title="Drag to resize"
+          style={{
+            position: "absolute", right: -6, bottom: -6, width: 16, height: 16, borderRadius: "50%",
+            background: gold, border: "2px solid #fff", boxShadow: "0 1px 3px rgba(0,0,0,0.3)", cursor: "nwse-resize",
+          }}
+        />
+      )}
     </div>
   );
 }
 
 function BrandHeroLogos() {
+  const { settings } = useSiteSettings();
   const [brands, setBrands] = useState(null);
+  const [selectedId, setSelectedId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState("");
+  const stageRef = React.useRef(null);
 
   async function reload() {
     const { data } = await supabase
       .from("brands")
-      .select("id,name,logo_url,hero_visible,hero_side,hero_size,hero_offset_y,hero_order")
+      .select("id,name,logo_url,hero_visible,hero_size,hero_x,hero_y")
       .not("logo_url", "is", null)
-      .order("hero_order");
+      .order("name");
     setBrands(data || []);
   }
 
@@ -169,25 +200,14 @@ function BrandHeroLogos() {
     setBrands((list) => list.map((b) => (b.id === id ? { ...b, ...fields } : b)));
   }
 
-  function move(id, dir) {
-    setBrands((list) => {
-      const idx = list.findIndex((b) => b.id === id);
-      const swapWith = idx + dir;
-      if (swapWith < 0 || swapWith >= list.length) return list;
-      const next = [...list];
-      [next[idx], next[swapWith]] = [next[swapWith], next[idx]];
-      return next;
-    });
-  }
-
   async function save() {
     setSaving(true);
     setNotice("");
     await Promise.all(
-      brands.map((b, i) =>
+      brands.map((b) =>
         supabase
           .from("brands")
-          .update({ hero_visible: b.hero_visible, hero_side: b.hero_side, hero_size: b.hero_size, hero_offset_y: b.hero_offset_y, hero_order: i })
+          .update({ hero_visible: b.hero_visible, hero_size: b.hero_size, hero_x: b.hero_x, hero_y: b.hero_y })
           .eq("id", b.id)
       )
     );
@@ -198,26 +218,68 @@ function BrandHeroLogos() {
 
   if (!brands) return <div style={{ color: grey, fontSize: 14 }}>Loading…</div>;
 
+  const visible = brands.filter((b) => b.hero_visible);
+  const selected = brands.find((b) => b.id === selectedId);
+
   return (
     <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 20, marginBottom: 20 }}>
       <div style={{ fontWeight: 700, color: navy[900], marginBottom: 4 }}>Brand logos on the landing page</div>
       <p style={{ fontSize: 13, color: grey, margin: "0 0 14px" }}>
-        Choose which side each brand's logo sits on, how big it is, and its vertical position. Use the arrows to reorder within a side.
+        Drag any logo to move it. Click one to select it, then drag the small handle at its corner to resize it. Changes save when you click Save below.
       </p>
 
-      {brands.length === 0 ? (
-        <div style={{ color: "#a39a8d", fontSize: 14 }}>No brands have a logo uploaded yet.</div>
-      ) : (
-        brands.map((b, i) => (
-          <BrandLogoRow
+      <div
+        ref={stageRef}
+        onPointerDown={() => setSelectedId(null)}
+        style={{
+          position: "relative",
+          width: "100%",
+          height: 320,
+          borderRadius: 12,
+          overflow: "hidden",
+          background: settings.background_url
+            ? `url(${settings.background_url}) center / cover no-repeat`
+            : navy[100],
+          border: "1px solid #e4dfd6",
+          marginBottom: 16,
+          userSelect: "none",
+        }}
+      >
+        <div
+          style={{
+            position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%)",
+            width: "60%", textAlign: "center", pointerEvents: "none", opacity: 0.55,
+          }}
+        >
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: navy[700], marginBottom: 6 }}>{settings.eyebrow}</div>
+          <div style={{ fontFamily: "'Lato', sans-serif", fontWeight: 300, fontSize: 22, color: navy[900] }}>{settings.headline}</div>
+        </div>
+
+        {visible.map((b) => (
+          <DraggableLogo
             key={b.id}
             brand={b}
-            isFirst={i === 0}
-            isLast={i === brands.length - 1}
-            onChange={(fields) => updateLocal(b.id, fields)}
-            onMove={(dir) => move(b.id, dir)}
+            selected={b.id === selectedId}
+            stageRef={stageRef}
+            onSelect={setSelectedId}
+            onMove={(id, x, y) => updateLocal(id, { hero_x: x, hero_y: y })}
+            onResize={(id, size) => updateLocal(id, { hero_size: size })}
           />
-        ))
+        ))}
+      </div>
+
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "10px 18px", marginBottom: 4 }}>
+        {brands.map((b) => (
+          <label key={b.id} style={{ fontSize: 13, color: grey, display: "flex", alignItems: "center", gap: 6 }}>
+            <input type="checkbox" checked={b.hero_visible} onChange={(e) => updateLocal(b.id, { hero_visible: e.target.checked })} />
+            {b.name}
+          </label>
+        ))}
+      </div>
+      {selected && (
+        <p style={{ fontSize: 12, color: "#a39a8d", margin: "8px 0 0" }}>
+          Selected: <strong>{selected.name}</strong> — drag it on the stage above, or drag its corner handle to resize.
+        </p>
       )}
 
       {notice && <div style={{ color: "#4d6b2c", fontSize: 13, margin: "14px 0 0" }}>{notice}</div>}
