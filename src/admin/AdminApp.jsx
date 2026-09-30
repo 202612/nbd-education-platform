@@ -9,6 +9,7 @@ import { AdminAssistant } from "./AdminMock.jsx";
 import DesignTab from "./DesignTab.jsx";
 import CertificatesTab from "./CertificatesTab.jsx";
 import PreviewAsCustomer from "./PreviewAsCustomer.jsx";
+import AdminSecurity from "./AdminSecurity.jsx";
 
 // ================= BRANDS & STEPS =================
 
@@ -1334,6 +1335,7 @@ export default function AdminApp() {
     { id: "approvals", label: "Approvals", icon: Clock },
     { id: "certificates", label: "Certificates", icon: Award },
     { id: "design", label: "Design", icon: Palette },
+    { id: "security", label: "Security", icon: ShieldCheck },
   ];
   return (
     <div style={{ display: "flex", gap: 24 }}>
@@ -1353,6 +1355,7 @@ export default function AdminApp() {
         {tab === "approvals" && <AdminApprovalsLive />}
         {tab === "certificates" && <CertificatesTab />}
         {tab === "design" && <DesignTab />}
+        {tab === "security" && <AdminSecurity />}
       </div>
     </div>
   );

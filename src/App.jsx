@@ -42,12 +42,62 @@ function CenteredLoader({ label }) {
   );
 }
 
+// Shown after a correct password when the account has 2FA enrolled and the
+// current session hasn't cleared that second factor yet.
+function MfaChallengeScreen({ onVerified, onSignOut }) {
+  const [code, setCode] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function submit(e) {
+    e.preventDefault();
+    if (!code.trim()) { setError("Enter the 6-digit code from your authenticator app."); return; }
+    setBusy(true);
+    setError("");
+    const { data: factors, error: listError } = await supabase.auth.mfa.listFactors();
+    if (listError) { setBusy(false); setError(listError.message); return; }
+    const factor = factors.totp.find((f) => f.status === "verified");
+    if (!factor) { setBusy(false); setError("No verified authenticator found."); return; }
+    const { data: challenge, error: challengeError } = await supabase.auth.mfa.challenge({ factorId: factor.id });
+    if (challengeError) { setBusy(false); setError(challengeError.message); return; }
+    const { error: verifyError } = await supabase.auth.mfa.verify({ factorId: factor.id, challengeId: challenge.id, code: code.trim() });
+    setBusy(false);
+    if (verifyError) { setError("That code didn't work — try again."); return; }
+    onVerified();
+  }
+
+  return (
+    <div style={{ fontFamily: "'Lato', -apple-system, sans-serif", background: cream, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <form onSubmit={submit} style={{ maxWidth: 360, width: "100%", padding: 20, textAlign: "center" }}>
+        <h2 style={{ fontSize: 22, fontWeight: 700, color: navy[900], margin: "0 0 6px" }}>Enter your 2FA code</h2>
+        <p style={{ color: grey, fontSize: 15, margin: "0 0 22px" }}>Open your authenticator app and enter the 6-digit code.</p>
+        <input
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
+          placeholder="123456"
+          autoFocus
+          style={{ width: "100%", padding: "11px 12px", border: "1px solid #d8d8d8", borderRadius: 6, marginBottom: 14, fontSize: 20, textAlign: "center", letterSpacing: 4, boxSizing: "border-box" }}
+        />
+        {error && <div style={{ color: "#a3372f", fontSize: 14, marginBottom: 14 }}>{error}</div>}
+        <button type="submit" disabled={busy} style={{ width: "100%", background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "13px 16px", fontSize: 16, fontWeight: 700, marginBottom: 12 }}>
+          {busy ? "Checking…" : "Verify"}
+        </button>
+        <button type="button" onClick={onSignOut} style={{ background: "none", border: "none", color: grey, fontSize: 14 }}>
+          Sign out
+        </button>
+      </form>
+    </div>
+  );
+}
+
 export default function App() {
   const [session, setSession] = useState(undefined); // undefined = not checked yet, null = signed out
   const [identity, setIdentity] = useState(null); // { kind, admin } | { kind, user, account } | { kind: "unrecognized" }
   const [resolving, setResolving] = useState(false);
   const [resolveError, setResolveError] = useState("");
   const [authScreen, setAuthScreen] = useState("apply"); // "login" | "apply" | "team" — new customers land here first; staff/admin sign in via the link on that screen, "team" is a shortcut straight into password creation
+  const [mfaNeeded, setMfaNeeded] = useState(false);
+  const [mfaChecked, setMfaChecked] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
@@ -58,7 +108,19 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!session) { setIdentity(null); return; }
+    if (!session) { setMfaChecked(false); setMfaNeeded(false); return; }
+    let cancelled = false;
+    supabase.auth.mfa.getAuthenticatorAssuranceLevel().then(({ data }) => {
+      if (cancelled) return;
+      setMfaNeeded(!!data && data.nextLevel === "aal2" && data.currentLevel !== "aal2");
+      setMfaChecked(true);
+    });
+    return () => { cancelled = true; };
+  }, [session]);
+
+  useEffect(() => {
+    if (!session || mfaNeeded) { setIdentity(null); return; }
+    if (!mfaChecked) return;
     let cancelled = false;
     setResolving(true);
     setResolveError("");
@@ -69,7 +131,7 @@ export default function App() {
       setIdentity(data);
     });
     return () => { cancelled = true; };
-  }, [session]);
+  }, [session, mfaNeeded, mfaChecked]);
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -86,6 +148,10 @@ export default function App() {
         initialMode={authScreen === "team" ? "signup" : "signin"}
       />
     );
+  }
+  if (!mfaChecked) return <CenteredLoader label="Checking your account…" />;
+  if (mfaNeeded) {
+    return <MfaChallengeScreen onVerified={() => setMfaNeeded(false)} onSignOut={signOut} />;
   }
   if (resolving || identity === null) return <CenteredLoader label="Checking your account…" />;
   if (resolveError) {
