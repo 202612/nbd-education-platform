@@ -177,8 +177,7 @@ function DraggableLogo({ brand, selected, stageRef, onSelect, onMove, onResize }
   );
 }
 
-function BrandHeroLogos() {
-  const { settings } = useSiteSettings();
+function BrandHeroLogos({ draft, setDraft }) {
   const [brands, setBrands] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -241,20 +240,20 @@ function BrandHeroLogos() {
     <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 20, marginBottom: 20 }}>
       <div style={{ fontWeight: 700, color: navy[900], marginBottom: 4 }}>Brand logos on the landing page</div>
       <p style={{ fontSize: 13, color: grey, margin: "0 0 14px" }}>
-        Drag any logo to move it. Click one to select it, then drag the small handle at its corner to resize it. Changes save when you click Save below.
+        Drag any logo to move it. Click one to select it, then drag the small handle at its corner to resize it. Click the heading text to edit it directly. Changes save when you click Save below (text saves with the main "Save changes" button).
       </p>
 
       <div
         ref={stageRef}
-        onPointerDown={() => setSelectedId(null)}
+        onPointerDown={(e) => { if (e.target === stageRef.current) setSelectedId(null); }}
         style={{
           position: "relative",
           width: "100%",
           height: 320,
           borderRadius: 12,
           overflow: "hidden",
-          background: settings.background_url
-            ? `url(${settings.background_url}) center / cover no-repeat`
+          background: draft.background_url
+            ? `url(${draft.background_url}) center / cover no-repeat`
             : navy[100],
           border: "1px solid #e4dfd6",
           marginBottom: 16,
@@ -264,11 +263,25 @@ function BrandHeroLogos() {
         <div
           style={{
             position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%)",
-            width: "60%", textAlign: "center", pointerEvents: "none", opacity: 0.55,
+            width: "60%", textAlign: "center",
           }}
         >
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: navy[700], marginBottom: 6 }}>{settings.eyebrow}</div>
-          <div style={{ fontFamily: "'Lato', sans-serif", fontWeight: 300, fontSize: 22, color: navy[900] }}>{settings.headline}</div>
+          <div
+            contentEditable
+            suppressContentEditableWarning
+            onBlur={(e) => setDraft((d) => ({ ...d, eyebrow: e.currentTarget.textContent }))}
+            style={{ fontSize: 11, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: navy[700], marginBottom: 6, opacity: 0.8, cursor: "text", outline: "none", borderRadius: 4 }}
+          >
+            {draft.eyebrow}
+          </div>
+          <div
+            contentEditable
+            suppressContentEditableWarning
+            onBlur={(e) => setDraft((d) => ({ ...d, headline: e.currentTarget.textContent }))}
+            style={{ fontFamily: "'Lato', sans-serif", fontWeight: 300, fontSize: 22, color: navy[900], opacity: 0.8, cursor: "text", outline: "none", borderRadius: 4 }}
+          >
+            {draft.headline}
+          </div>
         </div>
 
         {visible.map((b) => (
@@ -372,7 +385,7 @@ export default function DesignTab() {
 
       <LogoEditor draft={draft} setDraft={setDraft} uploading={uploadingLogo} onUpload={(e) => e.target.files[0] && uploadFile(e.target.files[0], setUploadingLogo, "logo_url")} />
       <BackgroundEditor draft={draft} setDraft={setDraft} uploading={uploadingBg} onUpload={(e) => e.target.files[0] && uploadFile(e.target.files[0], setUploadingBg, "background_url")} />
-      <BrandHeroLogos />
+      <BrandHeroLogos draft={draft} setDraft={setDraft} />
 
       <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 20, marginBottom: 20 }}>
         <div style={{ fontWeight: 700, color: navy[900], marginBottom: 14 }}>Heading text</div>
