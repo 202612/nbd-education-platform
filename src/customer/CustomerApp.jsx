@@ -466,7 +466,7 @@ function CustomerBrandDetail({ brand, completedStepIds, onStepCompleted, partici
       </button>
       <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 6 }}>
         {brand.logo_url && (
-          <div style={{ height: 56, width: 56, flexShrink: 0, borderRadius: 10, background: navy[500], display: "flex", alignItems: "center", justifyContent: "center", padding: 8 }}>
+          <div style={{ height: 56, width: 56, flexShrink: 0, borderRadius: 10, background: "#fff", border: "1px solid #e4dfd6", display: "flex", alignItems: "center", justifyContent: "center", padding: 8 }}>
             <img src={brand.logo_url} alt={brand.name} style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }} />
           </div>
         )}
@@ -539,11 +539,11 @@ function CustomerDashboard({ brands, completedStepIds, onStepCompleted, particip
           const pct = b.steps.length ? Math.round((done / b.steps.length) * 100) : 0;
           return (
             <button key={b.id} onClick={() => setOpenBrandId(b.id)} style={{ textAlign: "left", background: "#fff", border: "1px solid #e4dfd6", borderRadius: 16, padding: 0, overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
-              <div style={{ height: 140, display: "flex", alignItems: "center", justifyContent: "center", background: navy[500], padding: 24 }}>
+              <div style={{ height: 140, display: "flex", alignItems: "center", justifyContent: "center", background: "#fff", borderBottom: "1px solid #f0ece3", padding: 24 }}>
                 {b.logo_url ? (
                   <img src={b.logo_url} alt={b.name} style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }} />
                 ) : (
-                  <div style={{ fontWeight: 700, fontSize: 24, color: "#fff" }}>{b.name}</div>
+                  <div style={{ fontWeight: 700, fontSize: 24, color: navy[900] }}>{b.name}</div>
                 )}
               </div>
               <div style={{ padding: 20 }}>
@@ -564,7 +564,55 @@ function CustomerDashboard({ brands, completedStepIds, onStepCompleted, particip
 
 // ================= TEAM =================
 
-function CustomerTeam({ team, currentUserId, onAdd, onRemove }) {
+function TeamProgressTable({ team, brands, teamProgress }) {
+  function progressFor(userId, brand) {
+    const completed = teamProgress[userId] || new Set();
+    const total = brand.steps.length;
+    const done = brand.steps.filter((s) => completed.has(s.id)).length;
+    return { done, total, pct: total ? Math.round((done / total) * 100) : 0 };
+  }
+
+  if (brands.length === 0) return null;
+
+  return (
+    <div style={{ marginBottom: 28 }}>
+      <h3 style={{ fontSize: 17, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Team progress</h3>
+      <p style={{ color: "#8a8074", fontSize: 15, margin: "0 0 14px" }}>Where everyone on your team stands, by brand.</p>
+      <div style={{ overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+          <thead>
+            <tr>
+              <th style={{ textAlign: "left", padding: "8px 12px", color: "#8a8074", fontSize: 13, textTransform: "uppercase", letterSpacing: 0.5, borderBottom: "1px solid #e4dfd6" }}>Team member</th>
+              {brands.map((brand) => (
+                <th key={brand.id} style={{ textAlign: "left", padding: "8px 12px", color: "#8a8074", fontSize: 13, textTransform: "uppercase", letterSpacing: 0.5, borderBottom: "1px solid #e4dfd6", whiteSpace: "nowrap" }}>{brand.name}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {team.map((u) => (
+              <tr key={u.id}>
+                <td style={{ padding: "10px 12px", borderBottom: "1px solid #f0ece3" }}>
+                  <div style={{ fontWeight: 600, color: navy[900] }}>{u.name}{u.role === "holder" ? " (you)" : ""}</div>
+                  <div style={{ fontSize: 13, color: "#a39a8d" }}>{u.email}</div>
+                </td>
+                {brands.map((brand) => {
+                  const p = progressFor(u.id, brand);
+                  return (
+                    <td key={brand.id} style={{ padding: "10px 12px", borderBottom: "1px solid #f0ece3", whiteSpace: "nowrap" }}>
+                      <Badge tone={p.pct === 100 ? "gold" : p.done > 0 ? "navy" : "muted"}>{p.done} / {p.total}</Badge>
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function CustomerTeam({ team, currentUserId, onAdd, onRemove, brands = [], teamProgress = {}, isHolder = false }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
@@ -584,6 +632,8 @@ function CustomerTeam({ team, currentUserId, onAdd, onRemove }) {
     <div>
       <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Team</h2>
       <p style={{ color: "#8a8074", fontSize: 16, margin: "0 0 20px" }}>Add staff to your account. They sign in with the exact email you enter here, choosing their own password the first time.</p>
+
+      {isHolder && <TeamProgressTable team={team} brands={brands} teamProgress={teamProgress} />}
       <div style={{ display: "flex", gap: 8, marginBottom: 18, flexWrap: "wrap" }}>
         <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Staff name" style={{ flex: 1, minWidth: 140, padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 16 }} />
         <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" style={{ flex: 1, minWidth: 140, padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 16 }} />
@@ -722,7 +772,9 @@ export default function CustomerApp({ user, account }) {
   const [brands, setBrands] = useState(null);
   const [completedStepIds, setCompletedStepIds] = useState(new Set());
   const [team, setTeam] = useState([]);
+  const [teamProgress, setTeamProgress] = useState({});
   const [loadError, setLoadError] = useState("");
+  const isHolder = user.role === "holder";
 
   async function loadProgress() {
     const { data } = await supabase.from("step_progress").select("step_id").eq("user_id", user.id);
@@ -732,6 +784,17 @@ export default function CustomerApp({ user, account }) {
   async function loadTeam() {
     const { data } = await supabase.from("app_users").select("id,name,email,role").eq("account_id", account.id).order("role", { ascending: false });
     setTeam(data || []);
+  }
+
+  async function loadTeamProgress() {
+    if (!isHolder) return;
+    const { data } = await supabase.rpc("get_team_progress");
+    const byUser = {};
+    for (const row of data || []) {
+      if (!byUser[row.user_id]) byUser[row.user_id] = new Set();
+      byUser[row.user_id].add(row.step_id);
+    }
+    setTeamProgress(byUser);
   }
 
   useEffect(() => {
@@ -746,6 +809,7 @@ export default function CustomerApp({ user, account }) {
       setBrands(data || []);
       await loadProgress();
       await loadTeam();
+      await loadTeamProgress();
     }
     load();
     return () => { cancelled = true; };
@@ -763,6 +827,7 @@ export default function CustomerApp({ user, account }) {
 
   async function handleStepCompleted() {
     await loadProgress();
+    await loadTeamProgress();
   }
 
   async function handleAddStaff({ name, email }) {
@@ -799,7 +864,17 @@ export default function CustomerApp({ user, account }) {
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         {tab === "training" && <CustomerDashboard brands={brands} completedStepIds={completedStepIds} onStepCompleted={handleStepCompleted} participantName={displayName} />}
-        {tab === "team" && <CustomerTeam team={team} currentUserId={user.id} onAdd={handleAddStaff} onRemove={handleRemoveStaff} />}
+        {tab === "team" && (
+          <CustomerTeam
+            team={team}
+            currentUserId={user.id}
+            onAdd={handleAddStaff}
+            onRemove={handleRemoveStaff}
+            brands={isHolder ? brands.filter((b) => account.approved_brand_ids.includes(b.id)) : []}
+            teamProgress={teamProgress}
+            isHolder={isHolder}
+          />
+        )}
         {tab === "settings" && <AccountSettings user={user} account={account} onNameSaved={setDisplayName} />}
       </div>
     </div>
