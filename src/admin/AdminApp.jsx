@@ -1136,6 +1136,126 @@ function AdminCustomersLive() {
 
 // ================= OVERVIEW =================
 
+// Monday-based start of the week containing the given date.
+function weekStart(date) {
+  const d = new Date(date);
+  const day = (d.getDay() + 6) % 7; // 0 = Monday
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() - day);
+  return d;
+}
+
+function WeeklyBarChart({ weeks }) {
+  const max = Math.max(1, ...weeks.map((w) => w.count));
+  return (
+    <div style={{ display: "flex", alignItems: "flex-end", gap: 10, height: 140 }}>
+      {weeks.map((w) => (
+        <div key={w.label} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: navy[900] }}>{w.count}</div>
+          <div style={{ width: "100%", maxWidth: 34, height: 90, display: "flex", alignItems: "flex-end", background: "#f0ece3", borderRadius: 6, overflow: "hidden" }}>
+            <div style={{ width: "100%", height: `${(w.count / max) * 100}%`, background: navy[500], borderRadius: "6px 6px 0 0" }} />
+          </div>
+          <div style={{ fontSize: 11, color: "#a39a8d", whiteSpace: "nowrap" }}>{w.label}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function BrandBarList({ rows }) {
+  const max = Math.max(1, ...rows.map((r) => r.count));
+  if (rows.length === 0) return <div style={{ color: "#a39a8d", fontSize: 14 }}>No certificates issued yet.</div>;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      {rows.map((r) => (
+        <div key={r.name} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ width: 130, fontSize: 14, color: navy[900], fontWeight: 600, flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.name}</div>
+          <div style={{ flex: 1, height: 10, background: "#f0ece3", borderRadius: 999, overflow: "hidden" }}>
+            <div style={{ height: "100%", width: `${(r.count / max) * 100}%`, background: navy[500] }} />
+          </div>
+          <div style={{ width: 28, textAlign: "right", fontSize: 14, fontWeight: 700, color: navy[900] }}>{r.count}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function AdminReporting() {
+  const [report, setReport] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      const since = new Date();
+      since.setDate(since.getDate() - 7 * 8);
+
+      const [progressRes, certsRes] = await Promise.all([
+        supabase.from("step_progress").select("completed_at").gte("completed_at", since.toISOString()),
+        supabase.from("certificates").select("issued_at,brands(name)"),
+      ]);
+      if (cancelled) return;
+
+      // Build the last 8 Monday-starting weeks, oldest first.
+      const now = new Date();
+      const buckets = [];
+      for (let i = 7; i >= 0; i--) {
+        const start = weekStart(now);
+        start.setDate(start.getDate() - i * 7);
+        buckets.push({ start, label: start.toLocaleDateString("en-IE", { day: "numeric", month: "short" }), count: 0 });
+      }
+      for (const row of progressRes.data || []) {
+        const rowWeek = weekStart(row.completed_at).getTime();
+        const bucket = buckets.find((b) => b.start.getTime() === rowWeek);
+        if (bucket) bucket.count += 1;
+      }
+
+      const certs = certsRes.data || [];
+      const byBrand = {};
+      for (const c of certs) {
+        const name = c.brands?.name || "Unknown";
+        byBrand[name] = (byBrand[name] || 0) + 1;
+      }
+      const brandRows = Object.entries(byBrand).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
+
+      const thisWeekStart = weekStart(now).getTime();
+      const certsThisWeek = certs.filter((c) => weekStart(c.issued_at).getTime() === thisWeekStart).length;
+
+      setReport({
+        weeks: buckets.map((b) => ({ label: b.label, count: b.count })),
+        brandRows,
+        totalCerts: certs.length,
+        certsThisWeek,
+        completionsThisWeek: buckets[buckets.length - 1].count,
+      });
+    }
+    load();
+    return () => { cancelled = true; };
+  }, []);
+
+  if (!report) return <div style={{ color: "#8a8074", fontSize: 15 }}>Loading report…</div>;
+
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 20 }}>
+        <StatCard label="Steps completed this week" value={report.completionsThisWeek} icon={PlayCircle} />
+        <StatCard label="Certificates this week" value={report.certsThisWeek} icon={Award} />
+        <StatCard label="Certificates all-time" value={report.totalCerts} icon={CheckCircle2} />
+      </div>
+
+      <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+        <div style={{ flex: "1 1 360px", background: "#fff", border: "1px solid #e4dfd6", borderRadius: 12, padding: 18 }}>
+          <div style={{ fontWeight: 600, color: navy[900], marginBottom: 14 }}>Weekly usage — steps completed</div>
+          <WeeklyBarChart weeks={report.weeks} />
+        </div>
+        <div style={{ flex: "1 1 320px", background: "#fff", border: "1px solid #e4dfd6", borderRadius: 12, padding: 18 }}>
+          <div style={{ fontWeight: 600, color: navy[900], marginBottom: 14 }}>Certificates completed by brand</div>
+          <BrandBarList rows={report.brandRows} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AdminOverview() {
   const [stats, setStats] = useState(null);
   useEffect(() => {
@@ -1165,13 +1285,9 @@ function AdminOverview() {
         <StatCard label="Customers" value={stats?.customers ?? "…"} icon={Building2} />
         <StatCard label="Pending approvals" value={stats?.pending ?? "…"} icon={Clock} />
       </div>
-      <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 12, padding: 18 }}>
-        <div style={{ fontWeight: 600, color: navy[900], marginBottom: 10 }}>Live on the real database</div>
-        <div style={{ fontSize: 16, color: "#6b6155", lineHeight: 1.7 }}>
-          Brands, steps, quizzes, approvals and customers here all save for real. Certificate PDFs and Gmail-sent
-          approval emails are still placeholders — those come with the Google Drive and email steps of the build.
-        </div>
-      </div>
+
+      <h3 style={{ fontSize: 18, fontWeight: 600, color: navy[900], margin: "0 0 14px" }}>Reporting</h3>
+      <AdminReporting />
     </div>
   );
 }
