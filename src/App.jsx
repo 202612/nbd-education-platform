@@ -101,6 +101,23 @@ export default function App() {
   if (identity.kind === "customer" || identity.kind === "pending") {
     return (
       <Shell onSignOut={signOut} roleLabel={`Education platform · ${identity.account.company_name}`}>
+        {identity.admin_testing && (
+          <div style={{ background: "#fdf6e3", border: "1px solid #eddfad", color: "#8a6d1f", fontSize: 15, padding: "12px 16px", borderRadius: 8, marginBottom: 20, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+            <span>
+              <strong>Admin test mode</strong> — you're viewing everything as {identity.user.name} ({identity.account.company_name}). Anything you do here (watching videos, taking quizzes, claiming certificates) is real and will show up on this customer's record.
+            </span>
+            <button
+              onClick={async () => {
+                await supabase.rpc("admin_set_view_as", { p_app_user_id: null });
+                const { data } = await supabase.rpc("resolve_login");
+                setIdentity(data);
+              }}
+              style={{ background: "#8a6d1f", color: "#fff", border: "none", borderRadius: 999, padding: "8px 16px", fontSize: 14, fontWeight: 700, whiteSpace: "nowrap" }}
+            >
+              Exit test mode
+            </button>
+          </div>
+        )}
         <CustomerApp user={identity.user} account={identity.account} />
       </Shell>
     );

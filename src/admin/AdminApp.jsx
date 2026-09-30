@@ -1041,6 +1041,9 @@ function CustomerProfileLive({ account: initialAccount, brands, onBack, onDelete
       )}
 
       <div style={{ fontSize: 15, fontWeight: 600, color: "#6b6155", marginBottom: 10 }}>Team</div>
+      <p style={{ fontSize: 13, color: "#a39a8d", margin: "0 0 12px" }}>
+        "View as" logs you in as that real person — watching a video, passing a quiz, or claiming a certificate there actually happens on their record. Use "Exit test mode" on the banner to come back.
+      </p>
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {(team || []).map((u) => (
           <div key={u.id} style={{ display: "flex", alignItems: "center", gap: 10, background: u.role === "holder" ? navy[50] : "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: "12px 14px" }}>
@@ -1049,6 +1052,15 @@ function CustomerProfileLive({ account: initialAccount, brands, onBack, onDelete
               <div style={{ fontWeight: 500, fontSize: 16, color: navy[900] }}>{u.name}{u.role === "holder" ? " (main account holder)" : ""}</div>
               <div style={{ fontSize: 14, color: "#8a8074" }}>{u.email}</div>
             </div>
+            <button
+              className="nbd-btn nbd-btn--outline nbd-btn--sm"
+              onClick={async () => {
+                const { error } = await supabase.rpc("admin_set_view_as", { p_app_user_id: u.id });
+                if (!error) window.location.reload();
+              }}
+            >
+              <Eye size={13} /> View as this customer
+            </button>
           </div>
         ))}
       </div>

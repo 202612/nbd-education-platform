@@ -38,12 +38,18 @@ function loadYouTubeApi() {
   return youtubeApiPromise;
 }
 
+// Prevents dragging the YouTube progress bar forward past what's actually
+// been watched. YouTube's IFrame API has no "disable seeking" flag, so this
+// polls currentTime and snaps back to the furthest point genuinely reached
+// whenever it jumps ahead — rewinding to rewatch is still fine.
 function YouTubePlayer({ videoId, onEnded }) {
   const containerRef = useRef(null);
   const playerRef = useRef(null);
+  const maxWatchedRef = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
+    let pollId = null;
     loadYouTubeApi().then((YT) => {
       if (cancelled || !containerRef.current) return;
       playerRef.current = new YT.Player(containerRef.current, {
@@ -53,11 +59,24 @@ function YouTubePlayer({ videoId, onEnded }) {
           onStateChange: (e) => {
             if (e.data === YT.PlayerState.ENDED) onEnded();
           },
+          onReady: () => {
+            pollId = window.setInterval(() => {
+              const player = playerRef.current;
+              if (!player || !player.getCurrentTime) return;
+              const t = player.getCurrentTime();
+              if (t > maxWatchedRef.current + 1.5) {
+                player.seekTo(maxWatchedRef.current, true);
+              } else if (t > maxWatchedRef.current) {
+                maxWatchedRef.current = t;
+              }
+            }, 500);
+          },
         },
       });
     });
     return () => {
       cancelled = true;
+      if (pollId) window.clearInterval(pollId);
       if (playerRef.current?.destroy) playerRef.current.destroy();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -76,6 +95,7 @@ function QuizStep({ step, onComplete, onBack }) {
   const [loadError, setLoadError] = useState("");
   const [answers, setAnswers] = useState({});
   const [result, setResult] = useState(null);
+  const [perQuestion, setPerQuestion] = useState(null);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -101,7 +121,14 @@ function QuizStep({ step, onComplete, onBack }) {
     setSubmitting(false);
     if (rpcError) { setError(rpcError.message); return; }
     setResult(data.passed ? "pass" : "fail");
+    setPerQuestion(data.results || null);
     if (data.passed) onComplete();
+  }
+
+  function tryAgain() {
+    setResult(null);
+    setPerQuestion(null);
+    setError("");
   }
 
   if (loadError) return <div style={{ color: "#a3372f", fontSize: 16 }}>{loadError}</div>;
@@ -126,22 +153,48 @@ function QuizStep({ step, onComplete, onBack }) {
         <ChevronLeft size={15} /> Back
       </button>
       <h3 style={{ fontSize: 19, fontWeight: 600, color: navy[900], margin: "0 0 14px" }}>Quick check: {step.title}</h3>
-      {result === "fail" && <div style={{ background: "#fbeceb", color: "#a3372f", fontSize: 15, padding: "10px 14px", borderRadius: 8, marginBottom: 14 }}>Not quite — review the video and try again.</div>}
-      {questions.map((q, qi) => (
-        <div key={q.id} style={{ marginBottom: 16 }}>
-          <div style={{ fontSize: 16, fontWeight: 500, color: navy[900], marginBottom: 8 }}>{qi + 1}. {q.text}</div>
-          {q.options.map((opt, oi) => (
-            <label key={oi} style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 0", fontSize: 16, color: "#3d3830", cursor: "pointer" }}>
-              <input type="radio" name={q.id} checked={answers[q.id] === oi} onChange={() => setAnswers({ ...answers, [q.id]: oi })} />
-              {opt}
-            </label>
-          ))}
+      {result === "fail" && (
+        <div style={{ background: "#fdf6e3", border: "1px solid #eddfad", color: "#8a6d1f", fontSize: 15, padding: "12px 14px", borderRadius: 8, marginBottom: 14 }}>
+          Almost there! A couple of answers weren't quite right — have another look below and give it another go.
         </div>
-      ))}
+      )}
+      {questions.map((q, qi) => {
+        const wasWrong = perQuestion && perQuestion[q.id] === false;
+        const wasRight = perQuestion && perQuestion[q.id] === true;
+        return (
+          <div
+            key={q.id}
+            style={{
+              marginBottom: 16,
+              padding: perQuestion ? "12px 14px" : 0,
+              borderRadius: 8,
+              background: wasWrong ? "#fdecea" : wasRight ? "#f2f7e9" : "transparent",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 16, fontWeight: 500, color: navy[900], marginBottom: 8 }}>
+              {qi + 1}. {q.text}
+              {wasRight && <CheckCircle2 size={16} color="#4a6b3d" />}
+              {wasWrong && <span style={{ color: "#a3372f", fontSize: 13, fontWeight: 700 }}>Not quite</span>}
+            </div>
+            {q.options.map((opt, oi) => (
+              <label key={oi} style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 0", fontSize: 16, color: "#3d3830", cursor: "pointer" }}>
+                <input type="radio" name={q.id} checked={answers[q.id] === oi} onChange={() => setAnswers({ ...answers, [q.id]: oi })} />
+                {opt}
+              </label>
+            ))}
+          </div>
+        );
+      })}
       {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 10 }}>{error}</div>}
-      <button onClick={submit} disabled={submitting} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 8, padding: "9px 18px", fontSize: 16, fontWeight: 500, opacity: submitting ? 0.7 : 1 }}>
-        {submitting ? "Checking…" : "Submit answers"}
-      </button>
+      {result === "fail" ? (
+        <button onClick={tryAgain} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 8, padding: "9px 18px", fontSize: 16, fontWeight: 500 }}>
+          Try again
+        </button>
+      ) : (
+        <button onClick={submit} disabled={submitting} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 8, padding: "9px 18px", fontSize: 16, fontWeight: 500, opacity: submitting ? 0.7 : 1 }}>
+          {submitting ? "Checking…" : "Submit answers"}
+        </button>
+      )}
     </div>
   );
 }
@@ -152,6 +205,7 @@ function VideoStep({ step, onComplete, onBack }) {
   const [error, setError] = useState("");
   const [playbackUrl, setPlaybackUrl] = useState(step.video_storage_path ? null : step.video_url);
   const [resolving, setResolving] = useState(!!step.video_storage_path);
+  const maxWatchedRef = useRef(0);
 
   useEffect(() => {
     if (!step.video_storage_path) { setPlaybackUrl(step.video_url); setResolving(false); return; }
@@ -191,6 +245,15 @@ function VideoStep({ step, onComplete, onBack }) {
           key={playbackUrl}
           src={playbackUrl}
           controls
+          onTimeUpdate={(e) => {
+            if (e.currentTarget.currentTime > maxWatchedRef.current) maxWatchedRef.current = e.currentTarget.currentTime;
+          }}
+          onSeeking={(e) => {
+            // Rewatching earlier parts is fine; jumping ahead past what's actually been watched isn't.
+            if (e.currentTarget.currentTime > maxWatchedRef.current + 1.5) {
+              e.currentTarget.currentTime = maxWatchedRef.current;
+            }
+          }}
           onEnded={markWatched}
           onError={() => setError("This video couldn't be played. It may not have finished uploading correctly — try re-uploading it from the admin panel.")}
           style={{ width: "100%", borderRadius: 10, background: "#000", marginBottom: 16 }}
