@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Loader2, Upload } from "lucide-react";
+import { Loader2, Upload, Trash2, Image as ImageIcon } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
 import { navy, gold, grey, useSiteSettings } from "../lib/ui.jsx";
 
@@ -189,7 +189,6 @@ function BrandHeroLogos() {
     const { data } = await supabase
       .from("brands")
       .select("id,name,logo_url,hero_visible,hero_size,hero_x,hero_y")
-      .not("logo_url", "is", null)
       .order("name");
     setBrands(data || []);
   }
@@ -198,6 +197,23 @@ function BrandHeroLogos() {
 
   function updateLocal(id, fields) {
     setBrands((list) => list.map((b) => (b.id === id ? { ...b, ...fields } : b)));
+  }
+
+  async function uploadLogo(brand, file) {
+    setNotice("");
+    const path = `${brand.id}/${Date.now()}-${file.name}`;
+    const { error: uploadError } = await supabase.storage.from("brand-logos").upload(path, file);
+    if (uploadError) { setNotice(uploadError.message); return; }
+    const { data } = supabase.storage.from("brand-logos").getPublicUrl(path);
+    await supabase.from("brands").update({ logo_url: data.publicUrl }).eq("id", brand.id);
+    reload();
+  }
+
+  async function removeLogo(brand) {
+    if (!window.confirm(`Remove ${brand.name}'s logo from the landing page? You can upload a new one any time.`)) return;
+    await supabase.from("brands").update({ logo_url: null }).eq("id", brand.id);
+    if (selectedId === brand.id) setSelectedId(null);
+    reload();
   }
 
   async function save() {
@@ -218,7 +234,7 @@ function BrandHeroLogos() {
 
   if (!brands) return <div style={{ color: grey, fontSize: 14 }}>Loading…</div>;
 
-  const visible = brands.filter((b) => b.hero_visible);
+  const visible = brands.filter((b) => b.hero_visible && b.logo_url);
   const selected = brands.find((b) => b.id === selectedId);
 
   return (
@@ -268,14 +284,35 @@ function BrandHeroLogos() {
         ))}
       </div>
 
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "10px 18px", marginBottom: 4 }}>
-        {brands.map((b) => (
-          <label key={b.id} style={{ fontSize: 13, color: grey, display: "flex", alignItems: "center", gap: 6 }}>
-            <input type="checkbox" checked={b.hero_visible} onChange={(e) => updateLocal(b.id, { hero_visible: e.target.checked })} />
-            {b.name}
+      <div style={{ fontWeight: 700, color: navy[900], fontSize: 14, margin: "20px 0 10px" }}>Brand logo files</div>
+      <p style={{ fontSize: 13, color: grey, margin: "0 0 12px" }}>
+        Upload a logo for a new brand, replace an existing one, or remove one. Removing a logo automatically takes it off the landing page.
+      </p>
+      {brands.map((b) => (
+        <div key={b.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "10px 0", borderBottom: "1px solid #f0ebe0" }}>
+          <div style={{ width: 56, height: 44, background: navy[100], borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            {b.logo_url ? (
+              <img src={b.logo_url} alt={b.name} style={{ maxHeight: 36, maxWidth: 48, objectFit: "contain" }} />
+            ) : (
+              <ImageIcon size={16} color="#a39a8d" />
+            )}
+          </div>
+          <div style={{ flex: 1, minWidth: 120, fontSize: 14, color: navy[900], fontWeight: 600 }}>{b.name}</div>
+          <label style={{ fontSize: 13, color: grey, display: "flex", alignItems: "center", gap: 6, marginRight: 4 }}>
+            <input type="checkbox" checked={b.hero_visible} disabled={!b.logo_url} onChange={(e) => updateLocal(b.id, { hero_visible: e.target.checked })} />
+            On landing page
           </label>
-        ))}
-      </div>
+          <label className="nbd-btn nbd-btn--outline nbd-btn--sm">
+            <Upload size={13} /> {b.logo_url ? "Replace" : "Upload"}
+            <input type="file" accept="image/*" onChange={(e) => e.target.files[0] && uploadLogo(b, e.target.files[0])} style={{ display: "none" }} />
+          </label>
+          {b.logo_url && (
+            <button className="nbd-btn nbd-btn--outline nbd-btn--sm nbd-btn--danger" onClick={() => removeLogo(b)} title="Remove logo">
+              <Trash2 size={13} />
+            </button>
+          )}
+        </div>
+      ))}
       {selected && (
         <p style={{ fontSize: 12, color: "#a39a8d", margin: "8px 0 0" }}>
           Selected: <strong>{selected.name}</strong> — drag it on the stage above, or drag its corner handle to resize.
