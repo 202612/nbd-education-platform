@@ -92,8 +92,7 @@ export function AuthHero() {
       }
     : { background: navy[100] };
 
-  const logoOffsets = [0, 24, -16, 12, -22, 16, -10, 20];
-  const logoRotations = [-5, 4, -6, 5, 3, -4, 6, -3];
+  const logoOffsets = [0, 28, -18, 14, -26, 18, -12, 24];
 
   const mid = Math.ceil(brandLogos.length / 2);
   const leftLogos = brandLogos.slice(0, mid);
@@ -106,10 +105,10 @@ export function AuthHero() {
         flexWrap: "wrap",
         justifyContent: justify,
         alignItems: "center",
-        columnGap: "clamp(16px, 2.2vw, 26px)",
-        rowGap: "clamp(20px, 3vw, 32px)",
-        flex: "1 1 180px",
-        maxWidth: 260,
+        columnGap: "clamp(20px, 2.8vw, 34px)",
+        rowGap: "clamp(24px, 3.5vw, 38px)",
+        flex: "1 1 220px",
+        maxWidth: 340,
       }}
     >
       {logos.map((b, i) => (
@@ -119,10 +118,10 @@ export function AuthHero() {
           alt={b.name}
           title={b.name}
           style={{
-            height: "clamp(34px, 5vw, 52px)",
-            maxWidth: 110,
+            height: "clamp(38px, 5.5vw, 58px)",
+            maxWidth: 130,
             objectFit: "contain",
-            transform: `translateY(${logoOffsets[i % logoOffsets.length]}px) rotate(${logoRotations[i % logoRotations.length]}deg)`,
+            transform: `translateY(${logoOffsets[i % logoOffsets.length]}px)`,
           }}
         />
       ))}
