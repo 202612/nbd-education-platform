@@ -54,7 +54,7 @@ function YouTubePlayer({ videoId, onEnded }) {
       if (cancelled || !containerRef.current) return;
       playerRef.current = new YT.Player(containerRef.current, {
         videoId,
-        playerVars: { rel: 0, modestbranding: 1 },
+        playerVars: { rel: 0, modestbranding: 1, cc_load_policy: 0 },
         events: {
           onStateChange: (e) => {
             if (e.data === YT.PlayerState.ENDED) onEnded();
