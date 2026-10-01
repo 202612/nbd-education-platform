@@ -221,9 +221,12 @@ function AddCertificateForm({ brandId, initial, submitLabel, onCancel, onSave })
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
-  async function uploadTemplate(e) {
-    const file = e.target.files?.[0];
+  async function uploadTemplate(file) {
     if (!file) return;
+    if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
+      setError("Please use a PNG, JPG, or WebP image.");
+      return;
+    }
     setUploading(true);
     setError("");
     const path = `${brandId}/${Date.now()}-${file.name}`;
@@ -233,6 +236,8 @@ function AddCertificateForm({ brandId, initial, submitLabel, onCancel, onSave })
     setTemplateUrl(data.publicUrl);
     setUploading(false);
   }
+
+  const [dragOver, setDragOver] = useState(false);
 
   async function save() {
     if (!title.trim()) { setError("Give the certificate a title"); return; }
@@ -260,15 +265,30 @@ function AddCertificateForm({ brandId, initial, submitLabel, onCancel, onSave })
         rather use a design you made yourself.
       </p>
 
-      <div style={{ border: "1px solid #e4dfd6", borderRadius: 8, padding: 14, marginBottom: 14 }}>
+      <div
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={(e) => { e.preventDefault(); setDragOver(false); uploadTemplate(e.dataTransfer.files?.[0]); }}
+        style={{
+          border: dragOver ? "1px dashed #a8cb63" : "1px solid #e4dfd6",
+          background: dragOver ? "#f2f7e9" : "transparent",
+          borderRadius: 8, padding: 14, marginBottom: 14,
+        }}
+      >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
           <div style={{ fontWeight: 700, color: navy[900], fontSize: 14 }}>Certificate artwork</div>
           <label className="nbd-btn nbd-btn--outline nbd-btn--sm">
             {uploading ? <Loader2 size={13} className="spin" /> : <ImageIcon size={13} />}
             {uploading ? "Uploading…" : templateUrl ? "Replace image" : "Upload image"}
-            <input type="file" accept="image/png,image/jpeg,image/webp" onChange={uploadTemplate} disabled={uploading} style={{ display: "none" }} />
+            <input type="file" accept="image/png,image/jpeg,image/webp" onChange={(e) => uploadTemplate(e.target.files?.[0])} disabled={uploading} style={{ display: "none" }} />
           </label>
         </div>
+
+        {!templateUrl && (
+          <p style={{ fontSize: 13, color: "#a39a8d", margin: "0 0 4px" }}>
+            {dragOver ? "Drop to upload" : "Drag an image here, or use Upload image above."}
+          </p>
+        )}
 
         {templateUrl ? (
           <>
