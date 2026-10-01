@@ -70,6 +70,7 @@ export default function CertificatesTab() {
   }
 
   const [uploadingId, setUploadingId] = useState(null);
+  const [dragOverId, setDragOverId] = useState(null);
   async function uploadPdf(row, file) {
     if (!file) return;
     if (file.type !== "application/pdf") { setError("Please choose a PDF file."); return; }
@@ -152,7 +153,17 @@ export default function CertificatesTab() {
                 </thead>
                 <tbody>
                   {filtered.map((r) => (
-                    <tr key={r.id}>
+                    <tr
+                      key={r.id}
+                      onDragOver={(e) => { e.preventDefault(); setDragOverId(r.id); }}
+                      onDragLeave={() => setDragOverId((id) => (id === r.id ? null : id))}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        setDragOverId(null);
+                        uploadPdf(r, e.dataTransfer.files?.[0]);
+                      }}
+                      style={dragOverId === r.id ? { background: "#f2f7e9", outline: "2px dashed #a8cb63", outlineOffset: -2 } : undefined}
+                    >
                       <td style={td}>
                         <div style={{ fontWeight: 500 }}>{r.learner}</div>
                         {r.email && <div style={{ fontSize: 12.5, color: "#a39a8d" }}>{r.email}</div>}
@@ -170,7 +181,9 @@ export default function CertificatesTab() {
                               <Download size={13} /> {opening === r.id ? "Opening…" : "PDF"}
                             </button>
                           ) : (
-                            <span style={{ fontSize: 12.5, color: "#a39a8d" }}>Not stored</span>
+                            <span style={{ fontSize: 12.5, color: "#a39a8d" }}>
+                              {dragOverId === r.id ? "Drop to upload" : "Not stored — drag a PDF here"}
+                            </span>
                           )}
                           <label className="nbd-btn nbd-btn--outline nbd-btn--sm" title={r.pdfPath ? "Replace the stored PDF" : "Manually attach a PDF for this certificate"}>
                             {uploadingId === r.id ? <Loader2 size={13} className="spin" /> : <Upload size={13} />}
