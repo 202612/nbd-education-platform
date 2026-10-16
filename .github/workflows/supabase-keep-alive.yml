@@ -11,7 +11,11 @@ name: Supabase keep-alive
 
 on:
   schedule:
-    - cron: "0 9 * * 1,4" # Monday and Thursday, 09:00 UTC
+    # Daily rather than twice-weekly — GitHub's scheduler can silently skip
+    # or delay a run on a quiet repo, and a skipped run can't be detected
+    # from here. Daily leaves 6 days of slack against the 7-day pause limit
+    # instead of ~3, so one missed run alone can no longer cause a pause.
+    - cron: "0 9 * * *" # every day, 09:00 UTC
   workflow_dispatch: {} # lets you trigger it manually from the Actions tab to test
 
 jobs:
