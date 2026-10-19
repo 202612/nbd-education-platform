@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
-  PlayCircle, CheckCircle2, Lock, Award, Users, Trash2, Loader2, ChevronLeft, Clock, Mail, Download, Settings,
+  PlayCircle, CheckCircle2, Lock, Award, Users, Trash2, Loader2, ChevronLeft, Clock, Mail, Download, Settings, GripVertical,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
@@ -90,6 +90,216 @@ function YouTubePlayer({ videoId, onEnded }) {
 // server-side via the submit_quiz_answers RPC — the client never sees
 // correct_index, so the answer key can't be read out of the network tab.
 
+// ================= QUIZ QUESTION TYPES =================
+
+function isAnswered(q, value) {
+  if (value === undefined) return false;
+  if (q.type === "match_pairs") return Object.keys(value).length === q.left.length;
+  if (q.type === "categorize") return Object.keys(value).length === q.items.length;
+  if (q.type === "numeric") return value !== "";
+  return true;
+}
+
+function MultipleChoiceQuestion({ q, value, onChange }) {
+  return (
+    <>
+      {q.options.map((opt, oi) => (
+        <label key={oi} style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 0", fontSize: 16, color: "#3d3830", cursor: "pointer" }}>
+          <input type="radio" name={q.id} checked={value === oi} onChange={() => onChange(oi)} />
+          {opt}
+        </label>
+      ))}
+    </>
+  );
+}
+
+function NumericQuestion({ q, value, onChange }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <input
+        type="number"
+        value={value ?? ""}
+        onChange={(e) => onChange(e.target.value)}
+        style={{ padding: "9px 12px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 16, width: 140 }}
+      />
+      {q.unit && <span style={{ color: "#8a8074", fontSize: 15 }}>{q.unit}</span>}
+    </div>
+  );
+}
+
+function SequenceQuestion({ q, value, onChange }) {
+  const lookup = Object.fromEntries(q.items.map((it) => [it.id, it.text]));
+  const order = value || q.items.map((it) => it.id);
+  const dragIndex = useRef(null);
+  const [overIndex, setOverIndex] = useState(null);
+
+  function handleDrop(dropIndex) {
+    const from = dragIndex.current;
+    setOverIndex(null);
+    if (from === null || from === dropIndex) return;
+    const next = [...order];
+    const [moved] = next.splice(from, 1);
+    next.splice(dropIndex, 0, moved);
+    onChange(next);
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <p style={{ fontSize: 13, color: "#a39a8d", margin: 0 }}>Drag into the correct order.</p>
+      {order.map((id, i) => (
+        <div
+          key={id}
+          draggable
+          onDragStart={() => { dragIndex.current = i; }}
+          onDragOver={(e) => { e.preventDefault(); setOverIndex(i); }}
+          onDragLeave={() => setOverIndex((cur) => (cur === i ? null : cur))}
+          onDrop={() => handleDrop(i)}
+          style={{
+            display: "flex", alignItems: "center", gap: 10, background: "#fff", borderRadius: 8, padding: "11px 14px", cursor: "grab",
+            border: overIndex === i ? `2px dashed ${navy[500]}` : "1px solid #e4dfd6",
+          }}
+        >
+          <GripVertical size={16} color="#a39a8d" />
+          <span style={{ fontSize: 13, color: "#a39a8d", fontWeight: 700, width: 14 }}>{i + 1}</span>
+          <span style={{ fontSize: 16, color: navy[900] }}>{lookup[id]}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MatchPairsQuestion({ q, value, onChange }) {
+  const mapping = value || {};
+  const [selectedLeft, setSelectedLeft] = useState(null);
+  const pairedRight = new Set(Object.values(mapping));
+
+  function clickRight(id) {
+    if (!selectedLeft) return;
+    const next = { ...mapping, [selectedLeft]: id };
+    for (const k of Object.keys(next)) {
+      if (k !== selectedLeft && next[k] === id) delete next[k];
+    }
+    onChange(next);
+    setSelectedLeft(null);
+  }
+  function clearPair(leftId, e) {
+    e.stopPropagation();
+    const next = { ...mapping };
+    delete next[leftId];
+    onChange(next);
+  }
+
+  return (
+    <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+      <div style={{ flex: "1 1 200px", display: "flex", flexDirection: "column", gap: 8 }}>
+        {q.left.map((item) => {
+          const matchedId = mapping[item.id];
+          const matchedText = matchedId ? q.right.find((r) => r.id === matchedId)?.text : null;
+          return (
+            <button
+              key={item.id}
+              onClick={() => setSelectedLeft(selectedLeft === item.id ? null : item.id)}
+              style={{
+                textAlign: "left", padding: "10px 12px", borderRadius: 8, fontSize: 15, cursor: "pointer",
+                border: selectedLeft === item.id ? `2px solid ${navy[700]}` : "1px solid #e4dfd6",
+                background: matchedId ? "#f2f7e9" : "#fff",
+              }}
+            >
+              <div style={{ fontWeight: 600, color: navy[900] }}>{item.text}</div>
+              {matchedText && (
+                <div style={{ fontSize: 13, color: "#4d6b2c" }}>
+                  ↔ {matchedText} <span onClick={(e) => clearPair(item.id, e)} style={{ textDecoration: "underline", cursor: "pointer" }}>change</span>
+                </div>
+              )}
+            </button>
+          );
+        })}
+      </div>
+      <div style={{ flex: "1 1 200px", display: "flex", flexDirection: "column", gap: 8 }}>
+        {q.right.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => clickRight(item.id)}
+            style={{
+              textAlign: "left", padding: "10px 12px", borderRadius: 8, fontSize: 15,
+              border: pairedRight.has(item.id) ? "1px solid #cde3ab" : "1px solid #e4dfd6",
+              background: pairedRight.has(item.id) ? "#f2f7e9" : "#fff",
+              cursor: selectedLeft ? "pointer" : "default",
+              opacity: selectedLeft || pairedRight.has(item.id) ? 1 : 0.6,
+            }}
+          >
+            {item.text}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CategorizeQuestion({ q, value, onChange }) {
+  const mapping = value || {};
+  const dragItem = useRef(null);
+  const unplaced = q.items.filter((it) => mapping[it.id] === undefined);
+
+  function dropOn(bucketIndex) {
+    if (dragItem.current == null) return;
+    onChange({ ...mapping, [dragItem.current]: bucketIndex });
+    dragItem.current = null;
+  }
+
+  return (
+    <div>
+      <p style={{ fontSize: 13, color: "#a39a8d", margin: "0 0 10px" }}>Drag each item into the category it belongs in.</p>
+      {unplaced.length > 0 && (
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
+          {unplaced.map((it) => (
+            <div
+              key={it.id}
+              draggable
+              onDragStart={() => { dragItem.current = it.id; }}
+              style={{ padding: "8px 14px", background: "#fff", border: "1px solid #e4dfd6", borderRadius: 999, fontSize: 14, cursor: "grab" }}
+            >
+              {it.text}
+            </div>
+          ))}
+        </div>
+      )}
+      <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(q.buckets.length, 4)}, 1fr)`, gap: 10 }}>
+        {q.buckets.map((bucket, bi) => (
+          <div
+            key={bi}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={() => dropOn(bi)}
+            style={{ minHeight: 100, border: "2px dashed #ddd5cb", borderRadius: 8, padding: 10, background: "#fafaf7" }}
+          >
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#8a8074", marginBottom: 8 }}>{bucket}</div>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {q.items.filter((it) => mapping[it.id] === bi).map((it) => (
+                <div
+                  key={it.id}
+                  draggable
+                  onDragStart={() => { dragItem.current = it.id; }}
+                  style={{ padding: "6px 12px", background: navy[100], borderRadius: 999, fontSize: 13, cursor: "grab" }}
+                >
+                  {it.text}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function QuestionBody({ q, value, onChange }) {
+  if (q.type === "numeric") return <NumericQuestion q={q} value={value} onChange={onChange} />;
+  if (q.type === "sequence") return <SequenceQuestion q={q} value={value} onChange={onChange} />;
+  if (q.type === "match_pairs") return <MatchPairsQuestion q={q} value={value} onChange={onChange} />;
+  if (q.type === "categorize") return <CategorizeQuestion q={q} value={value} onChange={onChange} />;
+  return <MultipleChoiceQuestion q={q} value={value} onChange={onChange} />;
+}
+
 function QuizStep({ step, onComplete, onBack }) {
   const [questions, setQuestions] = useState(null);
   const [loadError, setLoadError] = useState("");
@@ -104,13 +314,20 @@ function QuizStep({ step, onComplete, onBack }) {
     supabase.rpc("get_quiz_questions", { p_step_id: step.id }).then(({ data, error: rpcError }) => {
       if (cancelled) return;
       if (rpcError) { setLoadError(rpcError.message); return; }
-      setQuestions(data || []);
+      const list = data || [];
+      setQuestions(list);
+      const seeded = {};
+      for (const q of list) {
+        if (q.type === "sequence") seeded[q.id] = q.items.map((it) => it.id);
+        else if (q.type === "match_pairs" || q.type === "categorize") seeded[q.id] = {};
+      }
+      setAnswers(seeded);
     });
     return () => { cancelled = true; };
   }, [step.id]);
 
   async function submit() {
-    const unanswered = questions.some((q) => answers[q.id] === undefined);
+    const unanswered = questions.some((q) => !isAnswered(q, answers[q.id]));
     if (unanswered) { setError("Answer every question before submitting"); return; }
     setSubmitting(true);
     setError("");
@@ -176,12 +393,7 @@ function QuizStep({ step, onComplete, onBack }) {
               {wasRight && <CheckCircle2 size={16} color="#4a6b3d" />}
               {wasWrong && <span style={{ color: "#a3372f", fontSize: 13, fontWeight: 700 }}>Not quite</span>}
             </div>
-            {q.options.map((opt, oi) => (
-              <label key={oi} style={{ display: "flex", alignItems: "center", gap: 8, padding: "7px 0", fontSize: 16, color: "#3d3830", cursor: "pointer" }}>
-                <input type="radio" name={q.id} checked={answers[q.id] === oi} onChange={() => setAnswers({ ...answers, [q.id]: oi })} />
-                {opt}
-              </label>
-            ))}
+            <QuestionBody q={q} value={answers[q.id]} onChange={(v) => setAnswers({ ...answers, [q.id]: v })} />
           </div>
         );
       })}

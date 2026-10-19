@@ -68,29 +68,253 @@ const ADMIN_BTN_CSS = `
 @keyframes nbd-spin { to { transform: rotate(360deg); } }
 `;
 
+// ================= QUIZ QUESTION TYPES =================
+// Each question picks its own interactive format. The working shape held in
+// AddQuizForm's local state is flat and type-specific (easiest to edit);
+// questionToRow()/rowToQuestion() convert to/from the DB row shape (which
+// funnels everything non-multiple-choice through a single `config` jsonb
+// column) right at the save/load boundary.
+
+const QUESTION_TYPES = [
+  { value: "multiple_choice", label: "Multiple choice" },
+  { value: "true_false", label: "True / False" },
+  { value: "sequence", label: "Put steps in order" },
+  { value: "match_pairs", label: "Match the pairs" },
+  { value: "categorize", label: "Sort into categories" },
+  { value: "numeric", label: "Numeric guess" },
+];
+
+function blankQuestion(type) {
+  switch (type) {
+    case "true_false":
+      return { type, text: "", options: ["True", "False"], correct: 0 };
+    case "numeric":
+      return { type, text: "", correctValue: "", tolerance: "0", unit: "" };
+    case "sequence":
+      return { type, text: "", items: ["", ""] };
+    case "match_pairs":
+      return { type, text: "", pairs: [{ left: "", right: "" }, { left: "", right: "" }] };
+    case "categorize":
+      return { type, text: "", buckets: ["Category 1", "Category 2"], items: [{ text: "", bucket: 0 }] };
+    default:
+      return { type: "multiple_choice", text: "", options: ["", "", ""], correct: 0 };
+  }
+}
+
+function questionToRow(q, step_id, order_index) {
+  const base = { step_id, type: q.type, text: q.text.trim(), order_index, options: null, correct_index: null, config: {} };
+  if (q.type === "multiple_choice" || q.type === "true_false") {
+    return { ...base, options: q.options, correct_index: q.correct };
+  }
+  if (q.type === "numeric") {
+    return { ...base, config: { correct_value: Number(q.correctValue), tolerance: Number(q.tolerance) || 0, unit: q.unit.trim() } };
+  }
+  if (q.type === "sequence") {
+    return { ...base, config: { items: q.items.map((text, i) => ({ id: `S${i}`, text })) } };
+  }
+  if (q.type === "match_pairs") {
+    return {
+      ...base,
+      config: {
+        left: q.pairs.map((p, i) => ({ id: `L${i}`, text: p.left })),
+        right: q.pairs.map((p, i) => ({ id: `R${i}`, text: p.right })),
+        correct_pairs: Object.fromEntries(q.pairs.map((_, i) => [`L${i}`, `R${i}`])),
+      },
+    };
+  }
+  if (q.type === "categorize") {
+    return {
+      ...base,
+      config: {
+        buckets: q.buckets,
+        items: q.items.map((it, i) => ({ id: `I${i}`, text: it.text })),
+        correct_buckets: Object.fromEntries(q.items.map((it, i) => [`I${i}`, it.bucket])),
+      },
+    };
+  }
+  return base;
+}
+
+function rowToQuestion(row) {
+  const type = row.type || "multiple_choice";
+  const cfg = row.config || {};
+  if (type === "sequence") {
+    const items = (cfg.items || []).map((it) => it.text);
+    return { type, text: row.text, items: items.length ? items : ["", ""] };
+  }
+  if (type === "match_pairs") {
+    const left = cfg.left || [];
+    const right = cfg.right || [];
+    const pairs = left.map((l, i) => ({ left: l.text, right: right[i]?.text || "" }));
+    return { type, text: row.text, pairs: pairs.length ? pairs : [{ left: "", right: "" }] };
+  }
+  if (type === "categorize") {
+    const correctBuckets = cfg.correct_buckets || {};
+    const items = (cfg.items || []).map((it) => ({ text: it.text, bucket: correctBuckets[it.id] ?? 0 }));
+    return { type, text: row.text, buckets: cfg.buckets || ["Category 1", "Category 2"], items: items.length ? items : [{ text: "", bucket: 0 }] };
+  }
+  if (type === "numeric") {
+    return { type, text: row.text, correctValue: String(cfg.correct_value ?? ""), tolerance: String(cfg.tolerance ?? "0"), unit: cfg.unit || "" };
+  }
+  return { type, text: row.text, options: row.options || ["", "", ""], correct: row.correct_index ?? 0 };
+}
+
+function QuestionTypeFields({ q, onChange }) {
+  const fieldStyle = { flex: 1, padding: "6px 9px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 15 };
+
+  if (q.type === "multiple_choice") {
+    return (
+      <>
+        {q.options.map((opt, oi) => (
+          <div key={oi} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+            <input type="radio" checked={q.correct === oi} onChange={() => onChange({ correct: oi })} title="Correct answer" />
+            <input
+              value={opt}
+              onChange={(e) => onChange({ options: q.options.map((o, i) => (i === oi ? e.target.value : o)) })}
+              placeholder={`Option ${oi + 1}`}
+              style={fieldStyle}
+            />
+            {q.options.length > 2 && (
+              <button className="nbd-iconbtn" onClick={() => {
+                const options = q.options.filter((_, i) => i !== oi);
+                onChange({ options, correct: q.correct >= options.length ? 0 : q.correct });
+              }} title="Remove option"><X size={13} /></button>
+            )}
+          </div>
+        ))}
+        <button className="nbd-linkbtn" onClick={() => onChange({ options: [...q.options, ""] })}>+ Add option</button>
+      </>
+    );
+  }
+
+  if (q.type === "true_false") {
+    return (
+      <div style={{ display: "flex", gap: 16 }}>
+        {["True", "False"].map((label, oi) => (
+          <label key={oi} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 15, color: "#3d3830" }}>
+            <input type="radio" checked={q.correct === oi} onChange={() => onChange({ correct: oi })} /> {label}
+          </label>
+        ))}
+      </div>
+    );
+  }
+
+  if (q.type === "numeric") {
+    return (
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <div>
+          <label style={{ fontSize: 13, color: "#8a8074", display: "block", marginBottom: 2 }}>Correct value</label>
+          <input type="number" value={q.correctValue} onChange={(e) => onChange({ correctValue: e.target.value })} style={{ ...fieldStyle, width: 110 }} />
+        </div>
+        <div>
+          <label style={{ fontSize: 13, color: "#8a8074", display: "block", marginBottom: 2 }}>± tolerance</label>
+          <input type="number" value={q.tolerance} onChange={(e) => onChange({ tolerance: e.target.value })} style={{ ...fieldStyle, width: 110 }} />
+        </div>
+        <div>
+          <label style={{ fontSize: 13, color: "#8a8074", display: "block", marginBottom: 2 }}>Unit (optional)</label>
+          <input value={q.unit} onChange={(e) => onChange({ unit: e.target.value })} placeholder="e.g. %, ml" style={{ ...fieldStyle, width: 110 }} />
+        </div>
+      </div>
+    );
+  }
+
+  if (q.type === "sequence") {
+    return (
+      <>
+        <p style={{ fontSize: 13, color: "#a39a8d", margin: "0 0 8px" }}>Enter the steps in the correct order — learners will see them shuffled and drag them back into place.</p>
+        {q.items.map((item, oi) => (
+          <div key={oi} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+            <span style={{ fontSize: 13, color: "#a39a8d", width: 16 }}>{oi + 1}.</span>
+            <input value={item} onChange={(e) => onChange({ items: q.items.map((v, i) => (i === oi ? e.target.value : v)) })} placeholder={`Step ${oi + 1}`} style={fieldStyle} />
+            <button className="nbd-iconbtn" onClick={() => onChange({ items: q.items.filter((_, i) => i !== oi) })} disabled={q.items.length <= 2} title="Remove step"><X size={13} /></button>
+          </div>
+        ))}
+        <button className="nbd-linkbtn" onClick={() => onChange({ items: [...q.items, ""] })}>+ Add step</button>
+      </>
+    );
+  }
+
+  if (q.type === "match_pairs") {
+    return (
+      <>
+        <p style={{ fontSize: 13, color: "#a39a8d", margin: "0 0 8px" }}>Each row is a matching pair — learners click one from each side to link them.</p>
+        {q.pairs.map((pair, oi) => (
+          <div key={oi} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+            <input value={pair.left} onChange={(e) => onChange({ pairs: q.pairs.map((p, i) => (i === oi ? { ...p, left: e.target.value } : p)) })} placeholder="Term" style={fieldStyle} />
+            <span style={{ color: "#a39a8d" }}>↔</span>
+            <input value={pair.right} onChange={(e) => onChange({ pairs: q.pairs.map((p, i) => (i === oi ? { ...p, right: e.target.value } : p)) })} placeholder="Match" style={fieldStyle} />
+            <button className="nbd-iconbtn" onClick={() => onChange({ pairs: q.pairs.filter((_, i) => i !== oi) })} disabled={q.pairs.length <= 2} title="Remove pair"><X size={13} /></button>
+          </div>
+        ))}
+        <button className="nbd-linkbtn" onClick={() => onChange({ pairs: [...q.pairs, { left: "", right: "" }] })}>+ Add pair</button>
+      </>
+    );
+  }
+
+  if (q.type === "categorize") {
+    return (
+      <>
+        <p style={{ fontSize: 13, color: "#a39a8d", margin: "0 0 8px" }}>Define the categories, then assign each item to the one it belongs in.</p>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
+          {q.buckets.map((b, bi) => (
+            <div key={bi} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <input
+                value={b}
+                onChange={(e) => onChange({ buckets: q.buckets.map((v, i) => (i === bi ? e.target.value : v)) })}
+                placeholder={`Category ${bi + 1}`}
+                style={{ ...fieldStyle, width: 130 }}
+              />
+              {q.buckets.length > 2 && (
+                <button className="nbd-iconbtn" onClick={() => {
+                  const buckets = q.buckets.filter((_, i) => i !== bi);
+                  onChange({ buckets, items: q.items.map((it) => ({ ...it, bucket: it.bucket >= buckets.length ? 0 : it.bucket })) });
+                }} title="Remove category"><X size={13} /></button>
+              )}
+            </div>
+          ))}
+          <button className="nbd-linkbtn" onClick={() => onChange({ buckets: [...q.buckets, `Category ${q.buckets.length + 1}`] })}>+ Category</button>
+        </div>
+        {q.items.map((item, oi) => (
+          <div key={oi} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+            <input value={item.text} onChange={(e) => onChange({ items: q.items.map((it, i) => (i === oi ? { ...it, text: e.target.value } : it)) })} placeholder={`Item ${oi + 1}`} style={fieldStyle} />
+            <select value={item.bucket} onChange={(e) => onChange({ items: q.items.map((it, i) => (i === oi ? { ...it, bucket: Number(e.target.value) } : it)) })} style={{ padding: "6px 9px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 14 }}>
+              {q.buckets.map((b, bi) => <option key={bi} value={bi}>{b}</option>)}
+            </select>
+            <button className="nbd-iconbtn" onClick={() => onChange({ items: q.items.filter((_, i) => i !== oi) })} disabled={q.items.length <= 1} title="Remove item"><X size={13} /></button>
+          </div>
+        ))}
+        <button className="nbd-linkbtn" onClick={() => onChange({ items: [...q.items, { text: "", bucket: 0 }] })}>+ Add item</button>
+      </>
+    );
+  }
+
+  return null;
+}
+
+function questionIsIncomplete(q) {
+  if (!q.text.trim()) return true;
+  if (q.type === "multiple_choice" || q.type === "true_false") return q.options.some((o) => !o.trim());
+  if (q.type === "numeric") return q.correctValue === "" || isNaN(Number(q.correctValue));
+  if (q.type === "sequence") return q.items.some((i) => !i.trim());
+  if (q.type === "match_pairs") return q.pairs.some((p) => !p.left.trim() || !p.right.trim());
+  if (q.type === "categorize") return q.items.some((i) => !i.text.trim()) || q.buckets.some((b) => !b.trim());
+  return false;
+}
+
 function AddQuizForm({ initial, submitLabel, onCancel, onSave }) {
   const [title, setTitle] = useState(initial?.title || "");
-  const [questions, setQuestions] = useState(initial?.questions || [{ text: "", options: ["", "", ""], correct: 0 }]);
+  const [questions, setQuestions] = useState(initial?.questions || [blankQuestion("multiple_choice")]);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
   function updateQuestion(qi, patch) {
     setQuestions(questions.map((q, i) => (i === qi ? { ...q, ...patch } : q)));
   }
-  function updateOption(qi, oi, value) {
-    updateQuestion(qi, { options: questions[qi].options.map((o, i) => (i === oi ? value : o)) });
-  }
-  function addOption(qi) {
-    updateQuestion(qi, { options: [...questions[qi].options, ""] });
-  }
-  function removeOption(qi, oi) {
-    if (questions[qi].options.length <= 2) return;
-    const options = questions[qi].options.filter((_, i) => i !== oi);
-    const correct = questions[qi].correct >= options.length ? 0 : questions[qi].correct;
-    updateQuestion(qi, { options, correct });
+  function setQuestionType(qi, type) {
+    setQuestions(questions.map((q, i) => (i === qi ? { ...blankQuestion(type), text: q.text } : q)));
   }
   function addQuestion() {
-    setQuestions([...questions, { text: "", options: ["", "", ""], correct: 0 }]);
+    setQuestions([...questions, blankQuestion("multiple_choice")]);
   }
   function removeQuestion(qi) {
     if (questions.length <= 1) return;
@@ -99,11 +323,9 @@ function AddQuizForm({ initial, submitLabel, onCancel, onSave }) {
 
   async function save() {
     if (!title.trim()) { setError("Give the quiz a title"); return; }
-    for (const q of questions) {
-      if (!q.text.trim() || q.options.some((o) => !o.trim())) {
-        setError("Fill in every question and answer option first");
-        return;
-      }
+    if (questions.some(questionIsIncomplete)) {
+      setError("Fill in every question completely first");
+      return;
     }
     setSaving(true);
     setError("");
@@ -118,18 +340,14 @@ function AddQuizForm({ initial, submitLabel, onCancel, onSave }) {
       <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Quick check: Foundations" style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 14, fontSize: 16, boxSizing: "border-box" }} />
       {questions.map((q, qi) => (
         <div key={qi} style={{ border: "1px solid #e4dfd6", borderRadius: 8, padding: 12, marginBottom: 10 }}>
-          <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
-            <input value={q.text} onChange={(e) => updateQuestion(qi, { text: e.target.value })} placeholder={`Question ${qi + 1}`} style={{ flex: 1, padding: "7px 9px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 15 }} />
+          <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8, flexWrap: "wrap" }}>
+            <input value={q.text} onChange={(e) => updateQuestion(qi, { text: e.target.value })} placeholder={`Question ${qi + 1}`} style={{ flex: "1 1 220px", padding: "7px 9px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 15 }} />
+            <select value={q.type} onChange={(e) => setQuestionType(qi, e.target.value)} style={{ padding: "7px 9px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 14 }}>
+              {QUESTION_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+            </select>
             <button className="nbd-iconbtn" onClick={() => removeQuestion(qi)} title="Remove question"><Trash2 size={14} /></button>
           </div>
-          {q.options.map((opt, oi) => (
-            <div key={oi} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-              <input type="radio" name={`correct-${qi}`} checked={q.correct === oi} onChange={() => updateQuestion(qi, { correct: oi })} title="Correct answer" />
-              <input value={opt} onChange={(e) => updateOption(qi, oi, e.target.value)} placeholder={`Option ${oi + 1}`} style={{ flex: 1, padding: "6px 9px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 15 }} />
-              {q.options.length > 2 && <button className="nbd-iconbtn" onClick={() => removeOption(qi, oi)} title="Remove option"><X size={13} /></button>}
-            </div>
-          ))}
-          <button className="nbd-linkbtn" onClick={() => addOption(qi)}>+ Add option</button>
+          <QuestionTypeFields q={q} onChange={(patch) => updateQuestion(qi, patch)} />
         </div>
       ))}
       <button className="nbd-linkbtn" onClick={addQuestion} style={{ marginBottom: 14 }}>+ Add question</button>
@@ -493,7 +711,7 @@ function BrandStepsEditor({ brandId, onBack }) {
     const order_index = await nextOrderIndex();
     const { data: step, error: stepErr } = await supabase.from("brand_steps").insert({ brand_id: brandId, type: "quiz", title, order_index }).select().single();
     if (stepErr) return stepErr.message;
-    const rows = questions.map((q, i) => ({ step_id: step.id, text: q.text, options: q.options, correct_index: q.correct, order_index: i }));
+    const rows = questions.map((q, i) => questionToRow(q, step.id, i));
     const { error: qErr } = await supabase.from("quiz_questions").insert(rows);
     if (qErr) return qErr.message;
     setAddingType(null);
@@ -518,12 +736,12 @@ function BrandStepsEditor({ brandId, onBack }) {
     if (step.type === "quiz") {
       const { data: qs } = await supabase
         .from("quiz_questions")
-        .select("text,options,correct_index,order_index")
+        .select("text,options,correct_index,type,config,order_index")
         .eq("step_id", step.id)
         .order("order_index");
       setEditingQuizData({
         title: step.title,
-        questions: (qs || []).map((q) => ({ text: q.text, options: q.options, correct: q.correct_index })),
+        questions: (qs || []).map(rowToQuestion),
       });
     }
     setEditingStep(step);
@@ -547,7 +765,7 @@ function BrandStepsEditor({ brandId, onBack }) {
     if (titleErr) return titleErr.message;
     const { error: delErr } = await supabase.from("quiz_questions").delete().eq("step_id", editingStep.id);
     if (delErr) return delErr.message;
-    const rows = questions.map((q, i) => ({ step_id: editingStep.id, text: q.text, options: q.options, correct_index: q.correct, order_index: i }));
+    const rows = questions.map((q, i) => questionToRow(q, editingStep.id, i));
     const { error: insErr } = await supabase.from("quiz_questions").insert(rows);
     if (insErr) return insErr.message;
     cancelEdit();

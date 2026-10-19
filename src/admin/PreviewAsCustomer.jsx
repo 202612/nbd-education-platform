@@ -95,7 +95,23 @@ function PreviewQuizStep({ step, onContinue }) {
       {questions?.map((q, i) => (
         <div key={q.id} style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 14, marginBottom: 10 }}>
           <div style={{ fontWeight: 600, color: navy[900], marginBottom: 8, fontSize: 15 }}>{i + 1}. {q.text}</div>
-          {q.options.map((opt, oi) => (
+          {q.type === "numeric" && (
+            <div style={{ fontSize: 14, color: "#6b6155" }}>Numeric guess{q.unit ? ` (${q.unit})` : ""} — answer withheld in preview</div>
+          )}
+          {q.type === "sequence" && (
+            <div style={{ fontSize: 14, color: "#6b6155" }}>Put in order: {q.items.map((it) => it.text).join(" · ")}</div>
+          )}
+          {q.type === "match_pairs" && (
+            <div style={{ fontSize: 14, color: "#6b6155" }}>
+              Match: {q.left.map((it) => it.text).join(", ")} ↔ {q.right.map((it) => it.text).join(", ")}
+            </div>
+          )}
+          {q.type === "categorize" && (
+            <div style={{ fontSize: 14, color: "#6b6155" }}>
+              Categories: {q.buckets.join(", ")} — items: {q.items.map((it) => it.text).join(", ")}
+            </div>
+          )}
+          {(q.type === "multiple_choice" || q.type === "true_false") && q.options?.map((opt, oi) => (
             <div key={oi} style={{ fontSize: 14, color: "#6b6155", padding: "3px 0" }}>○ {opt}</div>
           ))}
         </div>
