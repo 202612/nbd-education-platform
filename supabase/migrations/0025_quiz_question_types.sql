@@ -19,7 +19,12 @@ alter table quiz_questions alter column correct_index drop not null;
 -- correct_value/tolerance). Items needing a shuffle (sequence order, match
 -- pairs' right-hand side) are shuffled here so display order never leaks
 -- the answer.
-create or replace function get_quiz_questions(p_step_id uuid)
+-- get_quiz_questions used to return table(...); changing it to return a
+-- single jsonb value means the old signature has to be dropped first —
+-- Postgres won't let CREATE OR REPLACE change a function's return type.
+drop function if exists get_quiz_questions(uuid);
+
+create function get_quiz_questions(p_step_id uuid)
 returns jsonb
 language plpgsql
 security definer
@@ -77,6 +82,8 @@ begin
   return v_result;
 end;
 $$;
+
+grant execute on function get_quiz_questions(uuid) to authenticated;
 
 -- Grades every format. For sequence/match/categorize, the submitted answer
 -- is compared structurally (jsonb equality) against the stored correct
