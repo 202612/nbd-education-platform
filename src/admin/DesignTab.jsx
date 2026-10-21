@@ -240,12 +240,35 @@ function BrandHeroLogos({ draft, setDraft }) {
     <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 20, marginBottom: 20 }}>
       <div style={{ fontWeight: 700, color: navy[900], marginBottom: 4 }}>Brand logos on the landing page</div>
       <p style={{ fontSize: 13, color: grey, margin: "0 0 14px" }}>
-        Drag any logo to move it. Click one to select it, then drag the small handle at its corner to resize it. Click the heading text to edit it directly. Changes save when you click Save below (text saves with the main "Save changes" button).
+        Drag any logo to move it (handle at its corner resizes it). Drag the ⠿ handle to move the text block. Drag anywhere else on the background to reposition the photo. Click text to edit it directly. Changes save when you click Save below (text and background position save with the main "Save changes" button).
       </p>
 
       <div
         ref={stageRef}
-        onPointerDown={(e) => { if (e.target === stageRef.current) setSelectedId(null); }}
+        onPointerDown={(e) => {
+          if (e.target !== stageRef.current) return;
+          setSelectedId(null);
+          if (!draft.background_url) return;
+          const rect = stageRef.current.getBoundingClientRect();
+          const startX = e.clientX, startY = e.clientY;
+          const startPosX = draft.background_position_x ?? 50;
+          const startPosY = draft.background_position_y ?? 50;
+          function handleMove(ev) {
+            const dxPct = ((ev.clientX - startX) / rect.width) * 100;
+            const dyPct = ((ev.clientY - startY) / rect.height) * 100;
+            setDraft((d) => ({
+              ...d,
+              background_position_x: Math.min(100, Math.max(0, startPosX - dxPct)),
+              background_position_y: Math.min(100, Math.max(0, startPosY - dyPct)),
+            }));
+          }
+          function handleUp() {
+            window.removeEventListener("pointermove", handleMove);
+            window.removeEventListener("pointerup", handleUp);
+          }
+          window.addEventListener("pointermove", handleMove);
+          window.addEventListener("pointerup", handleUp);
+        }}
         style={{
           position: "relative",
           width: "100%",
@@ -253,19 +276,49 @@ function BrandHeroLogos({ draft, setDraft }) {
           borderRadius: 12,
           overflow: "hidden",
           background: draft.background_url
-            ? `url(${draft.background_url}) center / cover no-repeat`
+            ? `url(${draft.background_url}) ${draft.background_position_x ?? 50}% ${draft.background_position_y ?? 50}% / ${(draft.background_zoom || 1) * 100}% no-repeat`
             : navy[100],
           border: "1px solid #e4dfd6",
           marginBottom: 16,
           userSelect: "none",
+          cursor: draft.background_url ? "move" : "default",
         }}
       >
         <div
+          onPointerDown={(e) => e.stopPropagation()}
           style={{
-            position: "absolute", left: "50%", top: "50%", transform: "translate(-50%, -50%)",
+            position: "absolute",
+            left: `${draft.content_x ?? 50}%`,
+            top: `${draft.content_y ?? 50}%`,
+            transform: "translate(-50%, -50%)",
             width: "60%", textAlign: "center",
           }}
         >
+          <div
+            onPointerDown={(e) => {
+              e.preventDefault();
+              const rect = stageRef.current.getBoundingClientRect();
+              function handleMove(ev) {
+                const x = Math.min(97, Math.max(3, ((ev.clientX - rect.left) / rect.width) * 100));
+                const y = Math.min(94, Math.max(6, ((ev.clientY - rect.top) / rect.height) * 100));
+                setDraft((d) => ({ ...d, content_x: x, content_y: y }));
+              }
+              function handleUp() {
+                window.removeEventListener("pointermove", handleMove);
+                window.removeEventListener("pointerup", handleUp);
+              }
+              window.addEventListener("pointermove", handleMove);
+              window.addEventListener("pointerup", handleUp);
+            }}
+            title="Drag to move the text block"
+            style={{
+              display: "inline-flex", alignItems: "center", justifyContent: "center",
+              width: 22, height: 22, borderRadius: 6, background: "rgba(255,255,255,0.85)",
+              border: "1px solid #ddd5cb", color: grey, fontSize: 13, cursor: "grab", marginBottom: 6,
+            }}
+          >
+            ⠿
+          </div>
           <div
             contentEditable
             suppressContentEditableWarning

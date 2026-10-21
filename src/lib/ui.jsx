@@ -51,6 +51,8 @@ const DEFAULT_SITE_SETTINGS = {
   eyebrow_size: 15,
   headline_size: 42,
   subtitle_size: 15,
+  content_x: 50,
+  content_y: 50,
 };
 
 export function useSiteSettings() {
@@ -135,8 +137,8 @@ export function AuthHero() {
       <div
         style={{
           position: "absolute",
-          left: "50%",
-          top: "50%",
+          left: `${settings.content_x ?? 50}%`,
+          top: `${settings.content_y ?? 50}%`,
           transform: "translate(-50%, -50%)",
           width: "clamp(300px, 68vw, 620px)",
           textAlign: "center",
