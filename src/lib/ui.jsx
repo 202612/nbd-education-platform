@@ -144,7 +144,7 @@ export function AuthHero() {
           textAlign: "center",
         }}
       >
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: 40 }}>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
           {settings.logo_url ? (
             <div style={{ background: "#fff", borderRadius: 16, padding: "clamp(16px, 2.4vw, 26px) clamp(28px, 5vw, 48px)", display: "inline-flex", overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
               <div style={{ height: "clamp(68px, 11vw, 130px)", width: "clamp(170px, 26vw, 300px)", overflow: "hidden", position: "relative" }}>
@@ -167,7 +167,7 @@ export function AuthHero() {
             <img src={WORDMARK_SRC} alt="National Beauty Distribution" style={{ height: "clamp(68px, 11vw, 130px)", display: "block" }} />
           )}
         </div>
-        <div style={{ fontSize: settings.eyebrow_size || 15, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: navy[700], marginBottom: 18 }}>
+        <div style={{ fontSize: settings.eyebrow_size || 15, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: navy[700], marginBottom: 6 }}>
           {settings.eyebrow}
         </div>
         <h1
