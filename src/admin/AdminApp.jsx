@@ -949,7 +949,10 @@ function AdminApprovalsLive() {
   }
 
   async function approve(account) {
-    const chosen = Array.from(selected[account.id] || []);
+    // Checkboxes default to showing requested_brand_ids as pre-checked until
+    // the admin explicitly toggles one — this has to match that same default,
+    // or an approval where nothing was manually clicked saves an empty list.
+    const chosen = Array.from(selected[account.id] || new Set(account.requested_brand_ids));
     setBusyId(account.id);
     await supabase.from("accounts").update({ status: "approved", approved_brand_ids: chosen }).eq("id", account.id);
     setBusyId(null);
