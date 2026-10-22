@@ -908,9 +908,9 @@ function CustomerTeam({ team, currentUserId, onAdd, onRemove, brands = [], teamP
 
       {isHolder && <TeamProgressTable team={team} brands={brands} teamProgress={teamProgress} onSelectUser={setViewingUser} />}
       <div style={{ display: "flex", gap: 8, marginBottom: 18, flexWrap: "wrap" }}>
-        <input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First name" style={{ flex: 1, minWidth: 120, padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 16 }} />
-        <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last name" style={{ flex: 1, minWidth: 120, padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 16 }} />
-        <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" style={{ flex: 1, minWidth: 140, padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 16 }} />
+        <input required value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First name" style={{ flex: 1, minWidth: 120, padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 16 }} />
+        <input required value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last name" style={{ flex: 1, minWidth: 120, padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 16 }} />
+        <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" style={{ flex: 1, minWidth: 140, padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 16 }} />
         <button onClick={add} disabled={busy} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 15, opacity: busy ? 0.7 : 1 }}>Add</button>
       </div>
       {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 12 }}>{error}</div>}

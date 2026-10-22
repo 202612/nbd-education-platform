@@ -56,6 +56,7 @@ export default function Login({ onSwitchToApply, initialMode = "signin" }) {
         <form onSubmit={submit}>
           <label style={{ fontSize: 15, color: grey, display: "block", marginBottom: 4, fontWeight: 700 }}>Email</label>
           <input
+            required
             type="email"
             autoComplete="email"
             value={email}
@@ -64,6 +65,7 @@ export default function Login({ onSwitchToApply, initialMode = "signin" }) {
           />
           <label style={{ fontSize: 15, color: grey, display: "block", marginBottom: 4, fontWeight: 700 }}>Password</label>
           <input
+            required
             type="password"
             autoComplete={mode === "signin" ? "current-password" : "new-password"}
             value={password}
