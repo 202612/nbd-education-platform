@@ -919,8 +919,9 @@ function CustomerTeam({ team, currentUserId, onAdd, onRemove, brands = [], teamP
           <div key={u.id} style={{ display: "flex", alignItems: "center", gap: 10, background: u.role === "holder" ? navy[50] : "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: "12px 14px" }}>
             <Users size={16} color={navy[700]} />
             <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 500, fontSize: 16, color: navy[900] }}>
+              <div style={{ fontWeight: 500, fontSize: 16, color: navy[900], display: "flex", alignItems: "center", gap: 8 }}>
                 {u.name}{u.id === currentUserId ? " (you)" : ""}{u.role === "holder" ? " · main account holder" : ""}
+                {u.status === "pending" && <Badge tone="muted">Pending NBD approval</Badge>}
               </div>
               <div style={{ fontSize: 14, color: "#8a8074" }}>{u.email}</div>
             </div>
@@ -1056,7 +1057,7 @@ export default function CustomerApp({ user, account }) {
   }
 
   async function loadTeam() {
-    const { data } = await supabase.from("app_users").select("id,name,email,role").eq("account_id", account.id).order("role", { ascending: false });
+    const { data } = await supabase.from("app_users").select("id,name,email,role,status").eq("account_id", account.id).order("role", { ascending: false });
     setTeam(data || []);
   }
 
@@ -1111,7 +1112,7 @@ export default function CustomerApp({ user, account }) {
   }
 
   async function handleAddStaff({ name, email }) {
-    const { error } = await supabase.from("app_users").insert({ account_id: account.id, name, email, role: "staff" });
+    const { error } = await supabase.from("app_users").insert({ account_id: account.id, name, email, role: "staff", status: "pending" });
     if (error) return error.message.includes("duplicate") ? "That email is already on the team." : error.message;
     await loadTeam();
     return null;

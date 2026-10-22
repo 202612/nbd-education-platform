@@ -170,6 +170,19 @@ export default function App() {
     );
   }
 
+  if (identity.kind === "staff_pending") {
+    return (
+      <Shell onSignOut={signOut} roleLabel={`Education platform · ${identity.account.company_name}`}>
+        <div style={{ maxWidth: 420, margin: "60px auto", textAlign: "center" }}>
+          <h2 style={{ fontSize: 20, fontWeight: 600, color: navy[900], margin: "0 0 8px" }}>Waiting on approval</h2>
+          <p style={{ color: "#8a8074", fontSize: 16, lineHeight: 1.6 }}>
+            Your account's been created, but NBD still needs to approve you before you can get in. This usually doesn't take long — check back shortly.
+          </p>
+        </div>
+      </Shell>
+    );
+  }
+
   if (identity.kind === "customer" || identity.kind === "pending") {
     return (
       <Shell onSignOut={signOut} roleLabel={`Education platform · ${identity.account.company_name}`}>

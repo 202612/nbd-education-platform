@@ -926,19 +926,39 @@ function AdminBrandsLive() {
 function AdminApprovalsLive() {
   const [brands, setBrands] = useState([]);
   const [pending, setPending] = useState(null);
+  const [pendingStaff, setPendingStaff] = useState(null);
   const [selected, setSelected] = useState({});
   const [busyId, setBusyId] = useState(null);
   const [toast, setToast] = useState("");
 
   async function load() {
-    const [{ data: b }, { data: p }] = await Promise.all([
+    const [{ data: b }, { data: p }, { data: s }] = await Promise.all([
       supabase.from("brands").select("id,name").order("name"),
       supabase.from("accounts").select("*").eq("status", "pending").order("created_at"),
+      supabase.from("app_users").select("id,name,email,created_at,accounts(company_name,customer_number)").eq("status", "pending").order("created_at"),
     ]);
     setBrands(b || []);
     setPending(p || []);
+    setPendingStaff(s || []);
   }
   useEffect(() => { load(); }, []);
+
+  async function approveStaff(staffMember) {
+    setBusyId(staffMember.id);
+    await supabase.from("app_users").update({ status: "active" }).eq("id", staffMember.id);
+    setBusyId(null);
+    setToast(`${staffMember.name} approved`);
+    setTimeout(() => setToast(""), 3500);
+    load();
+  }
+  async function declineStaff(staffMember) {
+    setBusyId(staffMember.id);
+    await supabase.from("app_users").delete().eq("id", staffMember.id);
+    setBusyId(null);
+    setToast(`${staffMember.name} declined`);
+    setTimeout(() => setToast(""), 3500);
+    load();
+  }
 
   function toggleBrand(accountId, brandId) {
     setSelected((prev) => {
@@ -995,6 +1015,30 @@ function AdminApprovalsLive() {
                 <Check size={14} /> Approve
               </button>
               <button className="nbd-btn nbd-btn--outline" onClick={() => decline(a)} disabled={busyId === a.id}>
+                <X size={14} /> Decline
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: "32px 0 4px" }}>Staff approvals</h2>
+      <p style={{ color: "#8a8074", fontSize: 16, margin: "0 0 20px" }}>Staff a manager has added to their own account — they get the same brand access as their account, once approved.</p>
+      {pendingStaff && pendingStaff.length === 0 && <div style={{ color: "#8a8074", fontSize: 16 }}>No staff waiting on approval.</div>}
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {(pendingStaff || []).map((s) => (
+          <div key={s.id} style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 16, display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+            <div style={{ flex: 1, minWidth: 220 }}>
+              <div style={{ fontWeight: 600, color: navy[900] }}>{s.name}</div>
+              <div style={{ fontSize: 15, color: "#8a8074" }}>
+                {s.email} · {s.accounts?.company_name}{s.accounts?.customer_number ? ` (${s.accounts.customer_number})` : ""}
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button className="nbd-btn nbd-btn--primary" onClick={() => approveStaff(s)} disabled={busyId === s.id}>
+                <Check size={14} /> Approve
+              </button>
+              <button className="nbd-btn nbd-btn--outline" onClick={() => declineStaff(s)} disabled={busyId === s.id}>
                 <X size={14} /> Decline
               </button>
             </div>
