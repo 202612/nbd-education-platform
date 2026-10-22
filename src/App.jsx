@@ -90,6 +90,53 @@ function MfaChallengeScreen({ onVerified, onSignOut }) {
   );
 }
 
+// Shown when the session came from a "reset your password" email link, in
+// place of the normal app — they're technically signed in at this point,
+// but still need to actually set the new password before going anywhere.
+function ResetPasswordScreen({ onDone }) {
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  async function submit(e) {
+    e.preventDefault();
+    if (!password || password.length < 6) { setError("Password needs to be at least 6 characters."); return; }
+    if (password !== confirm) { setError("Those passwords don't match."); return; }
+    setBusy(true);
+    setError("");
+    const { error: updateError } = await supabase.auth.updateUser({ password });
+    setBusy(false);
+    if (updateError) { setError(updateError.message); return; }
+    onDone();
+  }
+
+  return (
+    <div style={{ fontFamily: "'Lato', -apple-system, sans-serif", background: cream, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <form onSubmit={submit} style={{ maxWidth: 380, width: "100%", padding: 20 }}>
+        <h2 style={{ fontSize: 22, fontWeight: 700, color: navy[900], margin: "0 0 6px", textAlign: "center" }}>Set a new password</h2>
+        <p style={{ color: grey, fontSize: 15, margin: "0 0 22px", textAlign: "center" }}>Choose a new password for your account.</p>
+        <label style={{ fontSize: 15, color: grey, display: "block", marginBottom: 4, fontWeight: 700 }}>New password</label>
+        <input
+          required type="password" autoComplete="new-password" value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          style={{ width: "100%", padding: "11px 12px", border: "1px solid #d8d8d8", borderRadius: 6, marginBottom: 14, fontSize: 17, boxSizing: "border-box", fontFamily: "inherit" }}
+        />
+        <label style={{ fontSize: 15, color: grey, display: "block", marginBottom: 4, fontWeight: 700 }}>Confirm password</label>
+        <input
+          required type="password" autoComplete="new-password" value={confirm}
+          onChange={(e) => setConfirm(e.target.value)}
+          style={{ width: "100%", padding: "11px 12px", border: "1px solid #d8d8d8", borderRadius: 6, marginBottom: 20, fontSize: 17, boxSizing: "border-box", fontFamily: "inherit" }}
+        />
+        {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 16 }}>{error}</div>}
+        <button type="submit" disabled={busy} style={{ width: "100%", background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "13px 16px", fontSize: 16, fontWeight: 700 }}>
+          {busy ? "Saving…" : "Save password"}
+        </button>
+      </form>
+    </div>
+  );
+}
+
 export default function App() {
   const [session, setSession] = useState(undefined); // undefined = not checked yet, null = signed out
   const [identity, setIdentity] = useState(null); // { kind, admin } | { kind, user, account } | { kind: "unrecognized" }
@@ -98,10 +145,12 @@ export default function App() {
   const [authScreen, setAuthScreen] = useState("apply"); // "login" | "apply" | "team" — new customers land here first; staff/admin sign in via the link on that screen, "team" is a shortcut straight into password creation
   const [mfaNeeded, setMfaNeeded] = useState(false);
   const [mfaChecked, setMfaChecked] = useState(false);
+  const [passwordRecovery, setPasswordRecovery] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, newSession) => {
+      if (event === "PASSWORD_RECOVERY") setPasswordRecovery(true);
       setSession(newSession);
     });
     return () => sub.subscription.unsubscribe();
@@ -138,6 +187,9 @@ export default function App() {
   }
 
   if (session === undefined) return <CenteredLoader label="Loading…" />;
+  if (passwordRecovery) {
+    return <ResetPasswordScreen onDone={() => setPasswordRecovery(false)} />;
+  }
   if (!session) {
     if (authScreen === "apply") {
       return <ApplyForAccess onSwitchToLogin={() => setAuthScreen("login")} onSwitchToTeam={() => setAuthScreen("team")} />;

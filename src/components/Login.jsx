@@ -4,7 +4,7 @@ import { supabase } from "../lib/supabaseClient.js";
 import { navy, cream, grey, AuthHero } from "../lib/ui.jsx";
 
 export default function Login({ onSwitchToApply, initialMode = "signin" }) {
-  const [mode, setMode] = useState(initialMode); // "signin" | "signup"
+  const [mode, setMode] = useState(initialMode); // "signin" | "signup" | "forgot"
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -13,6 +13,20 @@ export default function Login({ onSwitchToApply, initialMode = "signin" }) {
 
   async function submit(e) {
     e.preventDefault();
+    if (mode === "forgot") {
+      if (!email.trim()) { setError("Enter your email first."); return; }
+      setBusy(true);
+      setError("");
+      setNotice("");
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: window.location.origin,
+      });
+      setBusy(false);
+      if (resetError) { setError(resetError.message); return; }
+      setNotice("Check your inbox for a link to reset your password.");
+      return;
+    }
+
     if (!email.trim() || !password) {
       setError("Enter your email and password.");
       return;
@@ -45,11 +59,13 @@ export default function Login({ onSwitchToApply, initialMode = "signin" }) {
 
       <div style={{ maxWidth: 400, margin: "0 auto", padding: "48px 20px 80px" }}>
         <h2 style={{ fontSize: 24, fontWeight: 700, color: navy[900], margin: "0 0 4px", textAlign: "center" }}>
-          {mode === "signin" ? "Sign in" : "Create your password"}
+          {mode === "signin" ? "Sign in" : mode === "forgot" ? "Reset your password" : "Create your password"}
         </h2>
         <p style={{ color: grey, fontSize: 16, margin: "0 0 28px", textAlign: "center" }}>
           {mode === "signin"
             ? "For approved account holders, staff, and admins."
+            : mode === "forgot"
+            ? "Enter your email and we'll send you a link to set a new password."
             : "Part of a team? Use the exact email your account manager added you with, and choose a password."}
         </p>
 
@@ -63,15 +79,30 @@ export default function Login({ onSwitchToApply, initialMode = "signin" }) {
             onChange={(e) => setEmail(e.target.value)}
             style={{ width: "100%", padding: "11px 12px", border: "1px solid #d8d8d8", borderRadius: 6, marginBottom: 14, fontSize: 17, boxSizing: "border-box", fontFamily: "inherit" }}
           />
-          <label style={{ fontSize: 15, color: grey, display: "block", marginBottom: 4, fontWeight: 700 }}>Password</label>
-          <input
-            required
-            type="password"
-            autoComplete={mode === "signin" ? "current-password" : "new-password"}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            style={{ width: "100%", padding: "11px 12px", border: "1px solid #d8d8d8", borderRadius: 6, marginBottom: 20, fontSize: 17, boxSizing: "border-box", fontFamily: "inherit" }}
-          />
+          {mode !== "forgot" && (
+            <>
+              <label style={{ fontSize: 15, color: grey, display: "block", marginBottom: 4, fontWeight: 700 }}>Password</label>
+              <input
+                required
+                type="password"
+                autoComplete={mode === "signin" ? "current-password" : "new-password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                style={{ width: "100%", padding: "11px 12px", border: "1px solid #d8d8d8", borderRadius: 6, marginBottom: 10, fontSize: 17, boxSizing: "border-box", fontFamily: "inherit" }}
+              />
+            </>
+          )}
+
+          {mode === "signin" && (
+            <button
+              type="button"
+              onClick={() => { setMode("forgot"); setError(""); setNotice(""); }}
+              style={{ display: "block", textAlign: "right", width: "100%", background: "none", border: "none", color: navy[700], fontSize: 14, margin: "0 0 16px", fontFamily: "inherit" }}
+            >
+              Forgot your password?
+            </button>
+          )}
+          {mode !== "signin" && <div style={{ marginBottom: 6 }} />}
 
           {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 16 }}>{error}</div>}
           {notice && <div style={{ color: navy[700], fontSize: 15, marginBottom: 16 }}>{notice}</div>}
@@ -82,16 +113,25 @@ export default function Login({ onSwitchToApply, initialMode = "signin" }) {
             style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "13px 16px", fontSize: 17, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", opacity: busy ? 0.7 : 1, fontFamily: "inherit" }}
           >
             {busy && <Loader2 size={14} className="spin" />}
-            {mode === "signin" ? "Sign in" : "Create password & continue"}
+            {mode === "signin" ? "Sign in" : mode === "forgot" ? "Send reset link" : "Create password & continue"}
           </button>
         </form>
 
-        <button
-          onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setError(""); setNotice(""); }}
-          style={{ display: "block", width: "100%", textAlign: "center", background: "none", border: "none", color: navy[700], fontSize: 16, marginTop: 20, fontFamily: "inherit" }}
-        >
-          {mode === "signin" ? "Part of a team? Create your password" : "Already have a password? Sign in"}
-        </button>
+        {mode === "forgot" ? (
+          <button
+            onClick={() => { setMode("signin"); setError(""); setNotice(""); }}
+            style={{ display: "block", width: "100%", textAlign: "center", background: "none", border: "none", color: navy[700], fontSize: 16, marginTop: 20, fontFamily: "inherit" }}
+          >
+            Back to sign in
+          </button>
+        ) : (
+          <button
+            onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setError(""); setNotice(""); }}
+            style={{ display: "block", width: "100%", textAlign: "center", background: "none", border: "none", color: navy[700], fontSize: 16, marginTop: 20, fontFamily: "inherit" }}
+          >
+            {mode === "signin" ? "Part of a team? Create your password" : "Already have a password? Sign in"}
+          </button>
+        )}
 
         {mode === "signin" && (
           <button
