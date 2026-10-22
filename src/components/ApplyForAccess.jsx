@@ -40,6 +40,23 @@ export default function ApplyForAccess({ onSwitchToLogin, onSwitchToTeam }) {
     setBusy(true);
     setError("");
 
+    // Check this before creating the login — otherwise a taken customer
+    // number fails the application step after the login already exists,
+    // which permanently blocks that email from signing up again.
+    const { data: available, error: checkError } = await supabase.rpc("check_customer_number_available", {
+      p_customer_number: customerNumber.trim(),
+    });
+    if (checkError) {
+      setBusy(false);
+      setError(checkError.message);
+      return;
+    }
+    if (!available) {
+      setBusy(false);
+      setError("That customer number is already registered — contact NBD if this is a mistake.");
+      return;
+    }
+
     const { error: signUpError } = await supabase.auth.signUp({ email: email.trim(), password });
     if (signUpError) {
       setBusy(false);
