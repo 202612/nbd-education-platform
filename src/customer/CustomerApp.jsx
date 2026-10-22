@@ -956,6 +956,82 @@ function AccountStatusScreen({ account }) {
   );
 }
 
+// ================= CERTIFICATES =================
+
+function MyCertificates({ userId }) {
+  const [rows, setRows] = useState(null);
+  const [error, setError] = useState("");
+  const [openingId, setOpeningId] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    supabase
+      .from("certificates")
+      .select("id,brand_id,issued_at,pdf_path,brands(name,logo_url)")
+      .eq("user_id", userId)
+      .order("issued_at", { ascending: false })
+      .then(({ data, error: err }) => {
+        if (cancelled) return;
+        if (err) { setError(err.message); return; }
+        setRows(data || []);
+      });
+    return () => { cancelled = true; };
+  }, [userId]);
+
+  async function download(row) {
+    if (!row.pdf_path) return;
+    setOpeningId(row.id);
+    const { data, error: err } = await supabase.storage.from("certificates").createSignedUrl(row.pdf_path, 60);
+    setOpeningId(null);
+    if (err || !data?.signedUrl) { setError(err?.message || "Couldn't open that file"); return; }
+    window.open(data.signedUrl, "_blank", "noopener");
+  }
+
+  return (
+    <div>
+      <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Certificates</h2>
+      <p style={{ color: "#8a8074", fontSize: 16, margin: "0 0 20px" }}>Every certificate you've earned, saved here for whenever you need it.</p>
+
+      {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 12 }}>{error}</div>}
+      {!rows && !error && (
+        <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#8a8074", fontSize: 16 }}><Loader2 size={16} className="spin" /> Loading…</div>
+      )}
+      {rows && rows.length === 0 && (
+        <div style={{ color: "#a39a8d", fontSize: 16 }}>No certificates yet — complete a brand's training to earn one.</div>
+      )}
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {(rows || []).map((r) => (
+          <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 16, background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: "14px 16px" }}>
+            <div style={{ width: 48, height: 40, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {r.brands?.logo_url ? (
+                <img src={r.brands.logo_url} alt={r.brands.name} style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }} />
+              ) : (
+                <Award size={22} color={navy[500]} />
+              )}
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 600, fontSize: 16, color: navy[900] }}>{r.brands?.name || "—"}</div>
+              <div style={{ fontSize: 14, color: "#8a8074" }}>Issued {formatDate(r.issued_at)}</div>
+            </div>
+            {r.pdf_path ? (
+              <button
+                onClick={() => download(r)}
+                disabled={openingId === r.id}
+                style={{ display: "flex", alignItems: "center", gap: 6, background: navy[700], color: "#fff", border: "none", borderRadius: 8, padding: "9px 16px", fontSize: 15, fontWeight: 500 }}
+              >
+                <Download size={15} /> {openingId === r.id ? "Opening…" : "Download"}
+              </button>
+            ) : (
+              <span style={{ fontSize: 13, color: "#a39a8d" }}>Preparing…</span>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ================= SETTINGS =================
 
 function AccountSettings({ user, account, onNameSaved }) {
@@ -1128,6 +1204,7 @@ export default function CustomerApp({ user, account }) {
       <div style={{ width: 170, flexShrink: 0 }}>
         {[
           { id: "training", label: "Training", icon: PlayCircle },
+          { id: "certificates", label: "Certificates", icon: Award },
           { id: "team", label: "Team", icon: Users },
           { id: "settings", label: "Settings", icon: Settings },
         ].map((t) => (
@@ -1145,6 +1222,7 @@ export default function CustomerApp({ user, account }) {
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         {tab === "training" && <CustomerDashboard brands={approvedBrands} completedStepIds={completedStepIds} onStepCompleted={handleStepCompleted} participantName={displayName} />}
+        {tab === "certificates" && <MyCertificates userId={user.id} />}
         {tab === "team" && (
           <CustomerTeam
             team={team}
