@@ -927,19 +927,26 @@ function AdminApprovalsLive() {
   const [brands, setBrands] = useState([]);
   const [pending, setPending] = useState(null);
   const [pendingStaff, setPendingStaff] = useState(null);
+  const [accountHistory, setAccountHistory] = useState(null);
+  const [staffHistory, setStaffHistory] = useState(null);
+  const [showHistory, setShowHistory] = useState(false);
   const [selected, setSelected] = useState({});
   const [busyId, setBusyId] = useState(null);
   const [toast, setToast] = useState("");
 
   async function load() {
-    const [{ data: b }, { data: p }, { data: s }] = await Promise.all([
+    const [{ data: b }, { data: p }, { data: s }, { data: ah }, { data: sh }] = await Promise.all([
       supabase.from("brands").select("id,name").order("name"),
       supabase.from("accounts").select("*").eq("status", "pending").order("created_at"),
       supabase.from("app_users").select("id,name,email,created_at,accounts(company_name,customer_number)").eq("status", "pending").order("created_at"),
+      supabase.from("accounts").select("id,company_name,customer_number,status,approved_brand_ids,created_at").neq("status", "pending").order("created_at", { ascending: false }).limit(100),
+      supabase.from("app_users").select("id,name,email,status,created_at,accounts(company_name,customer_number)").in("status", ["active", "declined"]).eq("role", "staff").order("created_at", { ascending: false }).limit(100),
     ]);
     setBrands(b || []);
     setPending(p || []);
     setPendingStaff(s || []);
+    setAccountHistory(ah || []);
+    setStaffHistory(sh || []);
   }
   useEffect(() => { load(); }, []);
 
@@ -953,7 +960,7 @@ function AdminApprovalsLive() {
   }
   async function declineStaff(staffMember) {
     setBusyId(staffMember.id);
-    await supabase.from("app_users").delete().eq("id", staffMember.id);
+    await supabase.from("app_users").update({ status: "declined" }).eq("id", staffMember.id);
     setBusyId(null);
     setToast(`${staffMember.name} declined`);
     setTimeout(() => setToast(""), 3500);
@@ -1045,6 +1052,44 @@ function AdminApprovalsLive() {
           </div>
         ))}
       </div>
+
+      <button className="nbd-btn nbd-btn--ghost" onClick={() => setShowHistory((v) => !v)} style={{ marginTop: 32, marginBottom: showHistory ? 16 : 0 }}>
+        {showHistory ? "Hide" : "View"} request history
+      </button>
+
+      {showHistory && (
+        <div>
+          <div style={{ fontSize: 15, fontWeight: 600, color: "#6b6155", margin: "20px 0 10px" }}>Account requests</div>
+          {accountHistory && accountHistory.length === 0 && <div style={{ color: "#a39a8d", fontSize: 14 }}>Nothing yet.</div>}
+          <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 28 }}>
+            {(accountHistory || []).map((a) => (
+              <div key={a.id} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, padding: "8px 12px", background: "#fff", border: "1px solid #e4dfd6", borderRadius: 8 }}>
+                <Badge tone={a.status === "approved" ? "gold" : "muted"}>{a.status}</Badge>
+                <div style={{ flex: 1 }}>
+                  <span style={{ fontWeight: 600, color: navy[900] }}>{a.company_name}</span>
+                  {a.customer_number ? ` · ${a.customer_number}` : ""}
+                  {a.status === "approved" && ` · ${a.approved_brand_ids.length} brand${a.approved_brand_ids.length === 1 ? "" : "s"}`}
+                </div>
+                <span style={{ color: "#a39a8d" }}>{new Date(a.created_at).toLocaleDateString("en-IE", { day: "2-digit", month: "short", year: "numeric" })}</span>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ fontSize: 15, fontWeight: 600, color: "#6b6155", margin: "0 0 10px" }}>Staff</div>
+          {staffHistory && staffHistory.length === 0 && <div style={{ color: "#a39a8d", fontSize: 14 }}>Nothing yet.</div>}
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {(staffHistory || []).map((s) => (
+              <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, padding: "8px 12px", background: "#fff", border: "1px solid #e4dfd6", borderRadius: 8 }}>
+                <Badge tone={s.status === "active" ? "gold" : "muted"}>{s.status}</Badge>
+                <div style={{ flex: 1 }}>
+                  <span style={{ fontWeight: 600, color: navy[900] }}>{s.name}</span> · {s.email} · {s.accounts?.company_name}
+                </div>
+                <span style={{ color: "#a39a8d" }}>{new Date(s.created_at).toLocaleDateString("en-IE", { day: "2-digit", month: "short", year: "numeric" })}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1612,12 +1657,28 @@ function AdminAssistantPreview() {
 
 export default function AdminApp() {
   const [tab, setTab] = useState("dashboard");
+  const [pendingCount, setPendingCount] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadPendingCount() {
+      const [{ count: accountCount }, { count: staffCount }] = await Promise.all([
+        supabase.from("accounts").select("id", { count: "exact", head: true }).eq("status", "pending"),
+        supabase.from("app_users").select("id", { count: "exact", head: true }).eq("status", "pending"),
+      ]);
+      if (!cancelled) setPendingCount((accountCount || 0) + (staffCount || 0));
+    }
+    loadPendingCount();
+    const interval = setInterval(loadPendingCount, 30000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [tab]);
+
   const tabs = [
     { id: "dashboard", label: "Overview", icon: ShieldCheck },
     { id: "customers", label: "Customers", icon: Building2 },
     { id: "assistant", label: "AI assistant", icon: Sparkles },
     { id: "brands", label: "Brands & modules", icon: PlayCircle },
-    { id: "approvals", label: "Approvals", icon: Clock },
+    { id: "approvals", label: "Approvals", icon: Clock, badge: pendingCount },
     { id: "certificates", label: "Certificates", icon: Award },
     { id: "design", label: "Design", icon: Palette },
     { id: "security", label: "Security", icon: ShieldCheck },
@@ -1629,6 +1690,11 @@ export default function AdminApp() {
         {tabs.map((t) => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left", padding: "9px 12px", borderRadius: 8, fontSize: 16, marginBottom: 4, background: tab === t.id ? navy[100] : "transparent", color: tab === t.id ? navy[900] : "#6b6155", fontWeight: tab === t.id ? 500 : 400, border: "none" }}>
             <t.icon size={16} /> {t.label}
+            {!!t.badge && (
+              <span style={{ marginLeft: "auto", background: "#a3372f", color: "#fff", fontSize: 12, fontWeight: 700, borderRadius: 999, minWidth: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 5px" }}>
+                {t.badge}
+              </span>
+            )}
           </button>
         ))}
       </div>

@@ -1057,7 +1057,7 @@ export default function CustomerApp({ user, account }) {
   }
 
   async function loadTeam() {
-    const { data } = await supabase.from("app_users").select("id,name,email,role,status").eq("account_id", account.id).order("role", { ascending: false });
+    const { data } = await supabase.from("app_users").select("id,name,email,role,status").eq("account_id", account.id).neq("status", "declined").order("role", { ascending: false });
     setTeam(data || []);
   }
 
