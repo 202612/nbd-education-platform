@@ -1099,6 +1099,12 @@ export default function CustomerApp({ user, account }) {
     return <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#8a8074", fontSize: 16 }}><Loader2 size={16} className="spin" /> Loading your training…</div>;
   }
 
+  // The brands table itself is intentionally readable by everyone (the
+  // apply-for-access form needs the full catalog pre-login), so the
+  // approved_brand_ids filter has to be applied here — only approved brands
+  // should ever reach a customer's own dashboard.
+  const approvedBrands = brands.filter((b) => account.approved_brand_ids.includes(b.id));
+
   async function handleStepCompleted() {
     await loadProgress();
     await loadTeamProgress();
@@ -1137,14 +1143,14 @@ export default function CustomerApp({ user, account }) {
         </div>
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        {tab === "training" && <CustomerDashboard brands={brands} completedStepIds={completedStepIds} onStepCompleted={handleStepCompleted} participantName={displayName} />}
+        {tab === "training" && <CustomerDashboard brands={approvedBrands} completedStepIds={completedStepIds} onStepCompleted={handleStepCompleted} participantName={displayName} />}
         {tab === "team" && (
           <CustomerTeam
             team={team}
             currentUserId={user.id}
             onAdd={handleAddStaff}
             onRemove={handleRemoveStaff}
-            brands={isHolder ? brands.filter((b) => account.approved_brand_ids.includes(b.id)) : []}
+            brands={isHolder ? approvedBrands : []}
             teamProgress={teamProgress}
             isHolder={isHolder}
           />
