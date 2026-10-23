@@ -7,7 +7,57 @@ import ApplyForAccess from "./components/ApplyForAccess.jsx";
 import AdminApp from "./admin/AdminApp.jsx";
 import CustomerApp from "./customer/CustomerApp.jsx";
 
-function Shell({ children, onSignOut, roleLabel }) {
+// Lets an admin jump straight into "view as this person" from any screen,
+// instead of having to navigate into Customers first. Grouped by account so
+// it stays readable once there are more than a handful of people.
+function ViewAsDropdown() {
+  const [groups, setGroups] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    supabase
+      .from("accounts")
+      .select("id,company_name,app_users(id,name,role,status)")
+      .eq("status", "approved")
+      .order("company_name")
+      .then(({ data }) => {
+        if (cancelled) return;
+        setGroups(
+          (data || [])
+            .map((a) => ({ ...a, app_users: (a.app_users || []).filter((u) => u.status === "active").sort((x, y) => (x.role === "holder" ? -1 : 1)) }))
+            .filter((a) => a.app_users.length > 0)
+        );
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  async function choose(appUserId) {
+    if (!appUserId) return;
+    const { error } = await supabase.rpc("admin_set_view_as", { p_app_user_id: appUserId });
+    if (!error) window.location.reload();
+  }
+
+  if (!groups || groups.length === 0) return null;
+
+  return (
+    <select
+      defaultValue=""
+      onChange={(e) => choose(e.target.value)}
+      style={{ background: "#fff", border: `1px solid ${navy[300]}`, color: navy[900], borderRadius: 999, padding: "9px 16px", fontSize: 14, fontWeight: 600, fontFamily: "inherit" }}
+    >
+      <option value="" disabled>View as…</option>
+      {groups.map((a) => (
+        <optgroup key={a.id} label={a.company_name}>
+          {a.app_users.map((u) => (
+            <option key={u.id} value={u.id}>{u.name}{u.role === "holder" ? " (account holder)" : " (staff)"}</option>
+          ))}
+        </optgroup>
+      ))}
+    </select>
+  );
+}
+
+function Shell({ children, onSignOut, roleLabel, showViewAs }) {
   return (
     <div style={{ fontFamily: "'Lato', -apple-system, sans-serif", background: cream, minHeight: "100vh" }}>
       <div style={{ background: "#fff", borderBottom: "1px solid #e4dfd6" }}>
@@ -19,11 +69,14 @@ function Shell({ children, onSignOut, roleLabel }) {
               <div style={{ fontSize: 13, color: grey, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 700, marginTop: 8 }}>{roleLabel}</div>
             </div>
           </div>
-          {onSignOut && (
-            <button onClick={onSignOut} style={{ background: "none", border: `1px solid ${navy[700]}`, color: navy[700], borderRadius: 999, padding: "9px 20px", fontSize: 15, fontWeight: 700 }}>
-              Sign out
-            </button>
-          )}
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            {showViewAs && <ViewAsDropdown />}
+            {onSignOut && (
+              <button onClick={onSignOut} style={{ background: "none", border: `1px solid ${navy[700]}`, color: navy[700], borderRadius: 999, padding: "9px 20px", fontSize: 15, fontWeight: 700 }}>
+                Sign out
+              </button>
+            )}
+          </div>
         </div>
       </div>
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px" }}>
@@ -218,7 +271,7 @@ export default function App() {
 
   if (identity.kind === "admin") {
     return (
-      <Shell onSignOut={signOut} roleLabel="Education platform · admin">
+      <Shell onSignOut={signOut} roleLabel="Education platform · admin" showViewAs>
         <AdminApp />
       </Shell>
     );
