@@ -1253,7 +1253,9 @@ export default function CustomerApp({ user, account }) {
   // apply-for-access form needs the full catalog pre-login), so the
   // approved_brand_ids filter has to be applied here — only approved brands
   // should ever reach a customer's own dashboard.
-  const approvedBrands = brands.filter((b) => account.approved_brand_ids.includes(b.id));
+  // The admin's full-access demo account always sees every brand, regardless
+  // of approved_brand_ids — robust even as new brands get added later.
+  const approvedBrands = account.is_demo ? brands : brands.filter((b) => account.approved_brand_ids.includes(b.id));
 
   async function handleStepCompleted() {
     await loadProgress();

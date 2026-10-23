@@ -7,27 +7,20 @@ import ApplyForAccess from "./components/ApplyForAccess.jsx";
 import AdminApp from "./admin/AdminApp.jsx";
 import CustomerApp from "./customer/CustomerApp.jsx";
 
-// Lets an admin jump straight into "view as this person" from any screen,
-// instead of having to navigate into Customers first. Grouped by account so
-// it stays readable once there are more than a handful of people.
+// A quick way for admin to see exactly what a real customer sees — the
+// fixed demo account has every brand unlocked, so this isn't tied to (or
+// limited by) any specific real customer's actual access.
 function ViewAsDropdown() {
-  const [groups, setGroups] = useState(null);
+  const [options, setOptions] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
     supabase
-      .from("accounts")
-      .select("id,company_name,app_users(id,name,role,status)")
-      .eq("status", "approved")
-      .order("company_name")
-      .then(({ data }) => {
-        if (cancelled) return;
-        setGroups(
-          (data || [])
-            .map((a) => ({ ...a, app_users: (a.app_users || []).filter((u) => u.status === "active").sort((x, y) => (x.role === "holder" ? -1 : 1)) }))
-            .filter((a) => a.app_users.length > 0)
-        );
-      });
+      .from("app_users")
+      .select("id,name,role,accounts!inner(is_demo)")
+      .eq("accounts.is_demo", true)
+      .eq("status", "active")
+      .then(({ data }) => { if (!cancelled) setOptions(data || []); });
     return () => { cancelled = true; };
   }, []);
 
@@ -37,7 +30,7 @@ function ViewAsDropdown() {
     if (!error) window.location.reload();
   }
 
-  if (!groups || groups.length === 0) return null;
+  if (!options || options.length === 0) return null;
 
   return (
     <select
@@ -46,12 +39,8 @@ function ViewAsDropdown() {
       style={{ background: "#fff", border: `1px solid ${navy[300]}`, color: navy[900], borderRadius: 999, padding: "9px 16px", fontSize: 14, fontWeight: 600, fontFamily: "inherit" }}
     >
       <option value="" disabled>View as…</option>
-      {groups.map((a) => (
-        <optgroup key={a.id} label={a.company_name}>
-          {a.app_users.map((u) => (
-            <option key={u.id} value={u.id}>{u.name}{u.role === "holder" ? " (account holder)" : " (staff)"}</option>
-          ))}
-        </optgroup>
+      {options.map((u) => (
+        <option key={u.id} value={u.id}>{u.role === "holder" ? "Account holder view" : "Staff view"}</option>
       ))}
     </select>
   );
