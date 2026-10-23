@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
-import { navy, cream, grey, AuthHero } from "../lib/ui.jsx";
+import { navy, cream, grey, AuthHero, PasswordField, validatePassword } from "../lib/ui.jsx";
 
 export default function Login({ onSwitchToApply, initialMode = "signin" }) {
   const [mode, setMode] = useState(initialMode); // "signin" | "signup" | "forgot"
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -30,6 +31,11 @@ export default function Login({ onSwitchToApply, initialMode = "signin" }) {
     if (!email.trim() || !password) {
       setError("Enter your email and password.");
       return;
+    }
+    if (mode === "signup") {
+      const passwordError = validatePassword(password);
+      if (passwordError) { setError(passwordError); return; }
+      if (password !== confirmPassword) { setError("Those passwords don't match."); return; }
     }
     setBusy(true);
     setError("");
@@ -70,7 +76,9 @@ export default function Login({ onSwitchToApply, initialMode = "signin" }) {
         </p>
 
         <form onSubmit={submit}>
-          <label style={{ fontSize: 15, color: grey, display: "block", marginBottom: 4, fontWeight: 700 }}>Email</label>
+          <label style={{ fontSize: 15, color: grey, display: "block", marginBottom: 4, fontWeight: 700 }}>
+            Email<span style={{ color: "#a3372f", fontWeight: 400 }}> (required)</span>
+          </label>
           <input
             required
             type="email"
@@ -81,15 +89,27 @@ export default function Login({ onSwitchToApply, initialMode = "signin" }) {
           />
           {mode !== "forgot" && (
             <>
-              <label style={{ fontSize: 15, color: grey, display: "block", marginBottom: 4, fontWeight: 700 }}>Password</label>
-              <input
-                required
-                type="password"
-                autoComplete={mode === "signin" ? "current-password" : "new-password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                style={{ width: "100%", padding: "11px 12px", border: "1px solid #d8d8d8", borderRadius: 6, marginBottom: 10, fontSize: 17, boxSizing: "border-box", fontFamily: "inherit" }}
-              />
+              <label style={{ fontSize: 15, color: grey, display: "block", marginBottom: 4, fontWeight: 700 }}>
+                Password<span style={{ color: "#a3372f", fontWeight: 400 }}> (required)</span>
+              </label>
+              <div style={{ marginBottom: mode === "signup" ? 6 : 10 }}>
+                <PasswordField
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete={mode === "signin" ? "current-password" : "new-password"}
+                />
+              </div>
+              {mode === "signup" && (
+                <>
+                  <p style={{ fontSize: 13, color: "#999", margin: "0 0 14px" }}>At least 8 characters, with an uppercase letter, a lowercase letter, and a number.</p>
+                  <label style={{ fontSize: 15, color: grey, display: "block", marginBottom: 4, fontWeight: 700 }}>
+                    Confirm password<span style={{ color: "#a3372f", fontWeight: 400 }}> (required)</span>
+                  </label>
+                  <div style={{ marginBottom: 10 }}>
+                    <PasswordField value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} autoComplete="new-password" />
+                  </div>
+                </>
+              )}
             </>
           )}
 

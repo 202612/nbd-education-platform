@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
-import { navy, cream, grey, AuthHero } from "../lib/ui.jsx";
+import { navy, cream, grey, AuthHero, PasswordField, validatePassword } from "../lib/ui.jsx";
 
 export default function ApplyForAccess({ onSwitchToLogin, onSwitchToTeam }) {
   const [brands, setBrands] = useState(null);
@@ -11,6 +11,7 @@ export default function ApplyForAccess({ onSwitchToLogin, onSwitchToTeam }) {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [selected, setSelected] = useState(new Set());
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -33,6 +34,9 @@ export default function ApplyForAccess({ onSwitchToLogin, onSwitchToTeam }) {
       setError("Fill in every field first.");
       return;
     }
+    const passwordError = validatePassword(password);
+    if (passwordError) { setError(passwordError); return; }
+    if (password !== confirmPassword) { setError("Those passwords don't match."); return; }
     if (selected.size === 0) {
       setError("Select at least one brand you stock.");
       return;
@@ -81,6 +85,7 @@ export default function ApplyForAccess({ onSwitchToLogin, onSwitchToTeam }) {
   }
 
   const labelStyle = { fontSize: 15, color: grey, display: "block", marginBottom: 4, fontWeight: 700 };
+  const Required = () => <span style={{ color: "#a3372f", fontWeight: 400 }}> (required)</span>;
   const inputStyle = { width: "100%", padding: "11px 12px", border: "1px solid #d8d8d8", borderRadius: 6, marginBottom: 14, fontSize: 17, boxSizing: "border-box", fontFamily: "inherit" };
 
   return (
@@ -105,30 +110,38 @@ export default function ApplyForAccess({ onSwitchToLogin, onSwitchToTeam }) {
         </p>
 
         <form onSubmit={submit}>
-          <label style={labelStyle}>NBD customer number</label>
+          <label style={labelStyle}>NBD customer number<Required /></label>
           <input required value={customerNumber} onChange={(e) => setCustomerNumber(e.target.value)} placeholder="e.g. CU-1001" style={inputStyle} />
 
-          <label style={labelStyle}>Salon / business name</label>
+          <label style={labelStyle}>Salon / business name<Required /></label>
           <input required value={company} onChange={(e) => setCompany(e.target.value)} style={inputStyle} />
 
           <div style={{ display: "flex", gap: 10 }}>
             <div style={{ flex: 1 }}>
-              <label style={labelStyle}>First name</label>
+              <label style={labelStyle}>First name<Required /></label>
               <input required value={firstName} onChange={(e) => setFirstName(e.target.value)} style={inputStyle} />
             </div>
             <div style={{ flex: 1 }}>
-              <label style={labelStyle}>Last name</label>
+              <label style={labelStyle}>Last name<Required /></label>
               <input required value={lastName} onChange={(e) => setLastName(e.target.value)} style={inputStyle} />
             </div>
           </div>
 
-          <label style={labelStyle}>Email</label>
+          <label style={labelStyle}>Email<Required /></label>
           <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} style={inputStyle} />
 
-          <label style={labelStyle}>Choose a password</label>
-          <input required type="password" value={password} onChange={(e) => setPassword(e.target.value)} style={{ ...inputStyle, marginBottom: 22 }} />
+          <label style={labelStyle}>Choose a password<Required /></label>
+          <div style={{ marginBottom: 6 }}>
+            <PasswordField value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" />
+          </div>
+          <p style={{ fontSize: 13, color: "#999", margin: "0 0 14px" }}>At least 8 characters, with an uppercase letter, a lowercase letter, and a number.</p>
 
-          <div style={{ fontSize: 15, color: grey, fontWeight: 700, marginBottom: 10 }}>Which brands do you stock?</div>
+          <label style={labelStyle}>Confirm password<Required /></label>
+          <div style={{ marginBottom: 22 }}>
+            <PasswordField value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} autoComplete="new-password" />
+          </div>
+
+          <div style={{ fontSize: 15, color: grey, fontWeight: 700, marginBottom: 10 }}>Which brands do you stock?<Required /></div>
           {!brands && <div style={{ fontSize: 15, color: "#999", marginBottom: 18 }}>Loading brands…</div>}
           <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 22 }}>
             {(brands || []).map((b) => (

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { supabase } from "./lib/supabaseClient.js";
-import { navy, cream, grey, Logo, WORDMARK_SRC } from "./lib/ui.jsx";
+import { navy, cream, grey, Logo, WORDMARK_SRC, PasswordField, validatePassword } from "./lib/ui.jsx";
 import Login from "./components/Login.jsx";
 import ApplyForAccess from "./components/ApplyForAccess.jsx";
 import AdminApp from "./admin/AdminApp.jsx";
@@ -101,7 +101,8 @@ function ResetPasswordScreen({ onDone }) {
 
   async function submit(e) {
     e.preventDefault();
-    if (!password || password.length < 6) { setError("Password needs to be at least 6 characters."); return; }
+    const passwordError = validatePassword(password);
+    if (passwordError) { setError(passwordError); return; }
     if (password !== confirm) { setError("Those passwords don't match."); return; }
     setBusy(true);
     setError("");
@@ -116,18 +117,19 @@ function ResetPasswordScreen({ onDone }) {
       <form onSubmit={submit} style={{ maxWidth: 380, width: "100%", padding: 20 }}>
         <h2 style={{ fontSize: 22, fontWeight: 700, color: navy[900], margin: "0 0 6px", textAlign: "center" }}>Set a new password</h2>
         <p style={{ color: grey, fontSize: 15, margin: "0 0 22px", textAlign: "center" }}>Choose a new password for your account.</p>
-        <label style={{ fontSize: 15, color: grey, display: "block", marginBottom: 4, fontWeight: 700 }}>New password</label>
-        <input
-          required type="password" autoComplete="new-password" value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          style={{ width: "100%", padding: "11px 12px", border: "1px solid #d8d8d8", borderRadius: 6, marginBottom: 14, fontSize: 17, boxSizing: "border-box", fontFamily: "inherit" }}
-        />
-        <label style={{ fontSize: 15, color: grey, display: "block", marginBottom: 4, fontWeight: 700 }}>Confirm password</label>
-        <input
-          required type="password" autoComplete="new-password" value={confirm}
-          onChange={(e) => setConfirm(e.target.value)}
-          style={{ width: "100%", padding: "11px 12px", border: "1px solid #d8d8d8", borderRadius: 6, marginBottom: 20, fontSize: 17, boxSizing: "border-box", fontFamily: "inherit" }}
-        />
+        <label style={{ fontSize: 15, color: grey, display: "block", marginBottom: 4, fontWeight: 700 }}>
+          New password<span style={{ color: "#a3372f", fontWeight: 400 }}> (required)</span>
+        </label>
+        <div style={{ marginBottom: 6 }}>
+          <PasswordField value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" />
+        </div>
+        <p style={{ fontSize: 13, color: "#999", margin: "0 0 14px" }}>At least 8 characters, with an uppercase letter, a lowercase letter, and a number.</p>
+        <label style={{ fontSize: 15, color: grey, display: "block", marginBottom: 4, fontWeight: 700 }}>
+          Confirm password<span style={{ color: "#a3372f", fontWeight: 400 }}> (required)</span>
+        </label>
+        <div style={{ marginBottom: 20 }}>
+          <PasswordField value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="new-password" />
+        </div>
         {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 16 }}>{error}</div>}
         <button type="submit" disabled={busy} style={{ width: "100%", background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "13px 16px", fontSize: 16, fontWeight: 700 }}>
           {busy ? "Saving…" : "Save password"}

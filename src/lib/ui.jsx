@@ -1,5 +1,44 @@
 import React, { useEffect, useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { supabase } from "./supabaseClient.js";
+
+// Shared password rules: at least 8 characters, one uppercase, one
+// lowercase, one number. Returns an error string, or null if it passes.
+export function validatePassword(pw) {
+  if (!pw || pw.length < 8) return "Password needs to be at least 8 characters.";
+  if (!/[A-Z]/.test(pw)) return "Password needs at least one uppercase letter.";
+  if (!/[a-z]/.test(pw)) return "Password needs at least one lowercase letter.";
+  if (!/[0-9]/.test(pw)) return "Password needs at least one number.";
+  return null;
+}
+
+// A password input with a show/hide toggle — masked by default. Matches the
+// plain-input styling used across the auth screens, so it drops in as a
+// replacement for a bare <input type="password">.
+export function PasswordField({ value, onChange, placeholder, autoComplete, required = true }) {
+  const [visible, setVisible] = useState(false);
+  return (
+    <div style={{ position: "relative" }}>
+      <input
+        required={required}
+        type={visible ? "text" : "password"}
+        autoComplete={autoComplete}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        style={{ width: "100%", padding: "11px 44px 11px 12px", border: "1px solid #d8d8d8", borderRadius: 6, fontSize: 17, boxSizing: "border-box", fontFamily: "inherit" }}
+      />
+      <button
+        type="button"
+        onClick={() => setVisible((v) => !v)}
+        aria-label={visible ? "Hide password" : "Show password"}
+        style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: grey, display: "flex", alignItems: "center", padding: 4, cursor: "pointer" }}
+      >
+        {visible ? <EyeOff size={18} /> : <Eye size={18} />}
+      </button>
+    </div>
+  );
+}
 
 // Shared brand tokens and small presentational atoms, ported from nbd_education_platform.jsx (the shell prototype).
 // Real NBD brand colors: #a8cb63 (light green), #5e8f1e (deep green), #666666 (grey).
