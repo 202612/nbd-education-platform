@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
-  PlayCircle, CheckCircle2, Lock, Award, Users, Trash2, Loader2, ChevronLeft, Clock, Mail, Download, Settings, GripVertical,
+  PlayCircle, CheckCircle2, Lock, Award, Users, Trash2, Loader2, ChevronLeft, Clock, Mail, Download, Settings, GripVertical, BookOpen,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
@@ -1032,6 +1032,30 @@ function MyCertificates({ userId }) {
   );
 }
 
+// ================= EDUCATION BROCHURE =================
+
+const BROCHURE_URL = "https://online.flippingbook.com/view/679291008/";
+
+function EducationBrochure() {
+  return (
+    <div>
+      <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Education Brochure</h2>
+      <p style={{ color: "#8a8074", fontSize: 16, margin: "0 0 16px" }}>
+        Browse our full training brochure — tap any course to book it directly on Baluu.
+      </p>
+      <div style={{ position: "relative", width: "100%", paddingTop: "62%", borderRadius: 10, overflow: "hidden", border: "1px solid #e4dfd6", background: "#fafaf7" }}>
+        <iframe
+          src={BROCHURE_URL}
+          title="NBD Education Brochure"
+          allow="clipboard-write; fullscreen"
+          allowFullScreen
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }}
+        />
+      </div>
+    </div>
+  );
+}
+
 // ================= SETTINGS =================
 
 function AccountSettings({ user, account, onNameSaved }) {
@@ -1205,6 +1229,7 @@ export default function CustomerApp({ user, account }) {
         {[
           { id: "training", label: "Training", icon: PlayCircle },
           { id: "certificates", label: "Certificates", icon: Award },
+          { id: "brochure", label: "Education Brochure", icon: BookOpen },
           { id: "team", label: "Team", icon: Users },
           { id: "settings", label: "Settings", icon: Settings },
         ].map((t) => (
@@ -1223,6 +1248,7 @@ export default function CustomerApp({ user, account }) {
       <div style={{ flex: 1, minWidth: 0 }}>
         {tab === "training" && <CustomerDashboard brands={approvedBrands} completedStepIds={completedStepIds} onStepCompleted={handleStepCompleted} participantName={displayName} />}
         {tab === "certificates" && <MyCertificates userId={user.id} />}
+        {tab === "brochure" && <EducationBrochure />}
         {tab === "team" && (
           <CustomerTeam
             team={team}
