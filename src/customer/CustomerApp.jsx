@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
-  PlayCircle, CheckCircle2, Lock, Award, Users, Trash2, Loader2, ChevronLeft, Clock, Mail, Download, Settings, GripVertical, BookOpen,
+  PlayCircle, CheckCircle2, Lock, Award, Users, Trash2, Loader2, ChevronLeft, Clock, Mail, Download, Settings, GripVertical, BookOpen, Maximize2,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
@@ -1037,19 +1037,44 @@ function MyCertificates({ userId }) {
 const BROCHURE_URL = "https://online.flippingbook.com/view/679291008/";
 
 function EducationBrochure() {
+  const [loaded, setLoaded] = useState(false);
+  const frameWrapRef = useRef(null);
+
+  function goFullscreen() {
+    const el = frameWrapRef.current;
+    if (!el) return;
+    if (el.requestFullscreen) el.requestFullscreen();
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+  }
+
   return (
     <div>
-      <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Education Brochure</h2>
-      <p style={{ color: "#8a8074", fontSize: 16, margin: "0 0 16px" }}>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginBottom: 4 }}>
+        <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: 0 }}>Education Brochure</h2>
+        <button
+          onClick={goFullscreen}
+          style={{ display: "flex", alignItems: "center", gap: 6, background: "#fff", border: "1px solid #e4dfd6", color: navy[700], borderRadius: 8, padding: "8px 14px", fontSize: 14, fontWeight: 600, whiteSpace: "nowrap" }}
+        >
+          <Maximize2 size={14} /> View full screen
+        </button>
+      </div>
+      <p style={{ color: "#8a8074", fontSize: 16, margin: "8px 0 16px" }}>
         Want to continue your education journey with some in-person training? Browse our education brochure to see our full offering — at the end of each brand's section you'll find a timetable with links straight through to our booking page.
       </p>
-      <div style={{ position: "relative", width: "100%", paddingTop: "62%", borderRadius: 10, overflow: "hidden", border: "1px solid #e4dfd6", background: "#fafaf7" }}>
+      <div ref={frameWrapRef} style={{ position: "relative", width: "100%", paddingTop: loaded ? "62%" : "0", height: loaded ? undefined : 420, borderRadius: 10, overflow: "hidden", border: "1px solid #e4dfd6", background: "#fafaf7" }}>
+        {!loaded && (
+          <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, color: "#a39a8d" }}>
+            <Loader2 size={22} className="spin" />
+            <span style={{ fontSize: 14 }}>Loading brochure…</span>
+          </div>
+        )}
         <iframe
           src={BROCHURE_URL}
           title="NBD Education Brochure"
           allow="clipboard-write; fullscreen"
           allowFullScreen
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }}
+          onLoad={() => setLoaded(true)}
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none", opacity: loaded ? 1 : 0, transition: "opacity .25s ease" }}
         />
       </div>
     </div>
