@@ -1041,7 +1041,7 @@ function EducationBrochure() {
     <div>
       <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Education Brochure</h2>
       <p style={{ color: "#8a8074", fontSize: 16, margin: "0 0 16px" }}>
-        Browse our full training brochure — tap any course to book it directly on Baluu.
+        Want to continue your education journey with some in-person training? Browse our education brochure to see our full offering — at the end of each brand's section you'll find a timetable with links straight through to our booking page.
       </p>
       <div style={{ position: "relative", width: "100%", paddingTop: "62%", borderRadius: 10, overflow: "hidden", border: "1px solid #e4dfd6", background: "#fafaf7" }}>
         <iframe
