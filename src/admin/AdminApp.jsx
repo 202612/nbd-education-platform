@@ -14,9 +14,9 @@ import AdminSecurity from "./AdminSecurity.jsx";
 // ================= BRANDS & STEPS =================
 
 const STEP_TYPES = [
-  { type: "video", label: "Video", icon: PlayCircle },
-  { type: "quiz", label: "Quiz", icon: CheckCircle2 },
-  { type: "certificate", label: "Certificate", icon: Award },
+  { type: "video", label: "Video", icon: PlayCircle, color: "#5e8f1e" },
+  { type: "quiz", label: "Quiz", icon: CheckCircle2, color: "#8a6d1f" },
+  { type: "certificate", label: "Certificate", icon: Award, color: "#2b6f6f" },
 ];
 
 // Shared button styling for every admin screen. Injected once at the AdminApp
@@ -569,8 +569,10 @@ function StepCard({ step, index, count, onMove, onDelete, onEdit }) {
   const Icon = meta.icon;
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 12, background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: "12px 14px", flexWrap: "wrap" }}>
-      <Icon size={16} color={navy[500]} />
+    <div style={{ display: "flex", alignItems: "center", gap: 12, background: "#fff", border: "1px solid #e4dfd6", borderLeft: `4px solid ${meta.color}`, borderRadius: 10, padding: "12px 14px 12px 12px", flexWrap: "wrap" }}>
+      <div style={{ width: 28, height: 28, borderRadius: 7, background: `${meta.color}1a`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <Icon size={15} color={meta.color} />
+      </div>
       <div style={{ flex: 1, minWidth: 160 }}>
         <div style={{ fontWeight: 500, color: navy[900], fontSize: 16 }}>{step.title}</div>
         <div style={{ fontSize: 14, color: "#8a8074" }}>
@@ -822,21 +824,22 @@ function BrandStepsEditor({ brandId, onBack }) {
       <BrandLogoUpload brand={brand} onChanged={load} />
 
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 18 }}>
-        {steps.map((s, i) => (
-          <StepCard key={s.id} step={s} index={i} count={steps.length} onMove={moveStep} onDelete={deleteStep} onEdit={startEdit} />
-        ))}
+        {steps.map((s, i) => {
+          if (editingStep?.id === s.id) {
+            if (s.type === "video") {
+              return <AddVideoForm key={s.id} brandId={brandId} initial={editingStep} submitLabel="Save changes" onCancel={cancelEdit} onSave={updateVideo} />;
+            }
+            if (s.type === "quiz" && editingQuizData) {
+              return <AddQuizForm key={s.id} initial={editingQuizData} submitLabel="Save changes" onCancel={cancelEdit} onSave={updateQuiz} />;
+            }
+            if (s.type === "certificate") {
+              return <AddCertificateForm key={s.id} brandId={brandId} initial={editingStep} submitLabel="Save changes" onCancel={cancelEdit} onSave={updateCertificate} />;
+            }
+          }
+          return <StepCard key={s.id} step={s} index={i} count={steps.length} onMove={moveStep} onDelete={deleteStep} onEdit={startEdit} />;
+        })}
         {steps.length === 0 && <div style={{ fontSize: 15, color: "#a39a8d" }}>No steps yet — add the first one below.</div>}
       </div>
-
-      {editingStep && editingStep.type === "video" && (
-        <AddVideoForm brandId={brandId} initial={editingStep} submitLabel="Save changes" onCancel={cancelEdit} onSave={updateVideo} />
-      )}
-      {editingStep && editingStep.type === "quiz" && editingQuizData && (
-        <AddQuizForm initial={editingQuizData} submitLabel="Save changes" onCancel={cancelEdit} onSave={updateQuiz} />
-      )}
-      {editingStep && editingStep.type === "certificate" && (
-        <AddCertificateForm brandId={brandId} initial={editingStep} submitLabel="Save changes" onCancel={cancelEdit} onSave={updateCertificate} />
-      )}
 
       {!editingStep && addingType === "video" && <AddVideoForm brandId={brandId} onCancel={() => setAddingType(null)} onSave={saveVideo} />}
       {!editingStep && addingType === "quiz" && <AddQuizForm onCancel={() => setAddingType(null)} onSave={saveQuiz} />}
@@ -845,7 +848,7 @@ function BrandStepsEditor({ brandId, onBack }) {
       {!editingStep && !addingType && (
         <div style={{ display: "flex", gap: 8 }}>
           {STEP_TYPES.map((t) => (
-            <button key={t.type} className="nbd-btn nbd-btn--outline" onClick={() => setAddingType(t.type)}>
+            <button key={t.type} className="nbd-btn nbd-btn--outline" onClick={() => setAddingType(t.type)} style={{ color: t.color, borderColor: `${t.color}55` }}>
               <Plus size={14} /> <t.icon size={14} /> {t.label}
             </button>
           ))}
