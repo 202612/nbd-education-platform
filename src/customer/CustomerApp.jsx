@@ -46,6 +46,7 @@ function YouTubePlayer({ videoId, onEnded }) {
   const containerRef = useRef(null);
   const playerRef = useRef(null);
   const maxWatchedRef = useRef(0);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -60,6 +61,7 @@ function YouTubePlayer({ videoId, onEnded }) {
             if (e.data === YT.PlayerState.ENDED) onEnded();
           },
           onReady: () => {
+            setReady(true);
             pollId = window.setInterval(() => {
               const player = playerRef.current;
               if (!player || !player.getCurrentTime) return;
@@ -82,7 +84,17 @@ function YouTubePlayer({ videoId, onEnded }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [videoId]);
 
-  return <div ref={containerRef} style={{ width: "100%", aspectRatio: "16 / 9", borderRadius: 10, overflow: "hidden", marginBottom: 16, background: "#000" }} />;
+  return (
+    <div style={{ position: "relative", width: "100%", aspectRatio: "16 / 9", borderRadius: 10, overflow: "hidden", marginBottom: 16, background: "#000" }}>
+      {!ready && (
+        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, color: "#a39a8d", zIndex: 1 }}>
+          <Loader2 size={22} className="spin" />
+          <span style={{ fontSize: 14 }}>Loading video…</span>
+        </div>
+      )}
+      <div ref={containerRef} style={{ width: "100%", height: "100%" }} />
+    </div>
+  );
 }
 
 // ================= QUIZ STEP =================
@@ -417,6 +429,7 @@ function VideoStep({ step, onComplete, onBack }) {
   const [error, setError] = useState("");
   const [playbackUrl, setPlaybackUrl] = useState(step.video_storage_path ? null : step.video_url);
   const [resolving, setResolving] = useState(!!step.video_storage_path);
+  const [videoReady, setVideoReady] = useState(false);
   const maxWatchedRef = useRef(0);
 
   useEffect(() => {
@@ -453,23 +466,34 @@ function VideoStep({ step, onComplete, onBack }) {
         <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#8a8074", fontSize: 16, marginBottom: 16 }}><Loader2 size={16} className="spin" /> Loading video…</div>
       )}
       {!youtubeId && !resolving && playbackUrl && (
-        <video
-          key={playbackUrl}
-          src={playbackUrl}
-          controls
-          onTimeUpdate={(e) => {
-            if (e.currentTarget.currentTime > maxWatchedRef.current) maxWatchedRef.current = e.currentTarget.currentTime;
-          }}
-          onSeeking={(e) => {
-            // Rewatching earlier parts is fine; jumping ahead past what's actually been watched isn't.
-            if (e.currentTarget.currentTime > maxWatchedRef.current + 1.5) {
-              e.currentTarget.currentTime = maxWatchedRef.current;
-            }
-          }}
-          onEnded={markWatched}
-          onError={() => setError("This video couldn't be played. It may not have finished uploading correctly — try re-uploading it from the admin panel.")}
-          style={{ width: "100%", borderRadius: 10, background: "#000", marginBottom: 16 }}
-        />
+        <div style={{ position: "relative", marginBottom: 16 }}>
+          {!videoReady && (
+            <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, color: "#a39a8d", background: "#000", borderRadius: 10, zIndex: 1 }}>
+              <Loader2 size={22} className="spin" />
+              <span style={{ fontSize: 14 }}>Loading video…</span>
+            </div>
+          )}
+          <video
+            key={playbackUrl}
+            src={playbackUrl}
+            controls
+            controlsList="nodownload noplaybackrate"
+            disablePictureInPicture
+            onCanPlay={() => setVideoReady(true)}
+            onTimeUpdate={(e) => {
+              if (e.currentTarget.currentTime > maxWatchedRef.current) maxWatchedRef.current = e.currentTarget.currentTime;
+            }}
+            onSeeking={(e) => {
+              // Rewatching earlier parts is fine; jumping ahead past what's actually been watched isn't.
+              if (e.currentTarget.currentTime > maxWatchedRef.current + 1.5) {
+                e.currentTarget.currentTime = maxWatchedRef.current;
+              }
+            }}
+            onEnded={markWatched}
+            onError={() => setError("This video couldn't be played. It may not have finished uploading correctly — try re-uploading it from the admin panel.")}
+            style={{ width: "100%", borderRadius: 10, background: "#000", display: "block" }}
+          />
+        </div>
       )}
       {!youtubeId && !resolving && !playbackUrl && !hasSource && (
         <div style={{ background: "#fdf6e3", border: "1px solid #eddfad", color: "#8a6d1f", fontSize: 15, padding: "10px 14px", borderRadius: 8, marginBottom: 16 }}>
