@@ -175,6 +175,8 @@ function QuestionTypeFields({ q, onChange }) {
           <div key={oi} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
             <input type="radio" checked={q.correct === oi} onChange={() => onChange({ correct: oi })} title="Correct answer" />
             <input
+              spellCheck
+              lang="en-GB"
               value={opt}
               onChange={(e) => onChange({ options: q.options.map((o, i) => (i === oi ? e.target.value : o)) })}
               placeholder={`Option ${oi + 1}`}
@@ -231,7 +233,7 @@ function QuestionTypeFields({ q, onChange }) {
         {q.items.map((item, oi) => (
           <div key={oi} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
             <span style={{ fontSize: 13, color: "#a39a8d", width: 16 }}>{oi + 1}.</span>
-            <input value={item} onChange={(e) => onChange({ items: q.items.map((v, i) => (i === oi ? e.target.value : v)) })} placeholder={`Step ${oi + 1}`} style={fieldStyle} />
+            <input spellCheck lang="en-GB" value={item} onChange={(e) => onChange({ items: q.items.map((v, i) => (i === oi ? e.target.value : v)) })} placeholder={`Step ${oi + 1}`} style={fieldStyle} />
             <button className="nbd-iconbtn" onClick={() => onChange({ items: q.items.filter((_, i) => i !== oi) })} disabled={q.items.length <= 2} title="Remove step"><X size={13} /></button>
           </div>
         ))}
@@ -246,9 +248,9 @@ function QuestionTypeFields({ q, onChange }) {
         <p style={{ fontSize: 13, color: "#a39a8d", margin: "0 0 8px" }}>Each row is a matching pair — learners click one from each side to link them.</p>
         {q.pairs.map((pair, oi) => (
           <div key={oi} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-            <input value={pair.left} onChange={(e) => onChange({ pairs: q.pairs.map((p, i) => (i === oi ? { ...p, left: e.target.value } : p)) })} placeholder="Term" style={fieldStyle} />
+            <input spellCheck lang="en-GB" value={pair.left} onChange={(e) => onChange({ pairs: q.pairs.map((p, i) => (i === oi ? { ...p, left: e.target.value } : p)) })} placeholder="Term" style={fieldStyle} />
             <span style={{ color: "#a39a8d" }}>↔</span>
-            <input value={pair.right} onChange={(e) => onChange({ pairs: q.pairs.map((p, i) => (i === oi ? { ...p, right: e.target.value } : p)) })} placeholder="Match" style={fieldStyle} />
+            <input spellCheck lang="en-GB" value={pair.right} onChange={(e) => onChange({ pairs: q.pairs.map((p, i) => (i === oi ? { ...p, right: e.target.value } : p)) })} placeholder="Match" style={fieldStyle} />
             <button className="nbd-iconbtn" onClick={() => onChange({ pairs: q.pairs.filter((_, i) => i !== oi) })} disabled={q.pairs.length <= 2} title="Remove pair"><X size={13} /></button>
           </div>
         ))}
@@ -264,7 +266,7 @@ function QuestionTypeFields({ q, onChange }) {
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
           {q.buckets.map((b, bi) => (
             <div key={bi} style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <input
+              <input spellCheck lang="en-GB"
                 value={b}
                 onChange={(e) => onChange({ buckets: q.buckets.map((v, i) => (i === bi ? e.target.value : v)) })}
                 placeholder={`Category ${bi + 1}`}
@@ -282,7 +284,7 @@ function QuestionTypeFields({ q, onChange }) {
         </div>
         {q.items.map((item, oi) => (
           <div key={oi} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-            <input value={item.text} onChange={(e) => onChange({ items: q.items.map((it, i) => (i === oi ? { ...it, text: e.target.value } : it)) })} placeholder={`Item ${oi + 1}`} style={fieldStyle} />
+            <input spellCheck lang="en-GB" value={item.text} onChange={(e) => onChange({ items: q.items.map((it, i) => (i === oi ? { ...it, text: e.target.value } : it)) })} placeholder={`Item ${oi + 1}`} style={fieldStyle} />
             <select value={item.bucket} onChange={(e) => onChange({ items: q.items.map((it, i) => (i === oi ? { ...it, bucket: Number(e.target.value) } : it)) })} style={{ padding: "6px 9px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 14 }}>
               {q.buckets.map((b, bi) => <option key={bi} value={bi}>{b}</option>)}
             </select>
@@ -343,11 +345,11 @@ function AddQuizForm({ initial, submitLabel, onCancel, onSave }) {
   return (
     <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 16, marginBottom: 16 }}>
       <label style={{ fontSize: 15, color: "#6b6155", display: "block", marginBottom: 4 }}>Quiz title</label>
-      <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Quick check: Foundations" style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 14, fontSize: 16, boxSizing: "border-box" }} />
+      <input spellCheck lang="en-GB" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Quick check: Foundations" style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 14, fontSize: 16, boxSizing: "border-box" }} />
       {questions.map((q, qi) => (
         <div key={qi} style={{ border: "1px solid #e4dfd6", borderRadius: 8, padding: 12, marginBottom: 10 }}>
           <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8, flexWrap: "wrap" }}>
-            <input value={q.text} onChange={(e) => updateQuestion(qi, { text: e.target.value })} placeholder={`Question ${qi + 1}`} style={{ flex: "1 1 220px", padding: "7px 9px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 15 }} />
+            <input spellCheck lang="en-GB" value={q.text} onChange={(e) => updateQuestion(qi, { text: e.target.value })} placeholder={`Question ${qi + 1}`} style={{ flex: "1 1 220px", padding: "7px 9px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 15 }} />
             <select value={q.type} onChange={(e) => setQuestionType(qi, e.target.value)} style={{ padding: "7px 9px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 14 }}>
               {QUESTION_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
             </select>
@@ -407,7 +409,7 @@ function AddVideoForm({ brandId, initial, submitLabel, onCancel, onSave }) {
   return (
     <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 16, marginBottom: 16 }}>
       <label style={{ fontSize: 15, color: "#6b6155", display: "block", marginBottom: 4 }}>Video title</label>
-      <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Foundations of Colour Theory" style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 16, boxSizing: "border-box" }} />
+      <input spellCheck lang="en-GB" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Foundations of Colour Theory" style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 16, boxSizing: "border-box" }} />
       <label style={{ fontSize: 15, color: "#6b6155", display: "block", marginBottom: 4 }}>Duration (optional)</label>
       <input value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="e.g. 6 min" style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 16, boxSizing: "border-box" }} />
       <label style={{ fontSize: 15, color: "#6b6155", display: "block", marginBottom: 4 }}>Video file (MP4) — private, only approved customers can view it</label>
@@ -482,7 +484,7 @@ function AddCertificateForm({ brandId, initial, submitLabel, onCancel, onSave })
   return (
     <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 16, marginBottom: 16 }}>
       <label style={{ fontSize: 15, color: "#6b6155", display: "block", marginBottom: 4 }}>Certificate title</label>
-      <input value={title} onChange={(e) => setTitle(e.target.value)} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 14, fontSize: 16, boxSizing: "border-box" }} />
+      <input spellCheck lang="en-GB" value={title} onChange={(e) => setTitle(e.target.value)} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 14, fontSize: 16, boxSizing: "border-box" }} />
       <p style={{ fontSize: 14, color: "#a39a8d", margin: "0 0 14px" }}>
         Awarded automatically once every earlier step in this brand is complete, with the learner's name and the
         date filled in. By default it uses the built-in design below — upload your own artwork instead if you'd
@@ -669,9 +671,9 @@ function EditBrandDetails({ brand, onChanged }) {
   return (
     <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 14, marginBottom: 12 }}>
       <label style={{ fontSize: 15, color: "#6b6155", display: "block", marginBottom: 4 }}>Brand name</label>
-      <input value={name} onChange={(e) => setName(e.target.value)} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 10, fontSize: 16, boxSizing: "border-box" }} />
+      <input spellCheck lang="en-GB" value={name} onChange={(e) => setName(e.target.value)} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 10, fontSize: 16, boxSizing: "border-box" }} />
       <label style={{ fontSize: 15, color: "#6b6155", display: "block", marginBottom: 4 }}>Tagline</label>
-      <input value={tagline} onChange={(e) => setTagline(e.target.value)} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 16, boxSizing: "border-box" }} />
+      <input spellCheck lang="en-GB" value={tagline} onChange={(e) => setTagline(e.target.value)} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 16, boxSizing: "border-box" }} />
       {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 10 }}>{error}</div>}
       <div style={{ display: "flex", gap: 8 }}>
         <button className="nbd-btn nbd-btn--primary" onClick={save} disabled={saving}>{saving ? "Saving…" : "Save"}</button>
@@ -913,8 +915,8 @@ function AdminBrandsLive() {
       </div>
       {showAdd ? (
         <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 16 }}>
-          <input value={newBrandName} onChange={(e) => setNewBrandName(e.target.value)} placeholder="Brand name" style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 10, fontSize: 16, boxSizing: "border-box" }} />
-          <input value={newBrandTagline} onChange={(e) => setNewBrandTagline(e.target.value)} placeholder="Tagline (optional)" style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 16, boxSizing: "border-box" }} />
+          <input spellCheck lang="en-GB" value={newBrandName} onChange={(e) => setNewBrandName(e.target.value)} placeholder="Brand name" style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 10, fontSize: 16, boxSizing: "border-box" }} />
+          <input spellCheck lang="en-GB" value={newBrandTagline} onChange={(e) => setNewBrandTagline(e.target.value)} placeholder="Tagline (optional)" style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 16, boxSizing: "border-box" }} />
           {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 10 }}>{error}</div>}
           <div style={{ display: "flex", gap: 8 }}>
             <button className="nbd-btn nbd-btn--primary" onClick={addBrand}>Add brand</button>
@@ -1149,9 +1151,9 @@ function EditAccountDetails({ account, onSaved }) {
       <label style={{ fontSize: 15, color: "#6b6155", display: "block", marginBottom: 4 }}>Customer number</label>
       <input value={customerNumber} onChange={(e) => setCustomerNumber(e.target.value)} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 10, fontSize: 16, boxSizing: "border-box" }} />
       <label style={{ fontSize: 15, color: "#6b6155", display: "block", marginBottom: 4 }}>Company name</label>
-      <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 10, fontSize: 16, boxSizing: "border-box" }} />
+      <input spellCheck lang="en-GB" value={companyName} onChange={(e) => setCompanyName(e.target.value)} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 10, fontSize: 16, boxSizing: "border-box" }} />
       <label style={{ fontSize: 15, color: "#6b6155", display: "block", marginBottom: 4 }}>Main contact name</label>
-      <input value={contactName} onChange={(e) => setContactName(e.target.value)} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 10, fontSize: 16, boxSizing: "border-box" }} />
+      <input spellCheck lang="en-GB" value={contactName} onChange={(e) => setContactName(e.target.value)} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 10, fontSize: 16, boxSizing: "border-box" }} />
       <label style={{ fontSize: 15, color: "#6b6155", display: "block", marginBottom: 4 }}>Main contact email</label>
       <input value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 16, boxSizing: "border-box" }} />
       <p style={{ fontSize: 14, color: "#a39a8d", margin: "0 0 12px" }}>Changing the email here doesn't change how they sign in — that's still tied to their original login.</p>

@@ -463,11 +463,11 @@ export default function DesignTab() {
       <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 20, marginBottom: 20 }}>
         <div style={{ fontWeight: 700, color: navy[900], marginBottom: 14 }}>Heading text</div>
         <label style={{ fontSize: 13, color: grey, display: "block", marginBottom: 4, fontWeight: 700 }}>Eyebrow (small caps line above the heading)</label>
-        <input value={draft.eyebrow} onChange={(e) => setDraft({ ...draft, eyebrow: e.target.value })} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 14, boxSizing: "border-box" }} />
+        <input spellCheck lang="en-GB" value={draft.eyebrow} onChange={(e) => setDraft({ ...draft, eyebrow: e.target.value })} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 14, boxSizing: "border-box" }} />
         <label style={{ fontSize: 13, color: grey, display: "block", marginBottom: 4, fontWeight: 700 }}>Heading</label>
-        <input value={draft.headline} onChange={(e) => setDraft({ ...draft, headline: e.target.value })} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 14, boxSizing: "border-box" }} />
+        <input spellCheck lang="en-GB" value={draft.headline} onChange={(e) => setDraft({ ...draft, headline: e.target.value })} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 14, boxSizing: "border-box" }} />
         <label style={{ fontSize: 13, color: grey, display: "block", marginBottom: 4, fontWeight: 700 }}>Subheading text</label>
-        <textarea value={draft.subtitle} onChange={(e) => setDraft({ ...draft, subtitle: e.target.value })} rows={2} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 14, boxSizing: "border-box", fontFamily: "inherit", resize: "vertical" }} />
+        <textarea spellCheck lang="en-GB" value={draft.subtitle} onChange={(e) => setDraft({ ...draft, subtitle: e.target.value })} rows={2} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 14, boxSizing: "border-box", fontFamily: "inherit", resize: "vertical" }} />
       </div>
 
       {error && <div style={{ color: "#a3372f", fontSize: 13, marginBottom: 14 }}>{error}</div>}
