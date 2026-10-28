@@ -1218,100 +1218,145 @@ function CustomerDashboard({ brands, completedStepIds, onStepCompleted, particip
 
 // ================= TEAM =================
 
-function ReadOnlyStepRow({ step, done }) {
-  const Icon = STEP_ICON[step.type];
+const STATUS_TONE = { Completed: "gold", "In progress": "navy", "Not started": "muted" };
+
+// Plain-stroke SVG donut — no chart library needed for a handful of
+// segments. Segments are drawn clockwise starting from 12 o'clock.
+function DonutRing({ segments, size = 84, strokeWidth = 10, centerLabel, centerSub }) {
+  const r = (size - strokeWidth) / 2;
+  const c = 2 * Math.PI * r;
+  const total = segments.reduce((s, seg) => s + seg.value, 0) || 1;
+  let offset = 0;
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 12, background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: "11px 14px" }}>
-      {done ? <CheckCircle2 size={16} color="#4a6b3d" /> : <Icon size={16} color="#a39a8d" />}
-      <div style={{ flex: 1 }}>
-        <div style={{ fontWeight: 500, color: navy[900], fontSize: 15 }}>{step.title}</div>
-        <div style={{ fontSize: 13, color: "#8a8074" }}>{STEP_LABEL[step.type]}</div>
+    <div style={{ position: "relative", width: size, height: size, flexShrink: 0 }}>
+      <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#efe9e3" strokeWidth={strokeWidth} />
+        {segments.map((seg, i) => {
+          if (seg.value <= 0) return null;
+          const len = (seg.value / total) * c;
+          const circle = (
+            <circle
+              key={i}
+              cx={size / 2} cy={size / 2} r={r} fill="none"
+              stroke={seg.color} strokeWidth={strokeWidth}
+              strokeDasharray={`${len} ${c - len}`} strokeDashoffset={-offset}
+            />
+          );
+          offset += len;
+          return circle;
+        })}
+      </svg>
+      <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ fontSize: 22, fontWeight: 700, color: navy[900] }}>{centerLabel}</div>
+        {centerSub && <div style={{ fontSize: 11, color: "#8a8074" }}>{centerSub}</div>}
       </div>
-      {done && <Badge tone="gold">Done</Badge>}
     </div>
   );
 }
 
-// Full step-by-step view of one team member's progress, exactly as detailed
-// as their own Training tab — this is the holder's "full access to all
-// views," read-only (no writes happen from here, unlike admin test mode).
-function EmployeeDetail({ user, brands, completedStepIds, onBack }) {
-  return (
-    <div style={{ marginBottom: 28 }}>
-      <button
-        onClick={onBack}
-        style={{
-          display: "inline-flex", alignItems: "center", gap: 6, fontSize: 15, fontWeight: 600,
-          color: navy[700], marginBottom: 14, background: "#fff", border: "1px solid #e4dfd6",
-          borderRadius: 999, padding: "8px 16px", cursor: "pointer",
-        }}
-      >
-        <ChevronLeft size={15} /> Back to team progress
-      </button>
-      <h3 style={{ fontSize: 19, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>{user.name}'s progress</h3>
-      <p style={{ color: "#8a8074", fontSize: 15, margin: "0 0 20px" }}>{user.email}</p>
-      {brands.map((brand) => {
-        const steps = [...brand.steps].sort((a, b) => a.order_index - b.order_index);
-        const done = steps.filter((s) => completedStepIds.has(s.id)).length;
-        return (
-          <div key={brand.id} style={{ marginBottom: 22 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
-              {brand.logo_url && <img src={brand.logo_url} alt={brand.name} style={{ height: 28, maxWidth: 90, objectFit: "contain" }} />}
-              <div style={{ fontWeight: 600, color: navy[900], fontSize: 16 }}>{brand.name}</div>
-              <Badge tone={done === steps.length && steps.length > 0 ? "gold" : "navy"}>{done} / {steps.length}</Badge>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {steps.map((s) => <ReadOnlyStepRow key={s.id} step={s} done={completedStepIds.has(s.id)} />)}
-              {steps.length === 0 && <div style={{ color: "#a39a8d", fontSize: 14 }}>No steps added yet.</div>}
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
+// One tab per team member, each seeing only their own row of stats — the
+// holder can switch between teammates, but a staff member never gets this
+// component rendered at all (CustomerTeam only renders it when isHolder).
+function StaffTrainingDashboard({ team, brands, teamProgress }) {
+  const [selectedId, setSelectedId] = useState(team[0]?.id ?? null);
+  const selectedUser = team.find((u) => u.id === selectedId) || team[0];
+  const completed = (selectedUser && teamProgress[selectedUser.id]) || new Map();
 
-function TeamProgressTable({ team, brands, teamProgress, onSelectUser }) {
-  function progressFor(userId, brand) {
-    const completed = teamProgress[userId] || new Set();
-    const total = brand.steps.length;
-    const done = brand.steps.filter((s) => completed.has(s.id)).length;
-    return { done, total, pct: total ? Math.round((done / total) * 100) : 0 };
-  }
+  if (!selectedUser || brands.length === 0) return null;
 
-  if (brands.length === 0) return null;
+  let completedCount = 0, inProgressCount = 0, notStartedCount = 0, lastActivity = null;
+  const rows = brands.map((brand) => {
+    const steps = [...brand.steps].sort((a, b) => a.order_index - b.order_index);
+    const total = steps.length;
+    const done = steps.filter((s) => completed.has(s.id)).length;
+    const pct = total ? Math.round((done / total) * 100) : 0;
+    const status = total === 0 ? null : done === total ? "Completed" : done > 0 ? "In progress" : "Not started";
+    if (status === "Completed") completedCount++;
+    else if (status === "In progress") inProgressCount++;
+    else if (status === "Not started") notStartedCount++;
+
+    const quizStep = steps.find((s) => s.type === "quiz");
+    const quizDone = !!quizStep && completed.has(quizStep.id);
+
+    let brandLastActivity = null;
+    for (const s of steps) {
+      const ts = completed.get(s.id);
+      if (ts && (!brandLastActivity || ts > brandLastActivity)) brandLastActivity = ts;
+      if (ts && (!lastActivity || ts > lastActivity)) lastActivity = ts;
+    }
+
+    return { brand, total, done, pct, status, quizStep, quizDone, brandLastActivity };
+  });
 
   return (
     <div style={{ marginBottom: 28 }}>
-      <h3 style={{ fontSize: 17, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Team progress</h3>
-      <p style={{ color: "#8a8074", fontSize: 15, margin: "0 0 14px" }}>Where everyone on your team stands, by brand. Click a name for their full step-by-step breakdown.</p>
+      <h3 style={{ fontSize: 17, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Team training status</h3>
+      <p style={{ color: "#8a8074", fontSize: 15, margin: "0 0 16px" }}>Pick a name to see their own course-by-course status — nobody sees anyone else's.</p>
+
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 20 }}>
+        {team.map((u) => (
+          <button
+            key={u.id}
+            onClick={() => setSelectedId(u.id)}
+            style={{
+              padding: "8px 16px", borderRadius: 999, fontSize: 14, fontWeight: 600, cursor: "pointer",
+              border: `1px solid ${selectedId === u.id ? navy[700] : "#e4dfd6"}`,
+              background: selectedId === u.id ? navy[700] : "#fff",
+              color: selectedId === u.id ? "#fff" : navy[900],
+            }}
+          >
+            {u.name}{u.role === "holder" ? " (you)" : ""}
+          </button>
+        ))}
+      </div>
+
+      <div style={{ display: "flex", gap: 28, alignItems: "center", flexWrap: "wrap", background: "#fff", border: "1px solid #e4dfd6", borderRadius: 14, padding: "20px 24px", marginBottom: 20 }}>
+        <DonutRing
+          segments={[
+            { value: completedCount, color: "#4a6b3d" },
+            { value: inProgressCount, color: "#c99a2e" },
+            { value: notStartedCount, color: "#e4dfd6" },
+          ]}
+          centerLabel={brands.length}
+          centerSub="Courses"
+        />
+        <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 14 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}><span style={{ width: 10, height: 10, borderRadius: "50%", background: "#4a6b3d", display: "inline-block" }} /> {completedCount} completed</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}><span style={{ width: 10, height: 10, borderRadius: "50%", background: "#c99a2e", display: "inline-block" }} /> {inProgressCount} in progress</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}><span style={{ width: 10, height: 10, borderRadius: "50%", background: "#e4dfd6", display: "inline-block" }} /> {notStartedCount} not started</div>
+        </div>
+        <div style={{ marginLeft: "auto", textAlign: "right" }}>
+          <div style={{ fontSize: 13, color: "#8a8074" }}>Last activity</div>
+          <div style={{ fontSize: 16, fontWeight: 600, color: navy[900] }}>{lastActivity ? formatDate(lastActivity) : "No activity yet"}</div>
+        </div>
+      </div>
+
       <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
           <thead>
             <tr>
-              <th style={{ textAlign: "left", padding: "8px 12px", color: "#8a8074", fontSize: 13, textTransform: "uppercase", letterSpacing: 0.5, borderBottom: "1px solid #e4dfd6" }}>Team member</th>
-              {brands.map((brand) => (
-                <th key={brand.id} style={{ textAlign: "left", padding: "8px 12px", color: "#8a8074", fontSize: 13, textTransform: "uppercase", letterSpacing: 0.5, borderBottom: "1px solid #e4dfd6", whiteSpace: "nowrap" }}>{brand.name}</th>
+              {["Course", "Status", "Progress", "Quiz", "Last activity"].map((h) => (
+                <th key={h} style={{ textAlign: "left", padding: "8px 12px", color: "#8a8074", fontSize: 13, textTransform: "uppercase", letterSpacing: 0.5, borderBottom: "1px solid #e4dfd6", whiteSpace: "nowrap" }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {team.map((u) => (
-              <tr key={u.id}>
+            {rows.map(({ brand, total, done, pct, status, quizStep, quizDone, brandLastActivity }) => (
+              <tr key={brand.id}>
                 <td style={{ padding: "10px 12px", borderBottom: "1px solid #f0ece3" }}>
-                  <button onClick={() => onSelectUser(u)} style={{ background: "none", border: "none", padding: 0, cursor: "pointer", textAlign: "left" }}>
-                    <div style={{ fontWeight: 600, color: navy[700], textDecoration: "underline" }}>{u.name}{u.role === "holder" ? " (you)" : ""}</div>
-                    <div style={{ fontSize: 13, color: "#a39a8d" }}>{u.email}</div>
-                  </button>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    {brand.logo_url && <img src={brand.logo_url} alt={brand.name} style={{ height: 20, maxWidth: 70, objectFit: "contain" }} />}
+                    <span style={{ fontWeight: 600, color: navy[900] }}>{brand.name}</span>
+                  </div>
                 </td>
-                {brands.map((brand) => {
-                  const p = progressFor(u.id, brand);
-                  return (
-                    <td key={brand.id} style={{ padding: "10px 12px", borderBottom: "1px solid #f0ece3", whiteSpace: "nowrap" }}>
-                      <Badge tone={p.pct === 100 ? "gold" : p.done > 0 ? "navy" : "muted"}>{p.done} / {p.total}</Badge>
-                    </td>
-                  );
-                })}
+                <td style={{ padding: "10px 12px", borderBottom: "1px solid #f0ece3" }}>
+                  {status ? <Badge tone={STATUS_TONE[status]}>{status.toUpperCase()}</Badge> : <span style={{ color: "#a39a8d" }}>No steps yet</span>}
+                </td>
+                <td style={{ padding: "10px 12px", borderBottom: "1px solid #f0ece3", whiteSpace: "nowrap" }}>{done} / {total} ({pct}%)</td>
+                <td style={{ padding: "10px 12px", borderBottom: "1px solid #f0ece3" }}>
+                  {!quizStep ? <span style={{ color: "#a39a8d" }}>—</span> : quizDone ? <span style={{ color: "#4a6b3d", fontWeight: 600 }}>100%</span> : <span style={{ color: "#a39a8d" }}>Not taken</span>}
+                </td>
+                <td style={{ padding: "10px 12px", borderBottom: "1px solid #f0ece3", whiteSpace: "nowrap" }}>{brandLastActivity ? formatDate(brandLastActivity) : "—"}</td>
               </tr>
             ))}
           </tbody>
@@ -1327,7 +1372,6 @@ function CustomerTeam({ team, currentUserId, onAdd, onRemove, brands = [], teamP
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [viewingUser, setViewingUser] = useState(null);
 
   async function add() {
     if (!firstName.trim() || !lastName.trim() || !email.trim()) { setError("Enter a first name, last name, and email first"); return; }
@@ -1339,17 +1383,6 @@ function CustomerTeam({ team, currentUserId, onAdd, onRemove, brands = [], teamP
     setFirstName(""); setLastName(""); setEmail("");
   }
 
-  if (isHolder && viewingUser) {
-    return (
-      <EmployeeDetail
-        user={viewingUser}
-        brands={brands}
-        completedStepIds={teamProgress[viewingUser.id] || new Set()}
-        onBack={() => setViewingUser(null)}
-      />
-    );
-  }
-
   return (
     <div>
       <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Team</h2>
@@ -1359,7 +1392,7 @@ function CustomerTeam({ team, currentUserId, onAdd, onRemove, brands = [], teamP
           : "Everyone on your account's team."}
       </p>
 
-      {isHolder && <TeamProgressTable team={team} brands={brands} teamProgress={teamProgress} onSelectUser={setViewingUser} />}
+      {isHolder && <StaffTrainingDashboard team={team} brands={brands} teamProgress={teamProgress} />}
       {isHolder && (
         <>
           <div style={{ display: "flex", gap: 8, marginBottom: 18, flexWrap: "wrap" }}>
@@ -1648,8 +1681,8 @@ export default function CustomerApp({ user, account }) {
     const { data } = await supabase.rpc("get_team_progress");
     const byUser = {};
     for (const row of data || []) {
-      if (!byUser[row.user_id]) byUser[row.user_id] = new Set();
-      byUser[row.user_id].add(row.step_id);
+      if (!byUser[row.user_id]) byUser[row.user_id] = new Map();
+      byUser[row.user_id].set(row.step_id, row.completed_at);
     }
     setTeamProgress(byUser);
   }
