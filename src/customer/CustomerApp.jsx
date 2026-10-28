@@ -1310,6 +1310,11 @@ function StaffTrainingDashboard({ team, brands, teamProgress }) {
         ))}
       </div>
 
+      <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 10 }}>
+        <div style={{ fontSize: 16, fontWeight: 700, color: navy[900] }}>{selectedUser.name}{selectedUser.role === "holder" ? " (you)" : ""}</div>
+        <div style={{ fontSize: 14, color: "#8a8074" }}>{selectedUser.email}</div>
+      </div>
+
       <div style={{ display: "flex", gap: 28, alignItems: "center", flexWrap: "wrap", background: "#fff", border: "1px solid #e4dfd6", borderRadius: 14, padding: "20px 24px", marginBottom: 20 }}>
         <DonutRing
           segments={[
