@@ -18,6 +18,12 @@ function formatDate(isoString) {
   return new Date(isoString).toLocaleDateString("en-IE", { day: "numeric", month: "long", year: "numeric" });
 }
 
+function formatDateTime(isoString) {
+  if (!isoString) return "";
+  const d = new Date(isoString);
+  return `${d.toLocaleDateString("en-IE", { day: "numeric", month: "long", year: "numeric" })}, ${d.toLocaleTimeString("en-IE", { hour: "numeric", minute: "2-digit" })}`;
+}
+
 function extractYouTubeId(url) {
   if (!url) return null;
   const match = url.match(/(?:youtube\.com\/watch\?v=|youtube\.com\/embed\/|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
@@ -1084,6 +1090,12 @@ function CustomerBrandDetail({ brand, completedStepIds, onStepCompleted, partici
   }
 
   const brandPct = steps.length ? Math.round((doneCount / steps.length) * 100) : 0;
+  const status = doneCount === 0 ? "Start" : doneCount === steps.length && steps.length > 0 ? "Completed" : "Resume";
+  let lastActivity = null;
+  for (const s of steps) {
+    const ts = completedStepIds.get(s.id);
+    if (ts && (!lastActivity || ts > lastActivity)) lastActivity = ts;
+  }
 
   return (
     <div>
@@ -1125,6 +1137,28 @@ function CustomerBrandDetail({ brand, completedStepIds, onStepCompleted, partici
             </div>
             <div style={{ fontSize: 14, fontWeight: 600, whiteSpace: "nowrap" }}>{doneCount} / {steps.length} complete</div>
           </div>
+        </div>
+        <div style={{ textAlign: "right", flexShrink: 0 }}>
+          <div
+            style={{
+              display: "inline-block", fontSize: 13, textTransform: "uppercase", letterSpacing: 1, fontWeight: 700,
+              padding: "4px 12px", borderRadius: 999, marginBottom: 10,
+              background: status === "Completed" ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.18)",
+              color: status === "Completed" ? "#4a6b3d" : "#fff",
+            }}
+          >
+            {status}
+          </div>
+          <div style={{ fontSize: 13, opacity: 0.85 }}>
+            Last activity<br />
+            <span style={{ fontWeight: 600, fontSize: 14 }}>{lastActivity ? formatDateTime(lastActivity) : "Not started yet"}</span>
+          </div>
+          {status === "Completed" && (
+            <div style={{ fontSize: 13, opacity: 0.85, marginTop: 8 }}>
+              Completed on<br />
+              <span style={{ fontWeight: 600, fontSize: 14 }}>{formatDateTime(lastActivity)}</span>
+            </div>
+          )}
         </div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -1666,15 +1700,15 @@ export default function CustomerApp({ user, account }) {
   const [tab, setTab] = useState("training");
   const [displayName, setDisplayName] = useState(user.name);
   const [brands, setBrands] = useState(null);
-  const [completedStepIds, setCompletedStepIds] = useState(new Set());
+  const [completedStepIds, setCompletedStepIds] = useState(new Map());
   const [team, setTeam] = useState([]);
   const [teamProgress, setTeamProgress] = useState({});
   const [loadError, setLoadError] = useState("");
   const isHolder = user.role === "holder";
 
   async function loadProgress() {
-    const { data } = await supabase.from("step_progress").select("step_id").eq("user_id", user.id);
-    setCompletedStepIds(new Set((data || []).map((row) => row.step_id)));
+    const { data } = await supabase.from("step_progress").select("step_id,completed_at").eq("user_id", user.id);
+    setCompletedStepIds(new Map((data || []).map((row) => [row.step_id, row.completed_at])));
   }
 
   async function loadTeam() {
