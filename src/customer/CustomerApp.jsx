@@ -1277,9 +1277,15 @@ function CustomerDashboard({ brands, completedStepIds, onStepCompleted, particip
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 6 }}>
                   <div style={{ fontWeight: 700, fontSize: 17, color: navy[900] }}>{b.name}</div>
                   {b.steps.length > 0 && (
-                    <Badge tone={done === 0 ? "muted" : pct === 100 ? "gold" : "navy"}>
+                    <div
+                      style={{
+                        flexShrink: 0, fontSize: 14, fontWeight: 700, padding: "8px 18px", borderRadius: 999,
+                        background: done === 0 ? navy[700] : pct === 100 ? "#4a6b3d" : navy[500],
+                        color: "#fff",
+                      }}
+                    >
                       {done === 0 ? "Start" : pct === 100 ? "Completed" : "Resume"}
-                    </Badge>
+                    </div>
                   )}
                 </div>
                 <div style={{ fontSize: 15, color: "#8a8074", marginBottom: 12 }}>{done} of {b.steps.length} steps complete</div>
