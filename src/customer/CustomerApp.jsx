@@ -540,12 +540,130 @@ function DragChoiceQuestion({ q, value, onChange, feedback }) {
   );
 }
 
+function FillBlankQuestion({ q, value, onChange, feedback }) {
+  const match = q.text.match(/_{2,}/);
+  const before = match ? q.text.slice(0, match.index) : q.text;
+  const after = match ? q.text.slice(match.index + match[0].length) : "";
+
+  const containerRef = useRef(null);
+  const blankRef = useRef(null);
+  const [drag, setDrag] = useState(null); // { optionIndex, x, y } — container-relative
+  const [overBlank, setOverBlank] = useState(false);
+
+  const color = feedback == null ? navy[700] : feedback ? RIGHT_COLOR : WRONG_COLOR;
+
+  function startDrag(oi, e) {
+    if (feedback != null) return;
+    e.preventDefault();
+    const c = containerRef.current.getBoundingClientRect();
+    setDrag({ optionIndex: oi, x: e.clientX - c.left, y: e.clientY - c.top });
+  }
+
+  useEffect(() => {
+    if (!drag) return;
+    function insideBlank(e) {
+      const b = blankRef.current.getBoundingClientRect();
+      return e.clientX >= b.left && e.clientX <= b.right && e.clientY >= b.top && e.clientY <= b.bottom;
+    }
+    function move(e) {
+      const c = containerRef.current.getBoundingClientRect();
+      setOverBlank(insideBlank(e));
+      setDrag((d) => d && { ...d, x: e.clientX - c.left, y: e.clientY - c.top });
+    }
+    function up(e) {
+      const landed = insideBlank(e);
+      setDrag((d) => {
+        if (landed && d) onChange(d.optionIndex);
+        return null;
+      });
+      setOverBlank(false);
+    }
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+    return () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+    };
+  }, [drag, onChange]);
+
+  return (
+    <div>
+      <div style={{ fontSize: 13, color: grey, marginBottom: 10 }}>Drag the correct word into the blank.</div>
+      <div ref={containerRef} style={{ position: "relative" }}>
+        <div style={{ fontSize: 17, color: navy[900], lineHeight: 2.4, marginBottom: 20 }}>
+          {before}
+          <span
+            ref={blankRef}
+            style={{
+              display: "inline-flex", alignItems: "center", justifyContent: "center",
+              minWidth: 90, minHeight: 34, margin: "0 6px", borderRadius: 8, padding: "4px 12px",
+              border: `2px dashed ${value != null ? color : overBlank ? navy[700] : "#c7bfae"}`,
+              background: value != null ? `${color}14` : overBlank ? "#eef5e2" : "#faf8f3",
+              fontWeight: 700, color: navy[900], verticalAlign: "middle",
+            }}
+          >
+            {value != null && (
+              <>
+                {q.options[value]}
+                {feedback == null && (
+                  <button
+                    onClick={() => onChange(undefined)}
+                    style={{ marginLeft: 8, background: "none", border: "none", color: grey, cursor: "pointer", fontSize: 13 }}
+                    title="Clear"
+                  >
+                    ×
+                  </button>
+                )}
+              </>
+            )}
+          </span>
+          {after}
+        </div>
+
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+          {q.options.map((opt, oi) => {
+            const placed = value === oi;
+            return (
+              <div
+                key={oi}
+                onPointerDown={(e) => !placed && startDrag(oi, e)}
+                style={{
+                  padding: "9px 16px", borderRadius: 999, fontSize: 15, fontWeight: 600, touchAction: "none",
+                  border: `2px solid ${navy[700]}`, color: navy[700], background: "#fff",
+                  cursor: feedback != null || placed ? "default" : "grab",
+                  opacity: placed ? 0.35 : 1,
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+                }}
+              >
+                {opt}
+              </div>
+            );
+          })}
+        </div>
+
+        {drag && (
+          <div
+            style={{
+              position: "absolute", left: drag.x, top: drag.y, transform: "translate(-50%, -50%)",
+              padding: "9px 16px", borderRadius: 999, fontSize: 15, fontWeight: 600, pointerEvents: "none",
+              border: `2px solid ${navy[700]}`, color: navy[700], background: "#fff", boxShadow: "0 3px 10px rgba(0,0,0,0.18)",
+            }}
+          >
+            {q.options[drag.optionIndex]}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function QuestionBody({ q, value, onChange, feedback }) {
   if (q.type === "numeric") return <NumericQuestion q={q} value={value} onChange={onChange} />;
   if (q.type === "sequence") return <SequenceQuestion q={q} value={value} onChange={onChange} />;
   if (q.type === "match_pairs") return <MatchPairsQuestion q={q} value={value} onChange={onChange} feedback={feedback} />;
   if (q.type === "categorize") return <CategorizeQuestion q={q} value={value} onChange={onChange} />;
   if (q.type === "drag_choice") return <DragChoiceQuestion q={q} value={value} onChange={onChange} feedback={feedback} />;
+  if (q.type === "fill_blank") return <FillBlankQuestion q={q} value={value} onChange={onChange} feedback={feedback} />;
   return <MultipleChoiceQuestion q={q} value={value} onChange={onChange} />;
 }
 
@@ -658,7 +776,7 @@ function QuizStep({ step, onComplete, onBack }) {
               onChange={(v) => setAnswers({ ...answers, [q.id]: v })}
               feedback={
                 q.type === "match_pairs" ? (pairResults ? pairResults[q.id] : null)
-                : q.type === "drag_choice" ? (perQuestion ? perQuestion[q.id] : null)
+                : q.type === "drag_choice" || q.type === "fill_blank" ? (perQuestion ? perQuestion[q.id] : null)
                 : null
               }
             />
