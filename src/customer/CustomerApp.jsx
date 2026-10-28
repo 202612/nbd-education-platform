@@ -1752,10 +1752,10 @@ export default function CustomerApp({ user, account }) {
         {[
           { id: "training", label: "Training", icon: PlayCircle },
           { id: "certificates", label: "Certificates", icon: Award },
-          { id: "brochure", label: "Education Brochure", icon: BookOpen },
           { id: "team", label: "Team", icon: Users },
           ...(isHolder ? [{ id: "progress", label: "Team progress", icon: BarChart3 }] : []),
           { id: "settings", label: "Settings", icon: Settings },
+          { id: "brochure", label: "Education Brochure", icon: BookOpen },
         ].map((t) => (
           <button
             key={t.id}
@@ -1765,9 +1765,12 @@ export default function CustomerApp({ user, account }) {
             <t.icon size={16} /> {t.label}
           </button>
         ))}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left", padding: "9px 12px", borderRadius: 8, fontSize: 15, color: "#a39a8d", marginTop: 12 }}>
+        <a
+          href="mailto:education@nationalbeauty.ie?subject=Request%20another%20brand"
+          style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left", padding: "9px 12px", borderRadius: 8, fontSize: 15, color: "#a39a8d", marginTop: 12, textDecoration: "none" }}
+        >
           <Mail size={14} /> Contact NBD to request another brand
-        </div>
+        </a>
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         {tab === "training" && <CustomerDashboard brands={approvedBrands} completedStepIds={completedStepIds} onStepCompleted={handleStepCompleted} participantName={displayName} />}
