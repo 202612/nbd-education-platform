@@ -52,9 +52,9 @@ function Shell({ children, onSignOut, roleLabel, showViewAs }) {
       <div style={{ background: "#fff", borderBottom: "1px solid #e4dfd6" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: "20px 32px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-            <Logo size={72} />
+            <Logo size={56} />
             <div>
-              <img src={WORDMARK_SRC} alt="National Beauty Distribution Ireland" style={{ height: 40, display: "block", maxWidth: "100%" }} />
+              <img src={WORDMARK_SRC} alt="National Beauty Distribution Ireland" style={{ height: 56, display: "block", maxWidth: "100%" }} />
               <div style={{ fontSize: 13, color: grey, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 700, marginTop: 8 }}>{roleLabel}</div>
             </div>
           </div>
