@@ -944,20 +944,43 @@ function CustomerBrandDetail({ brand, completedStepIds, onStepCompleted, partici
     return <CertificateStep step={active} brand={brand} participantName={participantName} onComplete={refreshOnly} onBack={onBackToList} />;
   }
 
+  const brandPct = steps.length ? Math.round((doneCount / steps.length) * 100) : 0;
+
   return (
     <div>
       <button onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 15, color: navy[700], marginBottom: 14, background: "none" }}>
         <ChevronLeft size={15} /> All brands
       </button>
-      <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 6 }}>
+      <div
+        style={{
+          background: `linear-gradient(120deg, ${navy[700]} 0%, ${navy[500]} 100%)`,
+          borderRadius: 18,
+          padding: "32px 36px",
+          marginBottom: 28,
+          color: "#fff",
+          display: "flex",
+          alignItems: "center",
+          gap: 24,
+          flexWrap: "wrap",
+        }}
+      >
         {brand.logo_url && (
-          <div style={{ height: 56, width: 56, flexShrink: 0, borderRadius: 10, background: "#fff", border: "1px solid #e4dfd6", display: "flex", alignItems: "center", justifyContent: "center", padding: 8 }}>
+          <div style={{ height: 88, width: 88, flexShrink: 0, borderRadius: 16, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", padding: 14, boxShadow: "0 4px 14px rgba(0,0,0,0.18)" }}>
             <img src={brand.logo_url} alt={brand.name} style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }} />
           </div>
         )}
-        <h3 style={{ fontSize: 24, fontWeight: 700, color: navy[900], margin: 0 }}>{brand.name}</h3>
+        <div style={{ flex: "1 1 220px", minWidth: 0 }}>
+          <div style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: 1.5, opacity: 0.85, marginBottom: 4, fontWeight: 700 }}>Brand training</div>
+          <h3 style={{ fontSize: 30, fontWeight: 700, margin: "0 0 4px" }}>{brand.name}</h3>
+          {brand.tagline && <p style={{ margin: "0 0 14px", fontSize: 16, opacity: 0.9 }}>{brand.tagline}</p>}
+          <div style={{ display: "flex", alignItems: "center", gap: 14, maxWidth: 360 }}>
+            <div style={{ flex: 1, height: 8, background: "rgba(255,255,255,0.3)", borderRadius: 999, overflow: "hidden" }}>
+              <div style={{ height: "100%", width: `${brandPct}%`, background: "#fff" }} />
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 600, whiteSpace: "nowrap" }}>{doneCount} / {steps.length} complete</div>
+          </div>
+        </div>
       </div>
-      <p style={{ color: "#8a8074", fontSize: 16, margin: "0 0 18px" }}>{doneCount} of {steps.length} steps complete</p>
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {steps.map((s, i) => {
           const done = completedStepIds.has(s.id);
