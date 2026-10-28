@@ -263,7 +263,7 @@ function MatchPairsQuestion({ q, value, onChange, feedback }) {
   return (
     <div>
       <div style={{ fontSize: 13, color: grey, marginBottom: 10 }}>Drag the dot from each item on the left to its match on the right.</div>
-      <div ref={containerRef} style={{ position: "relative", display: "flex", gap: 40, flexWrap: "wrap" }}>
+      <div ref={containerRef} style={{ position: "relative", display: "flex", columnGap: 120, rowGap: 24, flexWrap: "wrap", maxWidth: 680 }}>
         <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none", overflow: "visible" }}>
           {q.left.map((item, i) => {
             const rightId = mapping[item.id];
