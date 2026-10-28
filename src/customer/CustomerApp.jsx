@@ -928,16 +928,24 @@ function CustomerTeam({ team, currentUserId, onAdd, onRemove, brands = [], teamP
   return (
     <div>
       <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Team</h2>
-      <p style={{ color: "#8a8074", fontSize: 16, margin: "0 0 20px" }}>Add staff to your account. They sign in with the exact email you enter here, choosing their own password the first time.</p>
+      <p style={{ color: "#8a8074", fontSize: 16, margin: "0 0 20px" }}>
+        {isHolder
+          ? "Add staff to your account. They sign in with the exact email you enter here, choosing their own password the first time."
+          : "Everyone on your account's team."}
+      </p>
 
       {isHolder && <TeamProgressTable team={team} brands={brands} teamProgress={teamProgress} onSelectUser={setViewingUser} />}
-      <div style={{ display: "flex", gap: 8, marginBottom: 18, flexWrap: "wrap" }}>
-        <input required value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First name" style={{ flex: 1, minWidth: 120, padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 16 }} />
-        <input required value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last name" style={{ flex: 1, minWidth: 120, padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 16 }} />
-        <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" style={{ flex: 1, minWidth: 140, padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 16 }} />
-        <button onClick={add} disabled={busy} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 15, opacity: busy ? 0.7 : 1 }}>Add</button>
-      </div>
-      {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 12 }}>{error}</div>}
+      {isHolder && (
+        <>
+          <div style={{ display: "flex", gap: 8, marginBottom: 18, flexWrap: "wrap" }}>
+            <input required value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First name" style={{ flex: 1, minWidth: 120, padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 16 }} />
+            <input required value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last name" style={{ flex: 1, minWidth: 120, padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 16 }} />
+            <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" style={{ flex: 1, minWidth: 140, padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 16 }} />
+            <button onClick={add} disabled={busy} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 15, opacity: busy ? 0.7 : 1 }}>Add</button>
+          </div>
+          {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 12 }}>{error}</div>}
+        </>
+      )}
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {team.map((u) => (
           <div key={u.id} style={{ display: "flex", alignItems: "center", gap: 10, background: u.role === "holder" ? navy[50] : "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: "12px 14px" }}>
@@ -949,7 +957,7 @@ function CustomerTeam({ team, currentUserId, onAdd, onRemove, brands = [], teamP
               </div>
               <div style={{ fontSize: 14, color: "#8a8074" }}>{u.email}</div>
             </div>
-            {u.role === "staff" && (
+            {isHolder && u.role === "staff" && (
               <button onClick={() => onRemove(u.id)} style={{ background: "none" }}>
                 <Trash2 size={15} color="#a39a8d" />
               </button>
