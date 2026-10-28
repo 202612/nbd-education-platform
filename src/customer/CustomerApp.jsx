@@ -618,7 +618,14 @@ function QuizStep({ step, onComplete, onBack }) {
 
   return (
     <div>
-      <button onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 15, color: navy[700], marginBottom: 14, background: "none" }}>
+      <button
+        onClick={onBack}
+        style={{
+          display: "inline-flex", alignItems: "center", gap: 6, fontSize: 15, fontWeight: 600,
+          color: navy[700], marginBottom: 14, background: "#fff", border: "1px solid #e4dfd6",
+          borderRadius: 999, padding: "8px 16px", cursor: "pointer",
+        }}
+      >
         <ChevronLeft size={15} /> Back
       </button>
       <h3 style={{ fontSize: 19, fontWeight: 600, color: navy[900], margin: "0 0 14px" }}>Quick check: {step.title}</h3>
@@ -706,7 +713,14 @@ function VideoStep({ step, onComplete, onBack }) {
 
   return (
     <div>
-      <button onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 15, color: navy[700], marginBottom: 14, background: "none" }}>
+      <button
+        onClick={onBack}
+        style={{
+          display: "inline-flex", alignItems: "center", gap: 6, fontSize: 15, fontWeight: 600,
+          color: navy[700], marginBottom: 14, background: "#fff", border: "1px solid #e4dfd6",
+          borderRadius: 999, padding: "8px 16px", cursor: "pointer",
+        }}
+      >
         <ChevronLeft size={15} /> Back
       </button>
       <h3 style={{ fontSize: 19, fontWeight: 600, color: navy[900], margin: "0 0 14px" }}>{step.title}</h3>
@@ -840,7 +854,14 @@ function CertificateStep({ step, brand, participantName, onComplete, onBack }) {
 
   return (
     <div>
-      <button onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 15, color: navy[700], marginBottom: 14, background: "none" }}>
+      <button
+        onClick={onBack}
+        style={{
+          display: "inline-flex", alignItems: "center", gap: 6, fontSize: 15, fontWeight: 600,
+          color: navy[700], marginBottom: 14, background: "#fff", border: "1px solid #e4dfd6",
+          borderRadius: 999, padding: "8px 16px", cursor: "pointer",
+        }}
+      >
         <ChevronLeft size={15} /> Back
       </button>
 
@@ -948,7 +969,14 @@ function CustomerBrandDetail({ brand, completedStepIds, onStepCompleted, partici
 
   return (
     <div>
-      <button onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 15, color: navy[700], marginBottom: 14, background: "none" }}>
+      <button
+        onClick={onBack}
+        style={{
+          display: "inline-flex", alignItems: "center", gap: 6, fontSize: 15, fontWeight: 600,
+          color: navy[700], marginBottom: 14, background: "#fff", border: "1px solid #e4dfd6",
+          borderRadius: 999, padding: "8px 16px", cursor: "pointer",
+        }}
+      >
         <ChevronLeft size={15} /> All brands
       </button>
       <div
@@ -1092,7 +1120,14 @@ function ReadOnlyStepRow({ step, done }) {
 function EmployeeDetail({ user, brands, completedStepIds, onBack }) {
   return (
     <div style={{ marginBottom: 28 }}>
-      <button onClick={onBack} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 15, color: navy[700], marginBottom: 14, background: "none", border: "none", cursor: "pointer" }}>
+      <button
+        onClick={onBack}
+        style={{
+          display: "inline-flex", alignItems: "center", gap: 6, fontSize: 15, fontWeight: 600,
+          color: navy[700], marginBottom: 14, background: "#fff", border: "1px solid #e4dfd6",
+          borderRadius: 999, padding: "8px 16px", cursor: "pointer",
+        }}
+      >
         <ChevronLeft size={15} /> Back to team progress
       </button>
       <h3 style={{ fontSize: 19, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>{user.name}'s progress</h3>

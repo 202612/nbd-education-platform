@@ -52,11 +52,11 @@ const ADMIN_BTN_CSS = `
 .nbd-rowcard { display: flex; align-items: center; gap: 12px; text-align: left; width: 100%; background: #fff; border: 1px solid #e4dfd6; border-radius: 10px; padding: 13px 16px; cursor: pointer; transition: border-color .12s ease, box-shadow .12s ease, background .12s ease; }
 .nbd-rowcard:hover { border-color: #a8cb63; background: #f7faf0; box-shadow: 0 1px 4px rgba(94,143,30,.12); }
 
-.nbd-actions { display: inline-flex; align-items: center; border: 1px solid #e4dfd6; border-radius: 8px; overflow: hidden; background: #fff; }
+.nbd-actions { display: inline-flex; align-items: center; border: 1px solid #e4dfd6; border-radius: 999px; overflow: hidden; background: #f7f4ee; }
 .nbd-actions button {
   display: inline-flex; align-items: center; justify-content: center;
   width: 34px; height: 32px; background: none; border: none;
-  border-left: 1px solid #efe8dc; color: #6b6155; cursor: pointer;
+  border-left: 1px solid #e4dfd6; color: #6b6155; cursor: pointer;
   transition: background .12s ease, color .12s ease;
 }
 .nbd-actions button:first-child { border-left: none; }
