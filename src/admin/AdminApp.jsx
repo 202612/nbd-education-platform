@@ -1501,6 +1501,18 @@ function AdminCustomersLive() {
 // ================= OVERVIEW =================
 
 // Monday-based start of the week containing the given date.
+// Video step "duration" is free text typed in admin (e.g. "6 min", "4:30"),
+// not a tracked watch-time — best-effort parse, skip anything that doesn't
+// match rather than guessing, so the hours total never includes a wrong number.
+function parseDurationMinutes(d) {
+  if (!d) return null;
+  const mmss = d.match(/^(\d+):(\d{2})$/);
+  if (mmss) return Number(mmss[1]) + Number(mmss[2]) / 60;
+  const min = d.match(/(\d+(?:\.\d+)?)\s*min/i);
+  if (min) return Number(min[1]);
+  return null;
+}
+
 function weekStart(date) {
   const d = new Date(date);
   const day = (d.getDay() + 6) % 7; // 0 = Monday
@@ -1694,17 +1706,31 @@ function AdminOverview() {
   const [stats, setStats] = useState(null);
   useEffect(() => {
     async function load() {
-      const [brands, steps, customers, pending] = await Promise.all([
+      const since = new Date();
+      since.setDate(since.getDate() - 7);
+
+      const [brands, customers, pending, weeklyVideo] = await Promise.all([
         supabase.from("brands").select("id", { count: "exact", head: true }),
-        supabase.from("brand_steps").select("id", { count: "exact", head: true }),
         supabase.from("accounts").select("id", { count: "exact", head: true }),
         supabase.from("accounts").select("id", { count: "exact", head: true }).eq("status", "pending"),
+        supabase
+          .from("step_progress")
+          .select("completed_at,brand_steps(type,duration)")
+          .gte("completed_at", since.toISOString()),
       ]);
+
+      let weeklyMinutes = 0;
+      for (const row of weeklyVideo.data || []) {
+        if (row.brand_steps?.type !== "video") continue;
+        const mins = parseDurationMinutes(row.brand_steps.duration);
+        if (mins != null) weeklyMinutes += mins;
+      }
+
       setStats({
         brands: brands.count || 0,
-        steps: steps.count || 0,
         customers: customers.count || 0,
         pending: pending.count || 0,
+        weeklyHours: (weeklyMinutes / 60).toFixed(1),
       });
     }
     load();
@@ -1715,7 +1741,7 @@ function AdminOverview() {
       <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: "0 0 16px" }}>Overview</h2>
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 24 }}>
         <StatCard label="Brands" value={stats?.brands ?? "…"} icon={ShieldCheck} />
-        <StatCard label="Total steps" value={stats?.steps ?? "…"} icon={PlayCircle} />
+        <StatCard label="Hours of weekly activity" value={stats ? `${stats.weeklyHours} hrs` : "…"} icon={Clock} />
         <StatCard label="Customers" value={stats?.customers ?? "…"} icon={Building2} />
         <StatCard label="Pending approvals" value={stats?.pending ?? "…"} icon={Clock} />
       </div>
