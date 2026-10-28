@@ -1573,7 +1573,7 @@ function AdminReporting() {
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 20 }}>
         <StatCard label="Steps completed this week" value={report.completionsThisWeek} icon={PlayCircle} />
         <StatCard label="Certificates this week" value={report.certsThisWeek} icon={Award} />
-        <StatCard label="Certificates all-time" value={report.totalCerts} icon={CheckCircle2} />
+        <StatCard label="Total number of certificates completed" value={report.totalCerts} icon={CheckCircle2} />
       </div>
 
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
