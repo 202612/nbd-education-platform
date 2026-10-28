@@ -1,0 +1,89 @@
+-- Adds per-pair right/wrong feedback for match_pairs questions, so the
+-- customer-facing drag-a-line UI can colour each individual line green or
+-- red after submitting, not just the whole question. This only ever
+-- reveals whether THIS submission's pairing was right — it never exposes
+-- the correct_pairs answer key itself.
+
+create or replace function submit_quiz_answers(p_step_id uuid, p_answers jsonb)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_uid uuid := my_app_user_id();
+  v_brand_id uuid;
+  v_type text;
+  v_total int;
+  v_correct int;
+  v_passed boolean;
+  v_results jsonb;
+  v_pair_results jsonb;
+begin
+  if v_uid is null then
+    raise exception 'No linked account for this login';
+  end if;
+
+  select brand_id, type into v_brand_id, v_type from brand_steps where id = p_step_id;
+  if v_brand_id is null then
+    raise exception 'Step not found';
+  end if;
+  if v_type <> 'quiz' then
+    raise exception 'Not a quiz step';
+  end if;
+  if not (v_brand_id = any (my_approved_brand_ids())) then
+    raise exception 'Not authorized for this brand';
+  end if;
+  if not step_unlocked_for(p_step_id, v_uid) then
+    raise exception 'Complete the previous step first';
+  end if;
+
+  select count(*) into v_total from quiz_questions where step_id = p_step_id;
+
+  select
+    count(*) filter (where graded.is_correct),
+    jsonb_object_agg(graded.id::text, graded.is_correct),
+    jsonb_object_agg(graded.id::text, graded.pair_feedback) filter (where graded.pair_feedback is not null)
+  into v_correct, v_results, v_pair_results
+  from (
+    select
+      qq.id,
+      case qq.type
+        when 'numeric' then
+          (p_answers -> qq.id::text) is not null
+          and abs((p_answers ->> qq.id::text)::numeric - (qq.config ->> 'correct_value')::numeric)
+              <= coalesce((qq.config ->> 'tolerance')::numeric, 0)
+        when 'sequence' then
+          (p_answers -> qq.id::text) = (
+            select coalesce(jsonb_agg(elem -> 'id'), '[]'::jsonb) from jsonb_array_elements(qq.config -> 'items') elem
+          )
+        when 'match_pairs' then
+          (p_answers -> qq.id::text) = coalesce(qq.config -> 'correct_pairs', '{}'::jsonb)
+        when 'categorize' then
+          (p_answers -> qq.id::text) = coalesce(qq.config -> 'correct_buckets', '{}'::jsonb)
+        else
+          (p_answers -> qq.id::text) is not null
+          and (p_answers ->> qq.id::text)::int = qq.correct_index
+      end as is_correct,
+      case when qq.type = 'match_pairs' then (
+        select jsonb_object_agg(kv.key, (p_answers -> qq.id::text ->> kv.key) = kv.value)
+        from jsonb_each_text(coalesce(qq.config -> 'correct_pairs', '{}'::jsonb)) kv
+      ) else null end as pair_feedback
+    from quiz_questions qq
+    where qq.step_id = p_step_id
+  ) graded;
+
+  v_passed := v_total > 0 and v_correct = v_total;
+  if v_passed then
+    insert into step_progress (user_id, step_id) values (v_uid, p_step_id)
+      on conflict (user_id, step_id) do nothing;
+  end if;
+
+  return jsonb_build_object(
+    'passed', v_passed, 'correct', v_correct, 'total', v_total,
+    'results', v_results, 'pair_results', coalesce(v_pair_results, '{}'::jsonb)
+  );
+end;
+$$;
+
+grant execute on function submit_quiz_answers(uuid, jsonb) to authenticated;

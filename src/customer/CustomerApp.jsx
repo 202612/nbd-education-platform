@@ -10,6 +10,8 @@ import { navy, gold, grey, Badge, WORDMARK_SRC } from "../lib/ui.jsx";
 // NBD-brand accent colours cycled per connection line, so each matched pair
 // gets its own recognisable colour across both columns and the line itself.
 const LINE_COLORS = ["#5e8f1e", "#8a6d1f", "#2b6f6f", navy[900], "#9b5de5", "#c1440e"];
+const RIGHT_COLOR = "#4a6b3d";
+const WRONG_COLOR = "#a3372f";
 
 function formatDate(isoString) {
   if (!isoString) return "";
@@ -190,7 +192,7 @@ function dotCenter(el, containerEl) {
   return { x: r.left + r.width / 2 - c.left, y: r.top + r.height / 2 - c.top };
 }
 
-function MatchPairsQuestion({ q, value, onChange }) {
+function MatchPairsQuestion({ q, value, onChange, feedback }) {
   const mapping = value || {};
   const containerRef = useRef(null);
   const leftDots = useRef(new Map());
@@ -243,9 +245,14 @@ function MatchPairsQuestion({ q, value, onChange }) {
   }, [drag, mapping, onChange]);
 
   function startDrag(leftId, e) {
+    if (feedback) return;
     e.preventDefault();
     const c = containerRef.current.getBoundingClientRect();
     setDrag({ leftId, x: e.clientX - c.left, y: e.clientY - c.top });
+  }
+  function lineColor(leftId, cycleIndex) {
+    if (feedback) return feedback[leftId] ? RIGHT_COLOR : WRONG_COLOR;
+    return LINE_COLORS[cycleIndex % LINE_COLORS.length];
   }
   function clearPair(leftId) {
     const next = { ...mapping };
@@ -264,7 +271,7 @@ function MatchPairsQuestion({ q, value, onChange }) {
             const p1 = positions["L:" + item.id];
             const p2 = positions["R:" + rightId];
             if (!p1 || !p2) return null;
-            const color = LINE_COLORS[i % LINE_COLORS.length];
+            const color = lineColor(item.id, i);
             return (
               <g key={item.id}>
                 <line x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke={color} strokeWidth={3} strokeLinecap="round" />
@@ -285,7 +292,7 @@ function MatchPairsQuestion({ q, value, onChange }) {
         <div style={{ flex: "1 1 220px", display: "flex", flexDirection: "column", gap: 10, position: "relative", zIndex: 1 }}>
           {q.left.map((item, i) => {
             const matched = !!mapping[item.id];
-            const color = LINE_COLORS[i % LINE_COLORS.length];
+            const color = matched ? lineColor(item.id, i) : LINE_COLORS[i % LINE_COLORS.length];
             return (
               <div key={item.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <div
@@ -296,7 +303,7 @@ function MatchPairsQuestion({ q, value, onChange }) {
                   }}
                 >
                   {item.text}
-                  {matched && (
+                  {matched && !feedback && (
                     <button
                       onClick={() => clearPair(item.id)}
                       style={{ marginLeft: 8, fontSize: 12, color: grey, background: "none", border: "none", textDecoration: "underline", cursor: "pointer" }}
@@ -309,7 +316,8 @@ function MatchPairsQuestion({ q, value, onChange }) {
                   ref={(el) => { if (el) leftDots.current.set(item.id, el); else leftDots.current.delete(item.id); }}
                   onPointerDown={(e) => startDrag(item.id, e)}
                   style={{
-                    width: 22, height: 22, borderRadius: "50%", flexShrink: 0, cursor: "grab", touchAction: "none",
+                    width: 22, height: 22, borderRadius: "50%", flexShrink: 0, touchAction: "none",
+                    cursor: feedback ? "default" : "grab",
                     border: `3px solid ${matched ? color : navy[700]}`,
                     background: matched ? color : "#fff",
                     boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
@@ -322,9 +330,10 @@ function MatchPairsQuestion({ q, value, onChange }) {
 
         <div style={{ flex: "1 1 220px", display: "flex", flexDirection: "column", gap: 10, position: "relative", zIndex: 1 }}>
           {q.right.map((item) => {
+            const pairedLeftId = q.left.find((l) => mapping[l.id] === item.id)?.id;
             const pairedLeftIndex = q.left.findIndex((l) => mapping[l.id] === item.id);
             const isPaired = pairedLeftIndex !== -1;
-            const color = isPaired ? LINE_COLORS[pairedLeftIndex % LINE_COLORS.length] : navy[700];
+            const color = isPaired ? lineColor(pairedLeftId, pairedLeftIndex) : navy[700];
             return (
               <div key={item.id} data-right-id={item.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <div
@@ -409,10 +418,10 @@ function CategorizeQuestion({ q, value, onChange }) {
   );
 }
 
-function QuestionBody({ q, value, onChange }) {
+function QuestionBody({ q, value, onChange, feedback }) {
   if (q.type === "numeric") return <NumericQuestion q={q} value={value} onChange={onChange} />;
   if (q.type === "sequence") return <SequenceQuestion q={q} value={value} onChange={onChange} />;
-  if (q.type === "match_pairs") return <MatchPairsQuestion q={q} value={value} onChange={onChange} />;
+  if (q.type === "match_pairs") return <MatchPairsQuestion q={q} value={value} onChange={onChange} feedback={feedback} />;
   if (q.type === "categorize") return <CategorizeQuestion q={q} value={value} onChange={onChange} />;
   return <MultipleChoiceQuestion q={q} value={value} onChange={onChange} />;
 }
@@ -423,6 +432,7 @@ function QuizStep({ step, onComplete, onBack }) {
   const [answers, setAnswers] = useState({});
   const [result, setResult] = useState(null);
   const [perQuestion, setPerQuestion] = useState(null);
+  const [pairResults, setPairResults] = useState(null);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -456,12 +466,14 @@ function QuizStep({ step, onComplete, onBack }) {
     if (rpcError) { setError(rpcError.message); return; }
     setResult(data.passed ? "pass" : "fail");
     setPerQuestion(data.results || null);
+    setPairResults(data.pair_results || null);
     if (data.passed) onComplete();
   }
 
   function tryAgain() {
     setResult(null);
     setPerQuestion(null);
+    setPairResults(null);
     setError("");
   }
 
@@ -510,7 +522,12 @@ function QuizStep({ step, onComplete, onBack }) {
               {wasRight && <CheckCircle2 size={16} color="#4a6b3d" />}
               {wasWrong && <span style={{ color: "#a3372f", fontSize: 13, fontWeight: 700 }}>Not quite</span>}
             </div>
-            <QuestionBody q={q} value={answers[q.id]} onChange={(v) => setAnswers({ ...answers, [q.id]: v })} />
+            <QuestionBody
+              q={q}
+              value={answers[q.id]}
+              onChange={(v) => setAnswers({ ...answers, [q.id]: v })}
+              feedback={pairResults ? pairResults[q.id] : null}
+            />
           </div>
         );
       })}
