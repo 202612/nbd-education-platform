@@ -1539,7 +1539,7 @@ function RecentActivityFeed({ rows }) {
               <Icon size={13} color={meta.color} />
             </div>
             <div style={{ flex: 1, fontSize: 14, color: navy[900] }}>
-              <strong>{r.userName}</strong> {r.type === "certificate" ? "earned a certificate for" : r.type === "quiz" ? "passed the quiz for" : "watched a video for"} <strong>{r.brandName}</strong>
+              <strong>{r.userName}</strong> {r.type === "certificate" ? "earned the certificate" : r.type === "quiz" ? "passed the quiz" : "watched"} <strong>"{r.stepTitle}"</strong> ({r.brandName})
             </div>
             <div style={{ fontSize: 13, color: "#a39a8d", whiteSpace: "nowrap" }}>{timeAgo(r.at)}</div>
           </div>
@@ -1576,13 +1576,13 @@ function AdminReporting() {
 
       const { data: activityRows } = await supabase
         .from("step_progress")
-        .select("completed_at,user_id,app_users(name,account_id),brand_steps(type,brands(name))")
+        .select("completed_at,user_id,app_users(name,account_id),brand_steps(title,type,brands(name))")
         .order("completed_at", { ascending: false })
         .limit(30);
       const activity = (activityRows || [])
         .filter((r) => r.app_users && r.app_users.account_id !== demoAccountId)
         .slice(0, 8)
-        .map((r) => ({ at: r.completed_at, userName: r.app_users.name, type: r.brand_steps?.type, brandName: r.brand_steps?.brands?.name || "—" }));
+        .map((r) => ({ at: r.completed_at, userName: r.app_users.name, type: r.brand_steps?.type, brandName: r.brand_steps?.brands?.name || "—", stepTitle: r.brand_steps?.title || "" }));
       if (cancelled) return;
 
       // Build the last 8 Monday-starting weeks, oldest first.
