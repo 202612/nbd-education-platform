@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
-  PlayCircle, CheckCircle2, Lock, Award, Users, Trash2, Loader2, ChevronLeft, Clock, Mail, Download, Settings, GripVertical, BookOpen, Maximize2, BarChart3,
+  PlayCircle, CheckCircle2, Lock, Award, Users, Trash2, Loader2, ChevronLeft, Clock, Mail, Download, Settings, GripVertical, BookOpen, Maximize2, BarChart3, XCircle,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
@@ -673,7 +673,41 @@ function QuestionBody({ q, value, onChange, feedback }) {
   return <MultipleChoiceQuestion q={q} value={value} onChange={onChange} />;
 }
 
-function QuizStep({ step, onComplete, onBack }) {
+function QuizResultModal({ passed, onPrimary, primaryLabel, onDismiss }) {
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(32,27,21,0.55)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 20 }}>
+      <div style={{ background: "#fff", borderRadius: 18, padding: "36px 32px", maxWidth: 360, width: "100%", textAlign: "center", boxShadow: "0 20px 50px rgba(0,0,0,0.25)" }}>
+        {passed ? (
+          <CheckCircle2 size={48} color="#4a6b3d" style={{ marginBottom: 14 }} />
+        ) : (
+          <XCircle size={48} color="#a3372f" style={{ marginBottom: 14 }} />
+        )}
+        <h3 style={{ fontSize: 22, fontWeight: 700, color: navy[900], margin: "0 0 8px" }}>
+          {passed ? "Congratulations!" : "Incorrect"}
+        </h3>
+        <p style={{ color: "#8a8074", fontSize: 16, margin: "0 0 22px", lineHeight: 1.5 }}>
+          {passed ? "You passed the quiz." : "A couple of answers weren't quite right."}
+        </p>
+        <button
+          onClick={onPrimary}
+          style={{
+            background: passed ? "#4a6b3d" : navy[700], color: "#fff", border: "none", borderRadius: 999,
+            padding: "11px 28px", fontSize: 16, fontWeight: 600, cursor: "pointer", width: "100%", marginBottom: passed ? 0 : 10,
+          }}
+        >
+          {passed ? primaryLabel : "Retry"}
+        </button>
+        {!passed && (
+          <button onClick={onDismiss} style={{ background: "none", border: "none", color: navy[700], fontSize: 14, fontWeight: 600, cursor: "pointer", textDecoration: "underline" }}>
+            Review my answers first
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function QuizStep({ step, onComplete, onBack, nextStep, onGoToNext }) {
   const [questions, setQuestions] = useState(null);
   const [loadError, setLoadError] = useState("");
   const [answers, setAnswers] = useState({});
@@ -682,6 +716,7 @@ function QuizStep({ step, onComplete, onBack }) {
   const [pairResults, setPairResults] = useState(null);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -714,6 +749,7 @@ function QuizStep({ step, onComplete, onBack }) {
     setResult(data.passed ? "pass" : "fail");
     setPerQuestion(data.results || null);
     setPairResults(data.pair_results || null);
+    setShowModal(true);
     if (data.passed) onComplete();
   }
 
@@ -721,6 +757,7 @@ function QuizStep({ step, onComplete, onBack }) {
     setResult(null);
     setPerQuestion(null);
     setPairResults(null);
+    setShowModal(false);
     setError("");
   }
 
@@ -729,19 +766,18 @@ function QuizStep({ step, onComplete, onBack }) {
     return <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#8a8074", fontSize: 16 }}><Loader2 size={16} className="spin" /> Loading quiz…</div>;
   }
 
-  if (result === "pass") {
-    return (
-      <div style={{ textAlign: "center", padding: "40px 0" }}>
-        <CheckCircle2 size={36} color="#4a6b3d" style={{ marginBottom: 10 }} />
-        <h3 style={{ fontSize: 20, fontWeight: 600, color: navy[900], margin: "0 0 6px" }}>Quiz passed</h3>
-        <p style={{ color: "#8a8074", fontSize: 16, marginBottom: 18 }}>The next step is now unlocked.</p>
-        <button onClick={onBack} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 8, padding: "9px 18px", fontSize: 16 }}>Back to sequence</button>
-      </div>
-    );
-  }
+  const nextLabel = !nextStep ? "Back to sequence" : nextStep.type === "video" ? "Continue to next video" : nextStep.type === "quiz" ? "Continue to next quiz" : "Continue to the next step";
 
   return (
     <div>
+      {showModal && result && (
+        <QuizResultModal
+          passed={result === "pass"}
+          primaryLabel={nextLabel}
+          onPrimary={() => { setShowModal(false); if (onGoToNext) onGoToNext(); else onBack(); }}
+          onDismiss={() => setShowModal(false)}
+        />
+      )}
       <button
         onClick={onBack}
         style={{
@@ -1079,12 +1115,15 @@ function CustomerBrandDetail({ brand, completedStepIds, onStepCompleted, partici
   const doneCount = steps.filter((s) => completedStepIds.has(s.id)).length;
 
   if (active) {
+    const activeIndex = steps.findIndex((s) => s.id === active.id);
+    const nextStep = activeIndex >= 0 ? steps[activeIndex + 1] : null;
     const onBackToList = () => setOpenStepId(null);
     // Quiz/certificate stay on screen to show their result — only video
     // auto-returns to the list, since there's nothing else to show there.
     const refreshOnly = () => onStepCompleted(active.id);
     const refreshAndReturn = () => { onStepCompleted(active.id); setOpenStepId(null); };
-    if (active.type === "quiz") return <QuizStep step={active} onComplete={refreshOnly} onBack={onBackToList} />;
+    const goToNext = () => { onStepCompleted(active.id); setOpenStepId(nextStep ? nextStep.id : null); };
+    if (active.type === "quiz") return <QuizStep step={active} onComplete={refreshOnly} onBack={onBackToList} nextStep={nextStep} onGoToNext={goToNext} />;
     if (active.type === "video") return <VideoStep step={active} onComplete={refreshAndReturn} onBack={onBackToList} />;
     return <CertificateStep step={active} brand={brand} participantName={participantName} onComplete={refreshOnly} onBack={onBackToList} />;
   }
