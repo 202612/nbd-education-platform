@@ -79,7 +79,7 @@ const QUESTION_TYPES = [
   { value: "multiple_choice", label: "Multiple choice" },
   { value: "true_false", label: "True / False" },
   { value: "sequence", label: "Put steps in order" },
-  { value: "match_pairs", label: "Match the pairs" },
+  { value: "match_pairs", label: "Match the pairs (drag a line)" },
   { value: "categorize", label: "Sort into categories" },
   { value: "numeric", label: "Numeric guess" },
 ];

@@ -1,11 +1,15 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   PlayCircle, CheckCircle2, Lock, Award, Users, Trash2, Loader2, ChevronLeft, Clock, Mail, Download, Settings, GripVertical, BookOpen, Maximize2,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { supabase } from "../lib/supabaseClient.js";
-import { navy, gold, Badge, WORDMARK_SRC } from "../lib/ui.jsx";
+import { navy, gold, grey, Badge, WORDMARK_SRC } from "../lib/ui.jsx";
+
+// NBD-brand accent colours cycled per connection line, so each matched pair
+// gets its own recognisable colour across both columns and the line itself.
+const LINE_COLORS = ["#5e8f1e", "#8a6d1f", "#2b6f6f", navy[900], "#9b5de5", "#c1440e"];
 
 function formatDate(isoString) {
   if (!isoString) return "";
@@ -180,69 +184,170 @@ function SequenceQuestion({ q, value, onChange }) {
   );
 }
 
+function dotCenter(el, containerEl) {
+  const r = el.getBoundingClientRect();
+  const c = containerEl.getBoundingClientRect();
+  return { x: r.left + r.width / 2 - c.left, y: r.top + r.height / 2 - c.top };
+}
+
 function MatchPairsQuestion({ q, value, onChange }) {
   const mapping = value || {};
-  const [selectedLeft, setSelectedLeft] = useState(null);
-  const pairedRight = new Set(Object.values(mapping));
+  const containerRef = useRef(null);
+  const leftDots = useRef(new Map());
+  const rightDots = useRef(new Map());
+  const [positions, setPositions] = useState({});
+  const [drag, setDrag] = useState(null); // { leftId, x, y } — container-relative
 
-  function clickRight(id) {
-    if (!selectedLeft) return;
-    const next = { ...mapping, [selectedLeft]: id };
-    for (const k of Object.keys(next)) {
-      if (k !== selectedLeft && next[k] === id) delete next[k];
+  const recomputePositions = useCallback(() => {
+    const c = containerRef.current;
+    if (!c) return;
+    const next = {};
+    leftDots.current.forEach((el, id) => { next["L:" + id] = dotCenter(el, c); });
+    rightDots.current.forEach((el, id) => { next["R:" + id] = dotCenter(el, c); });
+    setPositions(next);
+  }, []);
+
+  useLayoutEffect(() => { recomputePositions(); }, [q, mapping, recomputePositions]);
+  useEffect(() => {
+    window.addEventListener("resize", recomputePositions);
+    return () => window.removeEventListener("resize", recomputePositions);
+  }, [recomputePositions]);
+
+  useEffect(() => {
+    if (!drag) return;
+    function move(e) {
+      const c = containerRef.current.getBoundingClientRect();
+      setDrag((d) => d && { ...d, x: e.clientX - c.left, y: e.clientY - c.top });
     }
-    onChange(next);
-    setSelectedLeft(null);
+    function up(e) {
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      const rightEl = el && el.closest("[data-right-id]");
+      setDrag((d) => {
+        if (rightEl && d) {
+          const rightId = rightEl.getAttribute("data-right-id");
+          const next = { ...mapping, [d.leftId]: rightId };
+          for (const k of Object.keys(next)) {
+            if (k !== d.leftId && next[k] === rightId) delete next[k];
+          }
+          onChange(next);
+        }
+        return null;
+      });
+    }
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+    return () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+    };
+  }, [drag, mapping, onChange]);
+
+  function startDrag(leftId, e) {
+    e.preventDefault();
+    const c = containerRef.current.getBoundingClientRect();
+    setDrag({ leftId, x: e.clientX - c.left, y: e.clientY - c.top });
   }
-  function clearPair(leftId, e) {
-    e.stopPropagation();
+  function clearPair(leftId) {
     const next = { ...mapping };
     delete next[leftId];
     onChange(next);
   }
 
   return (
-    <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-      <div style={{ flex: "1 1 200px", display: "flex", flexDirection: "column", gap: 8 }}>
-        {q.left.map((item) => {
-          const matchedId = mapping[item.id];
-          const matchedText = matchedId ? q.right.find((r) => r.id === matchedId)?.text : null;
-          return (
-            <button
-              key={item.id}
-              onClick={() => setSelectedLeft(selectedLeft === item.id ? null : item.id)}
-              style={{
-                textAlign: "left", padding: "10px 12px", borderRadius: 8, fontSize: 15, cursor: "pointer",
-                border: selectedLeft === item.id ? `2px solid ${navy[700]}` : "1px solid #e4dfd6",
-                background: matchedId ? "#f2f7e9" : "#fff",
-              }}
-            >
-              <div style={{ fontWeight: 600, color: navy[900] }}>{item.text}</div>
-              {matchedText && (
-                <div style={{ fontSize: 13, color: "#4d6b2c" }}>
-                  ↔ {matchedText} <span onClick={(e) => clearPair(item.id, e)} style={{ textDecoration: "underline", cursor: "pointer" }}>change</span>
+    <div>
+      <div style={{ fontSize: 13, color: grey, marginBottom: 10 }}>Drag the dot from each item on the left to its match on the right.</div>
+      <div ref={containerRef} style={{ position: "relative", display: "flex", gap: 40, flexWrap: "wrap" }}>
+        <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none", overflow: "visible" }}>
+          {q.left.map((item, i) => {
+            const rightId = mapping[item.id];
+            if (!rightId) return null;
+            const p1 = positions["L:" + item.id];
+            const p2 = positions["R:" + rightId];
+            if (!p1 || !p2) return null;
+            const color = LINE_COLORS[i % LINE_COLORS.length];
+            return (
+              <g key={item.id}>
+                <line x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke={color} strokeWidth={3} strokeLinecap="round" />
+                <circle cx={p1.x} cy={p1.y} r={6} fill={color} />
+                <circle cx={p2.x} cy={p2.y} r={6} fill={color} />
+              </g>
+            );
+          })}
+          {drag && positions["L:" + drag.leftId] && (
+            <line
+              x1={positions["L:" + drag.leftId].x} y1={positions["L:" + drag.leftId].y}
+              x2={drag.x} y2={drag.y}
+              stroke={navy[900]} strokeWidth={3} strokeDasharray="6 5" strokeLinecap="round"
+            />
+          )}
+        </svg>
+
+        <div style={{ flex: "1 1 220px", display: "flex", flexDirection: "column", gap: 10, position: "relative", zIndex: 1 }}>
+          {q.left.map((item, i) => {
+            const matched = !!mapping[item.id];
+            const color = LINE_COLORS[i % LINE_COLORS.length];
+            return (
+              <div key={item.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div
+                  style={{
+                    flex: 1, padding: "10px 14px", borderRadius: 8, fontSize: 15, fontWeight: 600, color: navy[900],
+                    border: matched ? `2px solid ${color}` : "1px solid #e4dfd6",
+                    background: matched ? `${color}14` : "#fff",
+                  }}
+                >
+                  {item.text}
+                  {matched && (
+                    <button
+                      onClick={() => clearPair(item.id)}
+                      style={{ marginLeft: 8, fontSize: 12, color: grey, background: "none", border: "none", textDecoration: "underline", cursor: "pointer" }}
+                    >
+                      clear
+                    </button>
+                  )}
                 </div>
-              )}
-            </button>
-          );
-        })}
-      </div>
-      <div style={{ flex: "1 1 200px", display: "flex", flexDirection: "column", gap: 8 }}>
-        {q.right.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => clickRight(item.id)}
-            style={{
-              textAlign: "left", padding: "10px 12px", borderRadius: 8, fontSize: 15,
-              border: pairedRight.has(item.id) ? "1px solid #cde3ab" : "1px solid #e4dfd6",
-              background: pairedRight.has(item.id) ? "#f2f7e9" : "#fff",
-              cursor: selectedLeft ? "pointer" : "default",
-              opacity: selectedLeft || pairedRight.has(item.id) ? 1 : 0.6,
-            }}
-          >
-            {item.text}
-          </button>
-        ))}
+                <div
+                  ref={(el) => { if (el) leftDots.current.set(item.id, el); else leftDots.current.delete(item.id); }}
+                  onPointerDown={(e) => startDrag(item.id, e)}
+                  style={{
+                    width: 22, height: 22, borderRadius: "50%", flexShrink: 0, cursor: "grab", touchAction: "none",
+                    border: `3px solid ${matched ? color : navy[700]}`,
+                    background: matched ? color : "#fff",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+                  }}
+                />
+              </div>
+            );
+          })}
+        </div>
+
+        <div style={{ flex: "1 1 220px", display: "flex", flexDirection: "column", gap: 10, position: "relative", zIndex: 1 }}>
+          {q.right.map((item) => {
+            const pairedLeftIndex = q.left.findIndex((l) => mapping[l.id] === item.id);
+            const isPaired = pairedLeftIndex !== -1;
+            const color = isPaired ? LINE_COLORS[pairedLeftIndex % LINE_COLORS.length] : navy[700];
+            return (
+              <div key={item.id} data-right-id={item.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div
+                  ref={(el) => { if (el) rightDots.current.set(item.id, el); else rightDots.current.delete(item.id); }}
+                  style={{
+                    width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
+                    border: `3px solid ${color}`, background: isPaired ? color : "#fff",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+                  }}
+                />
+                <div
+                  style={{
+                    flex: 1, padding: "10px 14px", borderRadius: 8, fontSize: 15,
+                    border: isPaired ? `2px solid ${color}` : "1px solid #e4dfd6",
+                    background: isPaired ? `${color}14` : "#fff",
+                  }}
+                >
+                  {item.text}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
