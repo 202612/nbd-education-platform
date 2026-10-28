@@ -77,6 +77,7 @@ const ADMIN_BTN_CSS = `
 
 const QUESTION_TYPES = [
   { value: "multiple_choice", label: "Multiple choice" },
+  { value: "drag_choice", label: "Drag to the correct answer" },
   { value: "true_false", label: "True / False" },
   { value: "sequence", label: "Put steps in order" },
   { value: "match_pairs", label: "Match the pairs (drag a line)" },
@@ -86,6 +87,8 @@ const QUESTION_TYPES = [
 
 function blankQuestion(type) {
   switch (type) {
+    case "drag_choice":
+      return { type, text: "", options: ["", "", ""], correct: 0 };
     case "true_false":
       return { type, text: "", options: ["True", "False"], correct: 0 };
     case "numeric":
@@ -103,7 +106,7 @@ function blankQuestion(type) {
 
 function questionToRow(q, step_id, order_index) {
   const base = { step_id, type: q.type, text: q.text.trim(), order_index, options: null, correct_index: null, config: {} };
-  if (q.type === "multiple_choice" || q.type === "true_false") {
+  if (q.type === "multiple_choice" || q.type === "drag_choice" || q.type === "true_false") {
     return { ...base, options: q.options, correct_index: q.correct };
   }
   if (q.type === "numeric") {
@@ -162,9 +165,12 @@ function rowToQuestion(row) {
 function QuestionTypeFields({ q, onChange }) {
   const fieldStyle = { flex: 1, padding: "6px 9px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 15 };
 
-  if (q.type === "multiple_choice") {
+  if (q.type === "multiple_choice" || q.type === "drag_choice") {
     return (
       <>
+        {q.type === "drag_choice" && (
+          <p style={{ fontSize: 13, color: "#a39a8d", margin: "0 0 8px" }}>Learners see this as a speech bubble and drag a line to the correct answer on the right.</p>
+        )}
         {q.options.map((opt, oi) => (
           <div key={oi} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
             <input type="radio" checked={q.correct === oi} onChange={() => onChange({ correct: oi })} title="Correct answer" />
@@ -293,7 +299,7 @@ function QuestionTypeFields({ q, onChange }) {
 
 function questionIsIncomplete(q) {
   if (!q.text.trim()) return true;
-  if (q.type === "multiple_choice" || q.type === "true_false") return q.options.some((o) => !o.trim());
+  if (q.type === "multiple_choice" || q.type === "drag_choice" || q.type === "true_false") return q.options.some((o) => !o.trim());
   if (q.type === "numeric") return q.correctValue === "" || isNaN(Number(q.correctValue));
   if (q.type === "sequence") return q.items.some((i) => !i.trim());
   if (q.type === "match_pairs") return q.pairs.some((p) => !p.left.trim() || !p.right.trim());

@@ -418,11 +418,134 @@ function CategorizeQuestion({ q, value, onChange }) {
   );
 }
 
+function DragChoiceQuestion({ q, value, onChange, feedback }) {
+  const containerRef = useRef(null);
+  const bubbleDot = useRef(null);
+  const optionDots = useRef(new Map());
+  const [positions, setPositions] = useState({});
+  const [drag, setDrag] = useState(null); // { x, y } — container-relative
+
+  const color = feedback == null ? navy[700] : feedback ? RIGHT_COLOR : WRONG_COLOR;
+
+  const recomputePositions = useCallback(() => {
+    const c = containerRef.current;
+    if (!c) return;
+    const next = {};
+    if (bubbleDot.current) next.bubble = dotCenter(bubbleDot.current, c);
+    optionDots.current.forEach((el, oi) => { next["O:" + oi] = dotCenter(el, c); });
+    setPositions(next);
+  }, []);
+
+  useLayoutEffect(() => { recomputePositions(); }, [q, value, recomputePositions]);
+  useEffect(() => {
+    window.addEventListener("resize", recomputePositions);
+    return () => window.removeEventListener("resize", recomputePositions);
+  }, [recomputePositions]);
+
+  useEffect(() => {
+    if (!drag) return;
+    function move(e) {
+      const c = containerRef.current.getBoundingClientRect();
+      setDrag((d) => d && { x: e.clientX - c.left, y: e.clientY - c.top });
+    }
+    function up(e) {
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      const optionEl = el && el.closest("[data-option-index]");
+      if (optionEl) onChange(Number(optionEl.getAttribute("data-option-index")));
+      setDrag(null);
+    }
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+    return () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+    };
+  }, [drag, onChange]);
+
+  function startDrag(e) {
+    if (feedback != null) return;
+    e.preventDefault();
+    const c = containerRef.current.getBoundingClientRect();
+    setDrag({ x: e.clientX - c.left, y: e.clientY - c.top });
+  }
+
+  return (
+    <div>
+      <div style={{ fontSize: 13, color: grey, marginBottom: 10 }}>Drag the dot from the question to the correct answer.</div>
+      <div ref={containerRef} style={{ position: "relative", display: "flex", alignItems: "center", columnGap: 120, rowGap: 24, flexWrap: "wrap", maxWidth: 680 }}>
+        <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none", overflow: "visible" }}>
+          {value != null && positions.bubble && positions["O:" + value] && (
+            <g>
+              <line x1={positions.bubble.x} y1={positions.bubble.y} x2={positions["O:" + value].x} y2={positions["O:" + value].y} stroke={color} strokeWidth={3} strokeLinecap="round" />
+              <circle cx={positions.bubble.x} cy={positions.bubble.y} r={6} fill={color} />
+              <circle cx={positions["O:" + value].x} cy={positions["O:" + value].y} r={6} fill={color} />
+            </g>
+          )}
+          {drag && positions.bubble && (
+            <line x1={positions.bubble.x} y1={positions.bubble.y} x2={drag.x} y2={drag.y} stroke={navy[900]} strokeWidth={3} strokeDasharray="6 5" strokeLinecap="round" />
+          )}
+        </svg>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 10, position: "relative", zIndex: 1 }}>
+          <div
+            style={{
+              position: "relative", background: "#fff", border: `2px solid ${color}`, borderRadius: 16,
+              padding: "14px 20px", fontSize: 16, fontWeight: 600, color: navy[900], maxWidth: 260,
+              boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+            }}
+          >
+            {q.text}
+          </div>
+          <div
+            ref={bubbleDot}
+            onPointerDown={startDrag}
+            style={{
+              width: 22, height: 22, borderRadius: "50%", flexShrink: 0, touchAction: "none",
+              cursor: feedback != null ? "default" : "grab",
+              border: `3px solid ${color}`, background: value != null ? color : "#fff",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+            }}
+          />
+        </div>
+
+        <div style={{ flex: "1 1 200px", display: "flex", flexDirection: "column", gap: 10, position: "relative", zIndex: 1 }}>
+          {q.options.map((opt, oi) => {
+            const isChosen = value === oi;
+            const optColor = isChosen ? color : navy[700];
+            return (
+              <div key={oi} data-option-index={oi} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div
+                  ref={(el) => { if (el) optionDots.current.set(oi, el); else optionDots.current.delete(oi); }}
+                  style={{
+                    width: 22, height: 22, borderRadius: "50%", flexShrink: 0,
+                    border: `3px solid ${optColor}`, background: isChosen ? optColor : "#fff",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+                  }}
+                />
+                <div
+                  style={{
+                    flex: 1, padding: "10px 14px", borderRadius: 8, fontSize: 15,
+                    border: isChosen ? `2px solid ${optColor}` : "1px solid #e4dfd6",
+                    background: isChosen ? `${optColor}14` : "#fff",
+                  }}
+                >
+                  {opt}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function QuestionBody({ q, value, onChange, feedback }) {
   if (q.type === "numeric") return <NumericQuestion q={q} value={value} onChange={onChange} />;
   if (q.type === "sequence") return <SequenceQuestion q={q} value={value} onChange={onChange} />;
   if (q.type === "match_pairs") return <MatchPairsQuestion q={q} value={value} onChange={onChange} feedback={feedback} />;
   if (q.type === "categorize") return <CategorizeQuestion q={q} value={value} onChange={onChange} />;
+  if (q.type === "drag_choice") return <DragChoiceQuestion q={q} value={value} onChange={onChange} feedback={feedback} />;
   return <MultipleChoiceQuestion q={q} value={value} onChange={onChange} />;
 }
 
@@ -526,7 +649,11 @@ function QuizStep({ step, onComplete, onBack }) {
               q={q}
               value={answers[q.id]}
               onChange={(v) => setAnswers({ ...answers, [q.id]: v })}
-              feedback={pairResults ? pairResults[q.id] : null}
+              feedback={
+                q.type === "match_pairs" ? (pairResults ? pairResults[q.id] : null)
+                : q.type === "drag_choice" ? (perQuestion ? perQuestion[q.id] : null)
+                : null
+              }
             />
           </div>
         );
