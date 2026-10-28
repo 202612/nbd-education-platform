@@ -138,6 +138,17 @@ function questionToRow(q, step_id, order_index) {
   return base;
 }
 
+// Multiple choice and drag-to-the-answer share the exact same shape
+// (options + which one is correct) — switching between them should keep
+// whatever was already typed rather than wiping it back to blank.
+const OPTIONS_BASED_TYPES = new Set(["multiple_choice", "drag_choice"]);
+function convertQuestionType(q, newType) {
+  if (OPTIONS_BASED_TYPES.has(q.type) && OPTIONS_BASED_TYPES.has(newType)) {
+    return { ...blankQuestion(newType), text: q.text, options: q.options, correct: q.correct };
+  }
+  return { ...blankQuestion(newType), text: q.text };
+}
+
 function rowToQuestion(row) {
   const type = row.type || "multiple_choice";
   const cfg = row.config || {};
@@ -319,7 +330,7 @@ function AddQuizForm({ initial, submitLabel, onCancel, onSave }) {
     setQuestions(questions.map((q, i) => (i === qi ? { ...q, ...patch } : q)));
   }
   function setQuestionType(qi, type) {
-    setQuestions(questions.map((q, i) => (i === qi ? { ...blankQuestion(type), text: q.text } : q)));
+    setQuestions(questions.map((q, i) => (i === qi ? convertQuestionType(q, type) : q)));
   }
   function addQuestion() {
     setQuestions([...questions, blankQuestion("multiple_choice")]);
