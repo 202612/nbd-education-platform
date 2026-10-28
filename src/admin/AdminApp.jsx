@@ -1514,6 +1514,41 @@ function BrandBarList({ rows }) {
   );
 }
 
+function timeAgo(iso) {
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}d ago`;
+  return new Date(iso).toLocaleDateString("en-IE", { day: "2-digit", month: "short" });
+}
+
+function RecentActivityFeed({ rows }) {
+  if (rows.length === 0) return <div style={{ color: "#a39a8d", fontSize: 14 }}>No activity yet.</div>;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+      {rows.map((r, i) => {
+        const meta = STEP_TYPES.find((t) => t.type === r.type) || STEP_TYPES[0];
+        const Icon = meta.icon;
+        return (
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 0", borderBottom: i < rows.length - 1 ? "1px solid #f0ece3" : "none" }}>
+            <div style={{ width: 26, height: 26, borderRadius: 7, background: `${meta.color}1a`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <Icon size={13} color={meta.color} />
+            </div>
+            <div style={{ flex: 1, fontSize: 14, color: navy[900] }}>
+              <strong>{r.userName}</strong> {r.type === "certificate" ? "earned a certificate for" : r.type === "quiz" ? "passed the quiz for" : "watched a video for"} <strong>{r.brandName}</strong>
+            </div>
+            <div style={{ fontSize: 13, color: "#a39a8d", whiteSpace: "nowrap" }}>{timeAgo(r.at)}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function AdminReporting() {
   const [report, setReport] = useState(null);
 
@@ -1523,10 +1558,31 @@ function AdminReporting() {
       const since = new Date();
       since.setDate(since.getDate() - 7 * 8);
 
-      const [progressRes, certsRes] = await Promise.all([
+      const [progressRes, certsRes, demoAccountRes] = await Promise.all([
         supabase.from("step_progress").select("completed_at").gte("completed_at", since.toISOString()),
         supabase.from("certificates").select("issued_at,brands(name)"),
+        supabase.from("accounts").select("id").eq("is_demo", true).maybeSingle(),
       ]);
+      if (cancelled) return;
+
+      const demoAccountId = demoAccountRes.data?.id;
+      const { data: activeUsers } = await supabase.from("app_users").select("id,account_id").eq("status", "active");
+      const realUsers = (activeUsers || []).filter((u) => u.account_id !== demoAccountId);
+      const realUserIds = new Set(realUsers.map((u) => u.id));
+
+      const { data: certUserRows } = await supabase.from("certificates").select("user_id");
+      const distinctCertUsers = new Set((certUserRows || []).filter((c) => realUserIds.has(c.user_id)).map((c) => c.user_id));
+      const completionRate = realUsers.length ? Math.round((distinctCertUsers.size / realUsers.length) * 100) : 0;
+
+      const { data: activityRows } = await supabase
+        .from("step_progress")
+        .select("completed_at,user_id,app_users(name,account_id),brand_steps(type,brands(name))")
+        .order("completed_at", { ascending: false })
+        .limit(30);
+      const activity = (activityRows || [])
+        .filter((r) => r.app_users && r.app_users.account_id !== demoAccountId)
+        .slice(0, 8)
+        .map((r) => ({ at: r.completed_at, userName: r.app_users.name, type: r.brand_steps?.type, brandName: r.brand_steps?.brands?.name || "—" }));
       if (cancelled) return;
 
       // Build the last 8 Monday-starting weeks, oldest first.
@@ -1560,6 +1616,10 @@ function AdminReporting() {
         totalCerts: certs.length,
         certsThisWeek,
         completionsThisWeek: buckets[buckets.length - 1].count,
+        completionRate,
+        enrolledCount: realUsers.length,
+        completedCount: distinctCertUsers.size,
+        activity,
       });
     }
     load();
@@ -1574,7 +1634,11 @@ function AdminReporting() {
         <StatCard label="Steps completed this week" value={report.completionsThisWeek} icon={PlayCircle} />
         <StatCard label="Certificates this week" value={report.certsThisWeek} icon={Award} />
         <StatCard label="Total number of certificates completed" value={report.totalCerts} icon={CheckCircle2} />
+        <StatCard label="Completion rate" value={`${report.completionRate}%`} icon={Award} />
       </div>
+      <p style={{ fontSize: 13, color: "#a39a8d", margin: "-14px 0 20px" }}>
+        {report.completedCount} of {report.enrolledCount} enrolled staff have earned at least one certificate.
+      </p>
 
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
         <div style={{ flex: "1 1 360px", background: "#fff", border: "1px solid #e4dfd6", borderRadius: 12, padding: 18 }}>
@@ -1585,6 +1649,12 @@ function AdminReporting() {
           <div style={{ fontWeight: 600, color: navy[900], marginBottom: 14 }}>Certificates completed by brand</div>
           <BrandBarList rows={report.brandRows} />
         </div>
+      </div>
+
+      <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 12, padding: 18, marginTop: 16 }}>
+        <div style={{ fontWeight: 600, color: navy[900], marginBottom: 4 }}>Recent activity</div>
+        <p style={{ fontSize: 13, color: "#a39a8d", margin: "0 0 10px" }}>The latest videos watched, quizzes passed, and certificates earned.</p>
+        <RecentActivityFeed rows={report.activity} />
       </div>
     </div>
   );
