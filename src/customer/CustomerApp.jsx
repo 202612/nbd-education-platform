@@ -1274,12 +1274,18 @@ function CustomerDashboard({ brands, completedStepIds, onStepCompleted, particip
                 )}
               </div>
               <div style={{ padding: 20 }}>
-                <div style={{ fontWeight: 700, fontSize: 17, color: navy[900], marginBottom: 6 }}>{b.name}</div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                  <div style={{ fontWeight: 700, fontSize: 17, color: navy[900] }}>{b.name}</div>
+                  {b.steps.length > 0 && (
+                    <Badge tone={done === 0 ? "muted" : pct === 100 ? "gold" : "navy"}>
+                      {done === 0 ? "Start" : pct === 100 ? "Completed" : "Resume"}
+                    </Badge>
+                  )}
+                </div>
                 <div style={{ fontSize: 15, color: "#8a8074", marginBottom: 12 }}>{done} of {b.steps.length} steps complete</div>
                 <div style={{ height: 8, background: "#e4dfd6", borderRadius: 999, overflow: "hidden" }}>
                   <div style={{ height: "100%", width: `${pct}%`, background: pct === 100 ? "#4a6b3d" : navy[500] }} />
                 </div>
-                {pct === 100 && b.steps.length > 0 && <div style={{ marginTop: 12 }}><Badge tone="gold">Certified</Badge></div>}
               </div>
             </button>
           );
