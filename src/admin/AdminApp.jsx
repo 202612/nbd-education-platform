@@ -1715,13 +1715,20 @@ function AdminOverview() {
         supabase.from("accounts").select("id", { count: "exact", head: true }).eq("status", "pending"),
         supabase
           .from("step_progress")
-          .select("completed_at,brand_steps(type,duration)")
+          .select("completed_at,brand_steps(type,duration,duration_seconds)")
           .gte("completed_at", since.toISOString()),
       ]);
 
+      // Prefer the real, player-reported length (duration_seconds) once
+      // it's been captured; fall back to parsing the free-text duration
+      // admin typed in for any video that hasn't been watched yet.
       let weeklyMinutes = 0;
       for (const row of weeklyVideo.data || []) {
         if (row.brand_steps?.type !== "video") continue;
+        if (row.brand_steps.duration_seconds) {
+          weeklyMinutes += row.brand_steps.duration_seconds / 60;
+          continue;
+        }
         const mins = parseDurationMinutes(row.brand_steps.duration);
         if (mins != null) weeklyMinutes += mins;
       }

@@ -54,7 +54,7 @@ function loadYouTubeApi() {
 // been watched. YouTube's IFrame API has no "disable seeking" flag, so this
 // polls currentTime and snaps back to the furthest point genuinely reached
 // whenever it jumps ahead — rewinding to rewatch is still fine.
-function YouTubePlayer({ videoId, onEnded }) {
+function YouTubePlayer({ videoId, onEnded, onDuration }) {
   const containerRef = useRef(null);
   const playerRef = useRef(null);
   const maxWatchedRef = useRef(0);
@@ -74,6 +74,10 @@ function YouTubePlayer({ videoId, onEnded }) {
           },
           onReady: () => {
             setReady(true);
+            if (onDuration) {
+              const d = playerRef.current?.getDuration?.();
+              if (d) onDuration(d);
+            }
             pollId = window.setInterval(() => {
               const player = playerRef.current;
               if (!player || !player.getCurrentTime) return;
@@ -861,6 +865,14 @@ function VideoStep({ step, onComplete, onBack }) {
     return () => { cancelled = true; };
   }, [step.id, step.video_storage_path, step.video_url]);
 
+  // Opportunistically records the video's real length the first time
+  // anyone plays it, for honest weekly-activity-hours reporting instead of
+  // relying only on the free-text duration typed in admin.
+  function recordDuration(seconds) {
+    if (!seconds || !isFinite(seconds)) return;
+    supabase.rpc("record_video_duration", { p_step_id: step.id, p_seconds: Math.round(seconds) });
+  }
+
   async function markWatched() {
     setError("");
     const { error: rpcError } = await supabase.rpc("complete_video_step", { p_step_id: step.id });
@@ -884,7 +896,7 @@ function VideoStep({ step, onComplete, onBack }) {
         <ChevronLeft size={15} /> Back
       </button>
       <h3 style={{ fontSize: 19, fontWeight: 600, color: navy[900], margin: "0 0 14px" }}>{step.title}</h3>
-      {youtubeId && <YouTubePlayer videoId={youtubeId} onEnded={markWatched} />}
+      {youtubeId && <YouTubePlayer videoId={youtubeId} onEnded={markWatched} onDuration={recordDuration} />}
       {!youtubeId && resolving && (
         <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#8a8074", fontSize: 16, marginBottom: 16 }}><Loader2 size={16} className="spin" /> Loading video…</div>
       )}
@@ -903,6 +915,7 @@ function VideoStep({ step, onComplete, onBack }) {
             controlsList="nodownload noplaybackrate"
             disablePictureInPicture
             onCanPlay={() => setVideoReady(true)}
+            onLoadedMetadata={(e) => recordDuration(e.currentTarget.duration)}
             onTimeUpdate={(e) => {
               if (e.currentTarget.currentTime > maxWatchedRef.current) maxWatchedRef.current = e.currentTarget.currentTime;
             }}
