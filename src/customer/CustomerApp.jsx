@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
-  PlayCircle, CheckCircle2, Lock, Award, Users, Trash2, Loader2, ChevronLeft, Clock, Mail, Download, Settings, GripVertical, BookOpen, Maximize2,
+  PlayCircle, CheckCircle2, Lock, Award, Users, Trash2, Loader2, ChevronLeft, Clock, Mail, Download, Settings, GripVertical, BookOpen, Maximize2, BarChart3,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
@@ -1257,7 +1257,7 @@ function DonutRing({ segments, size = 84, strokeWidth = 10, centerLabel, centerS
 // One tab per team member, each seeing only their own row of stats — the
 // holder can switch between teammates, but a staff member never gets this
 // component rendered at all (CustomerTeam only renders it when isHolder).
-function StaffTrainingDashboard({ team, brands, teamProgress }) {
+function StaffTrainingDashboard({ team, brands, teamProgress, big = false }) {
   const [selectedId, setSelectedId] = useState(team[0]?.id ?? null);
   const selectedUser = team.find((u) => u.id === selectedId) || team[0];
   const completed = (selectedUser && teamProgress[selectedUser.id]) || new Map();
@@ -1290,16 +1290,16 @@ function StaffTrainingDashboard({ team, brands, teamProgress }) {
 
   return (
     <div style={{ marginBottom: 28 }}>
-      <h3 style={{ fontSize: 17, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Team training status</h3>
-      <p style={{ color: "#8a8074", fontSize: 15, margin: "0 0 16px" }}>Pick a name to see their own course-by-course status — nobody sees anyone else's.</p>
+      <h3 style={{ fontSize: big ? 24 : 17, fontWeight: 700, color: navy[900], margin: "0 0 4px" }}>Team training status</h3>
+      <p style={{ color: "#8a8074", fontSize: big ? 16 : 15, margin: "0 0 20px" }}>Pick a name to see their own course-by-course status — nobody sees anyone else's.</p>
 
-      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 20 }}>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 24 }}>
         {team.map((u) => (
           <button
             key={u.id}
             onClick={() => setSelectedId(u.id)}
             style={{
-              padding: "8px 16px", borderRadius: 999, fontSize: 14, fontWeight: 600, cursor: "pointer",
+              padding: big ? "11px 22px" : "8px 16px", borderRadius: 999, fontSize: big ? 16 : 14, fontWeight: 600, cursor: "pointer",
               border: `1px solid ${selectedId === u.id ? navy[700] : "#e4dfd6"}`,
               background: selectedId === u.id ? navy[700] : "#fff",
               color: selectedId === u.id ? "#fff" : navy[900],
@@ -1310,58 +1310,60 @@ function StaffTrainingDashboard({ team, brands, teamProgress }) {
         ))}
       </div>
 
-      <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 10 }}>
-        <div style={{ fontSize: 16, fontWeight: 700, color: navy[900] }}>{selectedUser.name}{selectedUser.role === "holder" ? " (you)" : ""}</div>
-        <div style={{ fontSize: 14, color: "#8a8074" }}>{selectedUser.email}</div>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 12 }}>
+        <div style={{ fontSize: big ? 22 : 16, fontWeight: 700, color: navy[900] }}>{selectedUser.name}{selectedUser.role === "holder" ? " (you)" : ""}</div>
+        <div style={{ fontSize: big ? 16 : 14, color: "#8a8074" }}>{selectedUser.email}</div>
       </div>
 
-      <div style={{ display: "flex", gap: 28, alignItems: "center", flexWrap: "wrap", background: "#fff", border: "1px solid #e4dfd6", borderRadius: 14, padding: "20px 24px", marginBottom: 20 }}>
+      <div style={{ display: "flex", gap: big ? 40 : 28, alignItems: "center", flexWrap: "wrap", background: "#fff", border: "1px solid #e4dfd6", borderRadius: 16, padding: big ? "32px 36px" : "20px 24px", marginBottom: 24 }}>
         <DonutRing
           segments={[
             { value: completedCount, color: "#4a6b3d" },
             { value: inProgressCount, color: "#c99a2e" },
             { value: notStartedCount, color: "#e4dfd6" },
           ]}
+          size={big ? 130 : 84}
+          strokeWidth={big ? 15 : 10}
           centerLabel={brands.length}
           centerSub="Courses"
         />
-        <div style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 14 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: big ? 10 : 6, fontSize: big ? 16 : 14 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}><span style={{ width: 10, height: 10, borderRadius: "50%", background: "#4a6b3d", display: "inline-block" }} /> {completedCount} completed</div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}><span style={{ width: 10, height: 10, borderRadius: "50%", background: "#c99a2e", display: "inline-block" }} /> {inProgressCount} in progress</div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}><span style={{ width: 10, height: 10, borderRadius: "50%", background: "#e4dfd6", display: "inline-block" }} /> {notStartedCount} not started</div>
         </div>
         <div style={{ marginLeft: "auto", textAlign: "right" }}>
-          <div style={{ fontSize: 13, color: "#8a8074" }}>Last activity</div>
-          <div style={{ fontSize: 16, fontWeight: 600, color: navy[900] }}>{lastActivity ? formatDate(lastActivity) : "No activity yet"}</div>
+          <div style={{ fontSize: big ? 14 : 13, color: "#8a8074" }}>Last activity</div>
+          <div style={{ fontSize: big ? 20 : 16, fontWeight: 600, color: navy[900] }}>{lastActivity ? formatDate(lastActivity) : "No activity yet"}</div>
         </div>
       </div>
 
       <div style={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: big ? 16 : 14 }}>
           <thead>
             <tr>
               {["Course", "Status", "Progress", "Quiz", "Last activity"].map((h) => (
-                <th key={h} style={{ textAlign: "left", padding: "8px 12px", color: "#8a8074", fontSize: 13, textTransform: "uppercase", letterSpacing: 0.5, borderBottom: "1px solid #e4dfd6", whiteSpace: "nowrap" }}>{h}</th>
+                <th key={h} style={{ textAlign: "left", padding: big ? "12px 16px" : "8px 12px", color: "#8a8074", fontSize: big ? 14 : 13, textTransform: "uppercase", letterSpacing: 0.5, borderBottom: "1px solid #e4dfd6", whiteSpace: "nowrap" }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {rows.map(({ brand, total, done, pct, status, quizStep, quizDone, brandLastActivity }) => (
               <tr key={brand.id}>
-                <td style={{ padding: "10px 12px", borderBottom: "1px solid #f0ece3" }}>
+                <td style={{ padding: big ? "14px 16px" : "10px 12px", borderBottom: "1px solid #f0ece3" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    {brand.logo_url && <img src={brand.logo_url} alt={brand.name} style={{ height: 20, maxWidth: 70, objectFit: "contain" }} />}
+                    {brand.logo_url && <img src={brand.logo_url} alt={brand.name} style={{ height: big ? 26 : 20, maxWidth: big ? 90 : 70, objectFit: "contain" }} />}
                     <span style={{ fontWeight: 600, color: navy[900] }}>{brand.name}</span>
                   </div>
                 </td>
-                <td style={{ padding: "10px 12px", borderBottom: "1px solid #f0ece3" }}>
+                <td style={{ padding: big ? "14px 16px" : "10px 12px", borderBottom: "1px solid #f0ece3" }}>
                   {status ? <Badge tone={STATUS_TONE[status]}>{status.toUpperCase()}</Badge> : <span style={{ color: "#a39a8d" }}>No steps yet</span>}
                 </td>
-                <td style={{ padding: "10px 12px", borderBottom: "1px solid #f0ece3", whiteSpace: "nowrap" }}>{done} / {total} ({pct}%)</td>
-                <td style={{ padding: "10px 12px", borderBottom: "1px solid #f0ece3" }}>
+                <td style={{ padding: big ? "14px 16px" : "10px 12px", borderBottom: "1px solid #f0ece3", whiteSpace: "nowrap" }}>{done} / {total} ({pct}%)</td>
+                <td style={{ padding: big ? "14px 16px" : "10px 12px", borderBottom: "1px solid #f0ece3" }}>
                   {!quizStep ? <span style={{ color: "#a39a8d" }}>—</span> : quizDone ? <span style={{ color: "#4a6b3d", fontWeight: 600 }}>100%</span> : <span style={{ color: "#a39a8d" }}>Not taken</span>}
                 </td>
-                <td style={{ padding: "10px 12px", borderBottom: "1px solid #f0ece3", whiteSpace: "nowrap" }}>{brandLastActivity ? formatDate(brandLastActivity) : "—"}</td>
+                <td style={{ padding: big ? "14px 16px" : "10px 12px", borderBottom: "1px solid #f0ece3", whiteSpace: "nowrap" }}>{brandLastActivity ? formatDate(brandLastActivity) : "—"}</td>
               </tr>
             ))}
           </tbody>
@@ -1371,7 +1373,7 @@ function StaffTrainingDashboard({ team, brands, teamProgress }) {
   );
 }
 
-function CustomerTeam({ team, currentUserId, onAdd, onRemove, brands = [], teamProgress = {}, isHolder = false }) {
+function CustomerTeam({ team, currentUserId, onAdd, onRemove, isHolder = false }) {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -1397,7 +1399,6 @@ function CustomerTeam({ team, currentUserId, onAdd, onRemove, brands = [], teamP
           : "Everyone on your account's team."}
       </p>
 
-      {isHolder && <StaffTrainingDashboard team={team} brands={brands} teamProgress={teamProgress} />}
       {isHolder && (
         <>
           <div style={{ display: "flex", gap: 8, marginBottom: 18, flexWrap: "wrap" }}>
@@ -1753,6 +1754,7 @@ export default function CustomerApp({ user, account }) {
           { id: "certificates", label: "Certificates", icon: Award },
           { id: "brochure", label: "Education Brochure", icon: BookOpen },
           { id: "team", label: "Team", icon: Users },
+          ...(isHolder ? [{ id: "progress", label: "Team progress", icon: BarChart3 }] : []),
           { id: "settings", label: "Settings", icon: Settings },
         ].map((t) => (
           <button
@@ -1777,11 +1779,10 @@ export default function CustomerApp({ user, account }) {
             currentUserId={user.id}
             onAdd={handleAddStaff}
             onRemove={handleRemoveStaff}
-            brands={isHolder ? approvedBrands : []}
-            teamProgress={teamProgress}
             isHolder={isHolder}
           />
         )}
+        {tab === "progress" && isHolder && <StaffTrainingDashboard team={team} brands={approvedBrands} teamProgress={teamProgress} big />}
         {tab === "settings" && <AccountSettings user={user} account={account} onNameSaved={setDisplayName} />}
       </div>
     </div>
