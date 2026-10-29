@@ -1845,8 +1845,16 @@ export default function CustomerApp({ user, account }) {
   }
 
   return (
-    <div style={{ display: "flex", gap: 24 }}>
-      <div style={{ width: 170, flexShrink: 0 }}>
+    <div className="nbd-shell-layout">
+      <style>{`
+        .nbd-shell-layout { display: flex; gap: 24px; }
+        .nbd-shell-nav { width: 170px; flex-shrink: 0; }
+        @media (max-width: 760px) {
+          .nbd-shell-layout { flex-direction: column; }
+          .nbd-shell-nav { width: 100%; }
+        }
+      `}</style>
+      <div className="nbd-shell-nav">
         {[
           { id: "training", label: "Training", icon: PlayCircle },
           { id: "certificates", label: "Certificates", icon: Award },

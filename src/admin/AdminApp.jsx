@@ -22,6 +22,12 @@ const STEP_TYPES = [
 // Shared button styling for every admin screen. Injected once at the AdminApp
 // root. :hover / :active need real CSS, hence classes rather than inline styles.
 const ADMIN_BTN_CSS = `
+.nbd-shell-layout { display: flex; gap: 24px; }
+.nbd-shell-nav { width: 190px; flex-shrink: 0; }
+@media (max-width: 760px) {
+  .nbd-shell-layout { flex-direction: column; }
+  .nbd-shell-nav { width: 100%; }
+}
 .nbd-btn {
   display: inline-flex; align-items: center; gap: 6px;
   font: inherit; font-size: 14px; font-weight: 600; line-height: 1;
@@ -1820,9 +1826,9 @@ export default function AdminApp() {
     { id: "security", label: "Security", icon: ShieldCheck },
   ];
   return (
-    <div style={{ display: "flex", gap: 24 }}>
+    <div className="nbd-shell-layout">
       <style>{ADMIN_BTN_CSS}</style>
-      <div style={{ width: 190, flexShrink: 0 }}>
+      <div className="nbd-shell-nav">
         {tabs.map((t) => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left", padding: "9px 12px", borderRadius: 8, fontSize: 16, marginBottom: 4, background: tab === t.id ? navy[100] : "transparent", color: tab === t.id ? navy[900] : "#6b6155", fontWeight: tab === t.id ? 500 : 400, border: "none" }}>
             <t.icon size={16} /> {t.label}
