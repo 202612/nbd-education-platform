@@ -50,7 +50,7 @@ function Shell({ children, onSignOut, roleLabel, showViewAs }) {
   return (
     <div style={{ fontFamily: "'Lato', -apple-system, sans-serif", background: cream, minHeight: "100vh" }}>
       <div style={{ background: "#fff", borderBottom: "1px solid #e4dfd6" }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto", padding: "20px 32px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
+        <div className="nbd-shell-header" style={{ maxWidth: 1100, margin: "0 auto", padding: "20px 32px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 40 }}>
             <Logo size={56} />
             <div>
@@ -68,7 +68,14 @@ function Shell({ children, onSignOut, roleLabel, showViewAs }) {
           </div>
         </div>
       </div>
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px" }}>
+      <style>{`
+        .nbd-shell-body { max-width: 1100px; margin: 0 auto; padding: 32px; }
+        @media (max-width: 760px) {
+          .nbd-shell-body { padding: 16px; }
+          .nbd-shell-header { padding: 16px !important; }
+        }
+      `}</style>
+      <div className="nbd-shell-body">
         {children}
       </div>
     </div>
