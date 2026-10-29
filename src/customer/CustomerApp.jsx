@@ -1227,8 +1227,7 @@ function CustomerBrandDetail({ brand, completedStepIds, onStepCompleted, partici
 
 // ================= DASHBOARD =================
 
-function CustomerDashboard({ brands, completedStepIds, onStepCompleted, participantName }) {
-  const [openBrandId, setOpenBrandId] = useState(null);
+function CustomerDashboard({ brands, completedStepIds, onStepCompleted, participantName, openBrandId, setOpenBrandId }) {
   const brand = brands.find((b) => b.id === openBrandId);
   if (brand) return <CustomerBrandDetail brand={brand} completedStepIds={completedStepIds} onStepCompleted={onStepCompleted} participantName={participantName} onBack={() => setOpenBrandId(null)} />;
   const totalSteps = brands.reduce((s, b) => s + b.steps.length, 0);
@@ -1768,7 +1767,12 @@ export default function CustomerApp({ user, account }) {
   const [team, setTeam] = useState([]);
   const [teamProgress, setTeamProgress] = useState({});
   const [loadError, setLoadError] = useState("");
+  const [openBrandId, setOpenBrandId] = useState(null);
   const isHolder = user.role === "holder";
+  // Once a brand's open, the drill-down (step list, video, quiz, certificate)
+  // takes the full page — the sidebar nav would only squeeze it and make
+  // drag-based quiz questions cramped on a phone screen.
+  const isDrilledIntoTraining = tab === "training" && !!openBrandId;
 
   async function loadProgress() {
     const { data } = await supabase.from("step_progress").select("step_id,completed_at").eq("user_id", user.id);
@@ -1854,32 +1858,43 @@ export default function CustomerApp({ user, account }) {
           .nbd-shell-nav { width: 100%; }
         }
       `}</style>
-      <div className="nbd-shell-nav">
-        {[
-          { id: "training", label: "Training", icon: PlayCircle },
-          { id: "certificates", label: "Certificates", icon: Award },
-          { id: "team", label: "Team", icon: Users },
-          ...(isHolder ? [{ id: "progress", label: "Team progress", icon: BarChart3 }] : []),
-          { id: "settings", label: "Settings", icon: Settings },
-          { id: "brochure", label: "Education Brochure", icon: BookOpen },
-        ].map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left", padding: "9px 12px", borderRadius: 8, fontSize: 16, marginBottom: 4, background: tab === t.id ? navy[100] : "transparent", color: tab === t.id ? navy[900] : "#6b6155", fontWeight: tab === t.id ? 500 : 400, border: "none" }}
+      {!isDrilledIntoTraining && (
+        <div className="nbd-shell-nav">
+          {[
+            { id: "training", label: "Training", icon: PlayCircle },
+            { id: "certificates", label: "Certificates", icon: Award },
+            { id: "team", label: "Team", icon: Users },
+            ...(isHolder ? [{ id: "progress", label: "Team progress", icon: BarChart3 }] : []),
+            { id: "settings", label: "Settings", icon: Settings },
+            { id: "brochure", label: "Education Brochure", icon: BookOpen },
+          ].map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left", padding: "9px 12px", borderRadius: 8, fontSize: 16, marginBottom: 4, background: tab === t.id ? navy[100] : "transparent", color: tab === t.id ? navy[900] : "#6b6155", fontWeight: tab === t.id ? 500 : 400, border: "none" }}
+            >
+              <t.icon size={16} /> {t.label}
+            </button>
+          ))}
+          <a
+            href="mailto:education@nationalbeauty.ie?subject=Request%20another%20brand"
+            style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left", padding: "9px 12px", borderRadius: 8, fontSize: 15, color: "#a39a8d", marginTop: 12, textDecoration: "none" }}
           >
-            <t.icon size={16} /> {t.label}
-          </button>
-        ))}
-        <a
-          href="mailto:education@nationalbeauty.ie?subject=Request%20another%20brand"
-          style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left", padding: "9px 12px", borderRadius: 8, fontSize: 15, color: "#a39a8d", marginTop: 12, textDecoration: "none" }}
-        >
-          <Mail size={14} /> Contact NBD to request another brand
-        </a>
-      </div>
+            <Mail size={14} /> Contact NBD to request another brand
+          </a>
+        </div>
+      )}
       <div style={{ flex: 1, minWidth: 0 }}>
-        {tab === "training" && <CustomerDashboard brands={approvedBrands} completedStepIds={completedStepIds} onStepCompleted={handleStepCompleted} participantName={displayName} />}
+        {tab === "training" && (
+          <CustomerDashboard
+            brands={approvedBrands}
+            completedStepIds={completedStepIds}
+            onStepCompleted={handleStepCompleted}
+            participantName={displayName}
+            openBrandId={openBrandId}
+            setOpenBrandId={setOpenBrandId}
+          />
+        )}
         {tab === "certificates" && <MyCertificates userId={user.id} />}
         {tab === "brochure" && <EducationBrochure />}
         {tab === "team" && (
