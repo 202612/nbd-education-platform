@@ -181,7 +181,45 @@ function ResetPasswordScreen({ onDone }) {
   );
 }
 
-export default function App() {
+// Catches any render error anywhere in the app and shows a plain "reload"
+// screen instead of a blank white page — without this, one unexpected
+// error in any component takes down the whole site for that customer.
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error, info) {
+    console.error("Unhandled app error:", error, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ fontFamily: "'Lato', -apple-system, sans-serif", background: cream, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }}>
+          <div style={{ maxWidth: 420, textAlign: "center" }}>
+            <Logo size={48} />
+            <h2 style={{ fontSize: 22, fontWeight: 700, color: navy[900], margin: "18px 0 8px" }}>Something went wrong</h2>
+            <p style={{ color: grey, fontSize: 16, lineHeight: 1.6, margin: "0 0 20px" }}>
+              This page hit an unexpected error. Reloading usually fixes it — if it keeps happening, let NBD know what you were doing when it occurred.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 999, padding: "10px 24px", fontSize: 16, fontWeight: 600, cursor: "pointer" }}
+            >
+              Reload
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+function AppInner() {
   const [session, setSession] = useState(undefined); // undefined = not checked yet, null = signed out
   const [identity, setIdentity] = useState(null); // { kind, admin } | { kind, user, account } | { kind: "unrecognized" }
   const [resolving, setResolving] = useState(false);
@@ -313,5 +351,13 @@ export default function App() {
         </p>
       </div>
     </Shell>
+  );
+}
+
+export default function App() {
+  return (
+    <ErrorBoundary>
+      <AppInner />
+    </ErrorBoundary>
   );
 }
