@@ -170,23 +170,27 @@ export function AuthHero() {
           below the breakpoint guarantees the photo always fills the space,
           at the cost of the admin's exact zoom/position below that width. */}
       <style>{`@media (max-width: 700px) { .nbd-auth-hero-photo { background-size: cover !important; } }`}</style>
-      {settings.background_url && (
-        <div
-          className="nbd-auth-hero-photo"
-          style={{
-            position: "absolute", inset: 0,
-            backgroundImage: `url(${DEFAULT_HERO_BG_SRC})`,
-            backgroundSize: `${settings.background_zoom * 100}%`,
-            backgroundPosition: `${settings.background_position_x}% ${settings.background_position_y}%`,
-            backgroundRepeat: "no-repeat",
-            opacity: bgReady ? 1 : 0,
-            transition: "opacity 400ms ease",
-          }}
-        />
-      )}
-      {settings.background_url && (
-        <div style={{ position: "absolute", inset: 0, background: "rgba(255,255,255,0.55)" }} />
-      )}
+      {/* Rendered unconditionally — waiting on settings.background_url from
+          the database before even trying to show the (already-embedded,
+          already-local) photo was its own separate network dependency, and
+          exactly what was still showing the plain green fallback first on
+          every load regardless of how fast the image itself was. Zoom/
+          position fall back to sensible defaults until the real ones load,
+          so the photo appears immediately and just settles into the admin's
+          exact framing a moment later, rather than not appearing at all. */}
+      <div
+        className="nbd-auth-hero-photo"
+        style={{
+          position: "absolute", inset: 0,
+          backgroundImage: `url(${DEFAULT_HERO_BG_SRC})`,
+          backgroundSize: `${(settings.background_zoom ?? 1) * 100}%`,
+          backgroundPosition: `${settings.background_position_x ?? 50}% ${settings.background_position_y ?? 50}%`,
+          backgroundRepeat: "no-repeat",
+          opacity: bgReady ? 1 : 0,
+          transition: "opacity 400ms ease",
+        }}
+      />
+      <div style={{ position: "absolute", inset: 0, background: "rgba(255,255,255,0.55)" }} />
 
       {brandLogos.map((b) => (
         <img
