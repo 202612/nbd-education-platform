@@ -1046,14 +1046,19 @@ function CertificateStep({ step, brand, participantName, onComplete, onBack }) {
           {step.cert_template_url ? (
             <div
               ref={certRef}
-              style={{ position: "relative", width: 900, maxWidth: "100%", margin: "0 auto 18px" }}
+              style={{ position: "relative", width: 900, maxWidth: "100%", margin: "0 auto 18px", containerType: "inline-size" }}
             >
               <img src={step.cert_template_url} alt={`${brand.name} certificate`} style={{ display: "block", width: "100%" }} />
               <div
                 style={{
                   position: "absolute", left: `${step.cert_name_x ?? 50}%`, top: `${step.cert_name_y ?? 55}%`,
                   transform: "translate(-50%, -50%)", whiteSpace: "nowrap",
-                  fontSize: step.cert_name_font_size ?? 34, color: step.cert_name_color || "#1a2b3d",
+                  // The name has to shrink exactly in step with the certificate
+                  // image on a narrow screen — a literal px size here would stay
+                  // full-size while only the image scaled down, so it's sized
+                  // relative to the container's own rendered width (cqw) instead.
+                  fontSize: `calc(${step.cert_name_font_size ?? 34} / 900 * 100cqw)`,
+                  color: step.cert_name_color || "#1a2b3d",
                   fontFamily: "Georgia, 'Times New Roman', serif", fontWeight: 600,
                 }}
               >
