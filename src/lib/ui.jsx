@@ -143,6 +143,7 @@ export function AuthHero() {
 
   return (
     <div
+      className="nbd-auth-hero"
       style={{
         ...backgroundStyle,
         padding: "0 24px",
@@ -151,6 +152,12 @@ export function AuthHero() {
         overflow: "hidden",
       }}
     >
+      {/* background_zoom/position are tuned against a wide desktop viewport —
+          sizing by a % of width alone can shrink the photo so much vertically
+          on a narrow phone that it barely covers the banner. Forcing "cover"
+          below the breakpoint guarantees the photo always fills the space,
+          at the cost of the admin's exact zoom/position below that width. */}
+      <style>{`@media (max-width: 700px) { .nbd-auth-hero { background-size: cover !important; } }`}</style>
       {settings.background_url && (
         <div style={{ position: "absolute", inset: 0, background: "rgba(255,255,255,0.55)" }} />
       )}
