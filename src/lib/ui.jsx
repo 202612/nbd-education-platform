@@ -120,6 +120,7 @@ export const HERO_STAGE_HEIGHT = "clamp(420px, 46vw, 520px)";
 export function AuthHero() {
   const { settings } = useSiteSettings();
   const [brandLogos, setBrandLogos] = useState([]);
+  const [bgLoaded, setBgLoaded] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -132,20 +133,25 @@ export function AuthHero() {
     return () => { cancelled = true; };
   }, []);
 
-  const backgroundStyle = settings.background_url
-    ? {
-        backgroundImage: `url(${settings.background_url})`,
-        backgroundSize: `${settings.background_zoom * 100}%`,
-        backgroundPosition: `${settings.background_position_x}% ${settings.background_position_y}%`,
-        backgroundRepeat: "no-repeat",
-      }
-    : { background: navy[100] };
+  // The hero photo is a few hundred KB — on a mobile connection it doesn't
+  // appear instantly, so without this the pale fallback colour shows first
+  // and the photo just pops in abruptly once it's downloaded. Preloading it
+  // and fading it in once ready turns that pop into a smooth reveal instead.
+  useEffect(() => {
+    setBgLoaded(false);
+    if (!settings.background_url) return;
+    let cancelled = false;
+    const img = new Image();
+    img.onload = () => { if (!cancelled) setBgLoaded(true); };
+    img.src = settings.background_url;
+    return () => { cancelled = true; };
+  }, [settings.background_url]);
 
   return (
     <div
       className="nbd-auth-hero"
       style={{
-        ...backgroundStyle,
+        background: navy[100],
         padding: "0 24px",
         position: "relative",
         height: HERO_STAGE_HEIGHT,
@@ -157,7 +163,21 @@ export function AuthHero() {
           on a narrow phone that it barely covers the banner. Forcing "cover"
           below the breakpoint guarantees the photo always fills the space,
           at the cost of the admin's exact zoom/position below that width. */}
-      <style>{`@media (max-width: 700px) { .nbd-auth-hero { background-size: cover !important; } }`}</style>
+      <style>{`@media (max-width: 700px) { .nbd-auth-hero-photo { background-size: cover !important; } }`}</style>
+      {settings.background_url && (
+        <div
+          className="nbd-auth-hero-photo"
+          style={{
+            position: "absolute", inset: 0,
+            backgroundImage: `url(${settings.background_url})`,
+            backgroundSize: `${settings.background_zoom * 100}%`,
+            backgroundPosition: `${settings.background_position_x}% ${settings.background_position_y}%`,
+            backgroundRepeat: "no-repeat",
+            opacity: bgLoaded ? 1 : 0,
+            transition: "opacity 500ms ease",
+          }}
+        />
+      )}
       {settings.background_url && (
         <div style={{ position: "absolute", inset: 0, background: "rgba(255,255,255,0.55)" }} />
       )}
