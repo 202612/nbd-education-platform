@@ -1252,8 +1252,7 @@ function CustomerDashboard({ brands, completedStepIds, onStepCompleted, particip
         }}
       >
         <div>
-          <h2 style={{ fontSize: 28, fontWeight: 700, margin: "0 0 6px" }}>Welcome back{participantName ? `, ${participantName.split(" ")[0]}` : ""}</h2>
-          <p style={{ fontSize: 17, margin: 0, opacity: 0.9 }}>Your training, for the brands you stock.</p>
+          <h2 style={{ fontSize: 28, fontWeight: 700, margin: 0 }}>Welcome back{participantName ? `, ${participantName.split(" ")[0]}` : ""}</h2>
         </div>
         <div style={{ display: "flex", gap: 32 }}>
           <div>
