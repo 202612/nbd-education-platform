@@ -273,7 +273,7 @@ function MatchPairsQuestion({ q, value, onChange, feedback }) {
   return (
     <div>
       <div style={{ fontSize: 13, color: grey, marginBottom: 10 }}>Drag the dot from each item on the left to its match on the right.</div>
-      <div ref={containerRef} style={{ position: "relative", display: "flex", columnGap: 120, rowGap: 24, flexWrap: "wrap", maxWidth: 680 }}>
+      <div ref={containerRef} style={{ position: "relative", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, maxWidth: 680 }}>
         <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none", overflow: "visible" }}>
           {q.left.map((item, i) => {
             const rightId = mapping[item.id];
@@ -299,7 +299,7 @@ function MatchPairsQuestion({ q, value, onChange, feedback }) {
           )}
         </svg>
 
-        <div style={{ flex: "1 1 220px", display: "flex", flexDirection: "column", gap: 10, position: "relative", zIndex: 1 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, position: "relative", zIndex: 1 }}>
           {q.left.map((item, i) => {
             const matched = !!mapping[item.id];
             const color = matched ? lineColor(item.id, i) : LINE_COLORS[i % LINE_COLORS.length];
@@ -338,7 +338,7 @@ function MatchPairsQuestion({ q, value, onChange, feedback }) {
           })}
         </div>
 
-        <div style={{ flex: "1 1 220px", display: "flex", flexDirection: "column", gap: 10, position: "relative", zIndex: 1 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, position: "relative", zIndex: 1 }}>
           {q.right.map((item) => {
             const pairedLeftId = q.left.find((l) => mapping[l.id] === item.id)?.id;
             const pairedLeftIndex = q.left.findIndex((l) => mapping[l.id] === item.id);
@@ -482,7 +482,7 @@ function DragChoiceQuestion({ q, value, onChange, feedback }) {
   return (
     <div>
       <div style={{ fontSize: 13, color: grey, marginBottom: 10 }}>Drag the dot from the question to the correct answer.</div>
-      <div ref={containerRef} style={{ position: "relative", display: "flex", alignItems: "center", columnGap: 120, rowGap: 24, flexWrap: "wrap", maxWidth: 680 }}>
+      <div ref={containerRef} style={{ position: "relative", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, alignItems: "center", maxWidth: 680 }}>
         <svg style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none", overflow: "visible" }}>
           {value != null && positions.bubble && positions["O:" + value] && (
             <g>
@@ -496,11 +496,11 @@ function DragChoiceQuestion({ q, value, onChange, feedback }) {
           )}
         </svg>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 10, position: "relative", zIndex: 1 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, position: "relative", zIndex: 1 }}>
           <div
             style={{
               position: "relative", background: "#fff", border: `2px solid ${color}`, borderRadius: 16,
-              padding: "14px 20px", fontSize: 16, fontWeight: 600, color: navy[900], maxWidth: 260,
+              padding: "12px 14px", fontSize: 15, fontWeight: 600, color: navy[900], flex: 1, minWidth: 0,
               boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
             }}
           >
@@ -518,7 +518,7 @@ function DragChoiceQuestion({ q, value, onChange, feedback }) {
           />
         </div>
 
-        <div style={{ flex: "1 1 200px", display: "flex", flexDirection: "column", gap: 10, position: "relative", zIndex: 1 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, position: "relative", zIndex: 1 }}>
           {q.options.map((opt, oi) => {
             const isChosen = value === oi;
             const optColor = isChosen ? color : navy[700];
