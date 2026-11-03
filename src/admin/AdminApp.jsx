@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   ShieldCheck, Building2, Clock, PlayCircle, CheckCircle2, Award, Plus, Trash2, Check, X,
-  ChevronRight, ChevronLeft, ArrowUp, ArrowDown, Search, Loader2, Sparkles, Users, Image as ImageIcon, Pencil, Palette, Eye,
+  ChevronRight, ChevronLeft, ArrowUp, ArrowDown, Search, Loader2, Sparkles, Users, Image as ImageIcon, Pencil, Palette, Eye, Radio,
 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
 import { navy, Badge, StatCard } from "../lib/ui.jsx";
@@ -1708,6 +1708,179 @@ function AdminReporting() {
   );
 }
 
+// ================= WEBINARS =================
+
+function formatDateTimeLocal(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  return `${d.toLocaleDateString("en-IE", { day: "numeric", month: "short", year: "numeric" })}, ${d.toLocaleTimeString("en-IE", { hour: "numeric", minute: "2-digit" })}`;
+}
+
+function AddWebinarForm({ brands, initial, onCancel, onSave }) {
+  const [brandId, setBrandId] = useState(initial?.brand_id || brands[0]?.id || "");
+  const [title, setTitle] = useState(initial?.title || "");
+  const [videoUrl, setVideoUrl] = useState(initial?.video_url || "");
+  // datetime-local inputs want "YYYY-MM-DDTHH:mm" in local time, not an ISO string.
+  const [scheduledLocal, setScheduledLocal] = useState(() => {
+    if (!initial?.scheduled_at) return "";
+    const d = new Date(initial.scheduled_at);
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  });
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  async function save() {
+    if (!brandId || !title.trim() || !videoUrl.trim() || !scheduledLocal) {
+      setError("Fill in a brand, title, YouTube link, and date/time first.");
+      return;
+    }
+    setSaving(true);
+    setError("");
+    const payload = {
+      brand_id: brandId,
+      title: title.trim(),
+      video_url: videoUrl.trim(),
+      scheduled_at: new Date(scheduledLocal).toISOString(),
+    };
+    const { error: err } = initial
+      ? await supabase.from("webinars").update(payload).eq("id", initial.id)
+      : await supabase.from("webinars").insert(payload);
+    setSaving(false);
+    if (err) { setError(err.message); return; }
+    onSave();
+  }
+
+  return (
+    <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 16, marginBottom: 16 }}>
+      <label style={{ fontSize: 13, color: "#8a8074", display: "block", marginBottom: 4 }}>Brand</label>
+      <select value={brandId} onChange={(e) => setBrandId(e.target.value)} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 15 }}>
+        {brands.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+      </select>
+      <label style={{ fontSize: 13, color: "#8a8074", display: "block", marginBottom: 4 }}>Title</label>
+      <input spellCheck lang="en-GB" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. K18 Spring Launch Webinar" style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 15, boxSizing: "border-box" }} />
+      <label style={{ fontSize: 13, color: "#8a8074", display: "block", marginBottom: 4 }}>YouTube link</label>
+      <input value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://youtube.com/watch?v=…" style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 15, boxSizing: "border-box" }} />
+      <label style={{ fontSize: 13, color: "#8a8074", display: "block", marginBottom: 4 }}>Goes live at</label>
+      <input type="datetime-local" value={scheduledLocal} onChange={(e) => setScheduledLocal(e.target.value)} style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 15, boxSizing: "border-box" }} />
+      <p style={{ fontSize: 13, color: "#a39a8d", margin: "0 0 14px" }}>Customers see a countdown until this time, then can watch it. The link itself is never sent to their browser before then.</p>
+      {error && <div style={{ color: "#a3372f", fontSize: 13, marginBottom: 12 }}>{error}</div>}
+      <div style={{ display: "flex", gap: 8 }}>
+        <button className="nbd-btn nbd-btn--primary" onClick={save} disabled={saving}>{saving ? "Saving…" : initial ? "Save changes" : "Add webinar"}</button>
+        <button className="nbd-btn nbd-btn--outline" onClick={onCancel}>Cancel</button>
+      </div>
+    </div>
+  );
+}
+
+function WebinarAttendanceList({ webinar }) {
+  if (webinar.attendance.length === 0) {
+    return <p style={{ fontSize: 14, color: "#a39a8d", margin: "10px 0 0" }}>No one has watched this yet.</p>;
+  }
+  return (
+    <div style={{ marginTop: 10, borderTop: "1px solid #f0ece3", paddingTop: 10 }}>
+      <div style={{ fontSize: 13, color: "#8a8074", marginBottom: 6, fontWeight: 600 }}>Watched by ({webinar.attendance.length})</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        {webinar.attendance.map((a) => (
+          <div key={a.id} style={{ fontSize: 14, color: navy[900], display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+            <span>{a.app_users?.name || "—"} <span style={{ color: "#a39a8d" }}>({a.app_users?.accounts?.company_name || "—"})</span></span>
+            <span style={{ color: "#8a8074", whiteSpace: "nowrap" }}>{formatDateTimeLocal(a.watched_at)}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AdminWebinars() {
+  const [brands, setBrands] = useState(null);
+  const [webinars, setWebinars] = useState(null);
+  const [showAdd, setShowAdd] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [expandedId, setExpandedId] = useState(null);
+
+  async function load() {
+    const [{ data: brandRows }, { data: webinarRows }, { data: attendanceRows }] = await Promise.all([
+      supabase.from("brands").select("id,name").order("name"),
+      supabase.from("webinars").select("id,brand_id,title,video_url,scheduled_at,brands(name)").order("scheduled_at", { ascending: false }),
+      supabase.from("webinar_attendance").select("id,webinar_id,watched_at,app_users(name,email,accounts(company_name))"),
+    ]);
+    setBrands(brandRows || []);
+    const byWebinar = {};
+    for (const a of attendanceRows || []) {
+      (byWebinar[a.webinar_id] ||= []).push(a);
+    }
+    setWebinars((webinarRows || []).map((w) => ({ ...w, attendance: byWebinar[w.id] || [] })));
+  }
+  useEffect(() => { load(); }, []);
+
+  async function deleteWebinar(id) {
+    if (!window.confirm("Delete this webinar? This also removes its attendance history. This can't be undone.")) return;
+    await supabase.from("webinars").delete().eq("id", id);
+    load();
+  }
+
+  if (!brands || !webinars) return <div style={{ color: "#8a8074", fontSize: 15 }}>Loading webinars…</div>;
+
+  const editing = webinars.find((w) => w.id === editingId);
+  const now = Date.now();
+
+  return (
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+        <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: 0 }}>Live Webinars</h2>
+        {!showAdd && !editing && brands.length > 0 && (
+          <button className="nbd-btn nbd-btn--primary" onClick={() => setShowAdd(true)}><Plus size={14} /> Add webinar</button>
+        )}
+      </div>
+      <p style={{ color: "#8a8074", fontSize: 15, margin: "-10px 0 20px" }}>
+        Every webinar ever scheduled stays listed here, with who watched it and when — customers only see it until they've watched it, then it drops off their list.
+      </p>
+
+      {brands.length === 0 && <div style={{ color: "#8a8074", fontSize: 15, marginBottom: 16 }}>Add a brand first (Brands & modules) before scheduling a webinar for it.</div>}
+
+      {showAdd && <AddWebinarForm brands={brands} onCancel={() => setShowAdd(false)} onSave={() => { setShowAdd(false); load(); }} />}
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {webinars.map((w) => {
+          if (editing && editing.id === w.id) {
+            return (
+              <AddWebinarForm
+                key={w.id}
+                brands={brands}
+                initial={w}
+                onCancel={() => setEditingId(null)}
+                onSave={() => { setEditingId(null); load(); }}
+              />
+            );
+          }
+          const isLive = new Date(w.scheduled_at).getTime() <= now;
+          return (
+            <div key={w.id} style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: "13px 16px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <Radio size={18} color={isLive ? "#4a6b3d" : navy[700]} />
+                <div style={{ flex: 1, minWidth: 0, cursor: "pointer" }} onClick={() => setExpandedId(expandedId === w.id ? null : w.id)}>
+                  <div style={{ fontWeight: 500, color: navy[900], fontSize: 16 }}>{w.title}</div>
+                  <div style={{ fontSize: 14, color: "#8a8074" }}>
+                    {w.brands?.name} · {formatDateTimeLocal(w.scheduled_at)} {isLive && <span style={{ color: "#4a6b3d", fontWeight: 600 }}>· Live</span>}
+                    {" · "}{w.attendance.length} watched
+                  </div>
+                </div>
+                <div className="nbd-actions">
+                  <button onClick={() => setEditingId(w.id)} title="Edit webinar"><Pencil size={15} /></button>
+                  <button onClick={() => deleteWebinar(w.id)} className="nbd-danger" title="Delete webinar"><Trash2 size={15} /></button>
+                </div>
+              </div>
+              {expandedId === w.id && <WebinarAttendanceList webinar={w} />}
+            </div>
+          );
+        })}
+        {webinars.length === 0 && <div style={{ color: "#8a8074", fontSize: 15 }}>No webinars scheduled yet.</div>}
+      </div>
+    </div>
+  );
+}
+
 function AdminOverview() {
   const [stats, setStats] = useState(null);
   useEffect(() => {
@@ -1820,6 +1993,7 @@ export default function AdminApp() {
     { id: "customers", label: "Customers", icon: Building2 },
     { id: "assistant", label: "AI assistant", icon: Sparkles },
     { id: "brands", label: "Brands & modules", icon: PlayCircle },
+    { id: "webinars", label: "Live Webinars", icon: Radio },
     { id: "approvals", label: "Approvals", icon: Clock, badge: pendingCount },
     { id: "certificates", label: "Certificates", icon: Award },
     { id: "design", label: "Design", icon: Palette },
@@ -1845,6 +2019,7 @@ export default function AdminApp() {
         {tab === "customers" && <AdminCustomersLive />}
         {tab === "assistant" && <AdminAssistantPreview />}
         {tab === "brands" && <AdminBrandsLive />}
+        {tab === "webinars" && <AdminWebinars />}
         {tab === "approvals" && <AdminApprovalsLive />}
         {tab === "certificates" && <CertificatesTab />}
         {tab === "design" && <DesignTab />}

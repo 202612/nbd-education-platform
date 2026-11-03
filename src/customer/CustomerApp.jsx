@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
-  PlayCircle, CheckCircle2, Lock, Award, Users, Trash2, Loader2, ChevronLeft, Clock, Mail, Download, Settings, GripVertical, BookOpen, Maximize2, BarChart3, XCircle,
+  PlayCircle, CheckCircle2, Lock, Award, Users, Trash2, Loader2, ChevronLeft, Clock, Mail, Download, Settings, GripVertical, BookOpen, Maximize2, BarChart3, XCircle, Radio,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
@@ -1230,6 +1230,175 @@ function CustomerBrandDetail({ brand, completedStepIds, onStepCompleted, partici
   );
 }
 
+// ================= LIVE WEBINARS =================
+
+function useCountdown(targetIso) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, []);
+  const target = new Date(targetIso).getTime();
+  const msLeft = Math.max(0, target - now);
+  const totalSeconds = Math.floor(msLeft / 1000);
+  return {
+    isPast: msLeft <= 0,
+    days: Math.floor(totalSeconds / 86400),
+    hours: Math.floor((totalSeconds % 86400) / 3600),
+    minutes: Math.floor((totalSeconds % 3600) / 60),
+    seconds: totalSeconds % 60,
+  };
+}
+
+function WebinarDetail({ webinar, onBack, onRefetch }) {
+  const countdown = useCountdown(webinar.scheduled_at);
+  const watchedRef = useRef(false);
+
+  // Once the countdown hits zero, the webinar prop we were handed is stale
+  // (it was shaped before now, so video_url was still withheld) — refetch
+  // so the real link comes through instead of waiting on a manual refresh.
+  useEffect(() => {
+    if (countdown.isPast && !webinar.is_live) onRefetch();
+  }, [countdown.isPast, webinar.is_live, onRefetch]);
+
+  useEffect(() => {
+    if (webinar.is_live && webinar.video_url && !watchedRef.current) {
+      watchedRef.current = true;
+      supabase.rpc("record_webinar_watched", { p_webinar_id: webinar.id });
+    }
+  }, [webinar.is_live, webinar.video_url, webinar.id]);
+
+  const youtubeId = webinar.video_url ? extractYouTubeId(webinar.video_url) : null;
+
+  return (
+    <div>
+      <button
+        onClick={onBack}
+        style={{
+          display: "inline-flex", alignItems: "center", gap: 6, fontSize: 15, fontWeight: 600,
+          color: navy[700], marginBottom: 14, background: "#fff", border: "1px solid #e4dfd6",
+          borderRadius: 999, padding: "8px 16px", cursor: "pointer",
+        }}
+      >
+        <ChevronLeft size={15} /> Back
+      </button>
+      <h3 style={{ fontSize: 19, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>{webinar.title}</h3>
+      <p style={{ color: "#8a8074", fontSize: 15, margin: "0 0 18px" }}>{webinar.brand_name}</p>
+
+      {webinar.is_live && youtubeId ? (
+        <YouTubePlayer videoId={youtubeId} onEnded={() => {}} />
+      ) : (
+        <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 14, padding: "40px 24px", textAlign: "center" }}>
+          <Radio size={28} color={navy[700]} style={{ marginBottom: 14 }} />
+          <div style={{ fontSize: 14, color: "#8a8074", marginBottom: 14, textTransform: "uppercase", letterSpacing: 1, fontWeight: 700 }}>Available in</div>
+          <div style={{ display: "flex", justifyContent: "center", gap: 20, marginBottom: 18 }}>
+            {[["Days", countdown.days], ["Hrs", countdown.hours], ["Min", countdown.minutes], ["Sec", countdown.seconds]].map(([label, val]) => (
+              <div key={label}>
+                <div style={{ fontSize: 32, fontWeight: 700, color: navy[900], fontVariantNumeric: "tabular-nums" }}>{String(val).padStart(2, "0")}</div>
+                <div style={{ fontSize: 12, color: "#a39a8d", textTransform: "uppercase", letterSpacing: 1 }}>{label}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ color: "#8a8074", fontSize: 15 }}>{formatDateTime(webinar.scheduled_at)}</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CustomerWebinars() {
+  const [webinars, setWebinars] = useState(null);
+  const [openBrandId, setOpenBrandId] = useState(null);
+  const [openWebinarId, setOpenWebinarId] = useState(null);
+
+  async function load() {
+    const { data } = await supabase.rpc("get_my_webinars");
+    setWebinars(data || []);
+  }
+  useEffect(() => { load(); }, []);
+
+  if (webinars === null) {
+    return <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#8a8074", fontSize: 16 }}><Loader2 size={16} className="spin" /> Loading webinars…</div>;
+  }
+
+  const byBrand = [];
+  const byBrandMap = {};
+  for (const w of webinars) {
+    if (!byBrandMap[w.brand_id]) {
+      byBrandMap[w.brand_id] = { brand_id: w.brand_id, brand_name: w.brand_name, brand_logo_url: w.brand_logo_url, items: [] };
+      byBrand.push(byBrandMap[w.brand_id]);
+    }
+    byBrandMap[w.brand_id].items.push(w);
+  }
+
+  const openBrand = byBrand.find((b) => b.brand_id === openBrandId);
+  const openWebinar = openBrand?.items.find((w) => w.id === openWebinarId);
+
+  if (openBrand && openWebinar) {
+    return <WebinarDetail webinar={openWebinar} onBack={() => setOpenWebinarId(null)} onRefetch={load} />;
+  }
+
+  if (openBrand) {
+    return (
+      <div>
+        <button
+          onClick={() => setOpenBrandId(null)}
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 6, fontSize: 15, fontWeight: 600,
+            color: navy[700], marginBottom: 14, background: "#fff", border: "1px solid #e4dfd6",
+            borderRadius: 999, padding: "8px 16px", cursor: "pointer",
+          }}
+        >
+          <ChevronLeft size={15} /> All brands
+        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
+          {openBrand.brand_logo_url && <img src={openBrand.brand_logo_url} alt={openBrand.brand_name} style={{ height: 32, maxWidth: 100, objectFit: "contain" }} />}
+          <h3 style={{ fontSize: 20, fontWeight: 600, color: navy[900], margin: 0 }}>{openBrand.brand_name} — Live Webinars</h3>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {openBrand.items.map((w) => (
+            <button
+              key={w.id}
+              onClick={() => setOpenWebinarId(w.id)}
+              className="nbd-rowcard"
+              style={{ display: "flex", alignItems: "center", gap: 12, textAlign: "left", width: "100%", background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: "13px 16px", cursor: "pointer" }}
+            >
+              <Radio size={18} color={w.is_live ? "#4a6b3d" : navy[700]} />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 500, color: navy[900], fontSize: 16 }}>{w.title}</div>
+                <div style={{ fontSize: 14, color: "#8a8074" }}>{w.is_live ? "Available now" : formatDateTime(w.scheduled_at)}</div>
+              </div>
+              {w.is_live && <Badge tone="gold">Live</Badge>}
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Live Webinars</h2>
+      <p style={{ color: "#8a8074", fontSize: 16, margin: "0 0 20px" }}>Upcoming and available webinars for the brands you stock.</p>
+      {byBrand.length === 0 && <div style={{ color: "#8a8074", fontSize: 16 }}>No upcoming webinars right now — check back soon.</div>}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20 }}>
+        {byBrand.map((b) => {
+          const liveCount = b.items.filter((w) => w.is_live).length;
+          return (
+            <button key={b.brand_id} onClick={() => setOpenBrandId(b.brand_id)} style={{ textAlign: "left", background: "#fff", border: "1px solid #e4dfd6", borderRadius: 16, padding: 20, cursor: "pointer" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                {b.brand_logo_url && <img src={b.brand_logo_url} alt={b.brand_name} style={{ height: 28, maxWidth: 90, objectFit: "contain" }} />}
+                <div style={{ fontWeight: 700, fontSize: 16, color: navy[900] }}>{b.brand_name}</div>
+              </div>
+              <div style={{ fontSize: 14, color: "#8a8074" }}>{b.items.length} webinar{b.items.length === 1 ? "" : "s"}{liveCount > 0 ? ` · ${liveCount} live now` : ""}</div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ================= DASHBOARD =================
 
 function CustomerDashboard({ brands, completedStepIds, onStepCompleted, participantName, openBrandId, setOpenBrandId }) {
@@ -1866,6 +2035,7 @@ export default function CustomerApp({ user, account }) {
         <div className="nbd-shell-nav">
           {[
             { id: "training", label: "Training", icon: PlayCircle },
+            { id: "webinars", label: "Live Webinars", icon: Radio },
             { id: "certificates", label: "Certificates", icon: Award },
             { id: "team", label: "Team", icon: Users },
             ...(isHolder ? [{ id: "progress", label: "Team progress", icon: BarChart3 }] : []),
@@ -1899,6 +2069,7 @@ export default function CustomerApp({ user, account }) {
             setOpenBrandId={setOpenBrandId}
           />
         )}
+        {tab === "webinars" && <CustomerWebinars />}
         {tab === "certificates" && <MyCertificates userId={user.id} />}
         {tab === "brochure" && <EducationBrochure />}
         {tab === "team" && (
