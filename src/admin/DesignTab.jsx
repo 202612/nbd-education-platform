@@ -381,17 +381,23 @@ function BrandHeroLogos({ draft, setDraft }) {
 
       <div style={{ fontWeight: 700, color: navy[900], fontSize: 14, margin: "20px 0 10px" }}>Brand logo files</div>
       <p style={{ fontSize: 13, color: grey, margin: "0 0 12px" }}>
-        Upload a logo for a new brand, replace an existing one, or remove one — or just drag a file onto a row. Removing a logo automatically takes it off the landing page.
+        Upload a logo for a new brand, replace an existing one, or remove one — or just drag a file onto a row. You can also click a row and paste (Cmd+V) an image you've copied. Removing a logo automatically takes it off the landing page.
       </p>
       {brands.map((b) => (
         <div
           key={b.id}
+          tabIndex={0}
           onDragOver={(e) => { e.preventDefault(); setDragOverId(b.id); }}
           onDragLeave={() => setDragOverId((id) => (id === b.id ? null : id))}
           onDrop={(e) => {
             e.preventDefault();
             setDragOverId(null);
             const file = e.dataTransfer.files?.[0];
+            if (file) uploadLogo(b, file);
+          }}
+          onPaste={(e) => {
+            const item = Array.from(e.clipboardData?.items || []).find((it) => it.type.startsWith("image/"));
+            const file = item?.getAsFile();
             if (file) uploadLogo(b, file);
           }}
           style={{
