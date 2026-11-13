@@ -88,7 +88,6 @@ export function BrandMarquee({ brands, onLogoClick, height = 48 }) {
         @keyframes nbd-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
         .nbd-marquee-track { display: flex; width: max-content; animation: nbd-marquee 28s linear infinite; }
         .nbd-marquee-track:hover { animation-play-state: paused; }
-        @media (prefers-reduced-motion: reduce) { .nbd-marquee-track { animation: none; } }
       `}</style>
       <div className="nbd-marquee-track">
         {items.map((b, i) => {

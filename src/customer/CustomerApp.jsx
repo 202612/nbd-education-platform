@@ -1401,11 +1401,80 @@ function CustomerWebinars() {
 
 // ================= DASHBOARD =================
 
+// Picks the brand to feature in "Continue where you left off": the
+// most-recently-touched brand that's neither untouched nor finished. Falls
+// back to the first not-yet-started brand (nothing to "continue" yet) and
+// finally to null if every brand is either finished or has no steps.
+function pickContinueBrand(brands, completedStepIds) {
+  let best = null, bestTime = null;
+  for (const b of brands) {
+    const total = b.steps.length;
+    if (!total) continue;
+    const done = b.steps.filter((s) => completedStepIds.has(s.id)).length;
+    if (done === 0 || done === total) continue;
+    let last = null;
+    for (const s of b.steps) {
+      const ts = completedStepIds.get(s.id);
+      if (ts && (!last || ts > last)) last = ts;
+    }
+    if (!best || (last && (!bestTime || last > bestTime))) { best = { brand: b, done, total, started: true }; bestTime = last; }
+  }
+  if (best) return best;
+  const notStarted = brands.find((b) => b.steps.length > 0 && b.steps.filter((s) => completedStepIds.has(s.id)).length === 0);
+  if (notStarted) return { brand: notStarted, done: 0, total: notStarted.steps.length, started: false };
+  return null;
+}
+
+function ContinueCard({ pick, onOpenBrand }) {
+  if (!pick) return null;
+  const { brand, done, total, started } = pick;
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  return (
+    <button
+      onClick={() => onOpenBrand(brand.id)}
+      style={{
+        display: "flex", alignItems: "center", gap: 20, width: "100%", textAlign: "left",
+        background: "#fff", border: "1px solid #e4dfd6", borderRadius: 16, padding: 20,
+        marginBottom: 20, cursor: "pointer",
+      }}
+    >
+      <div style={{ width: 64, height: 64, borderRadius: 12, border: "1px solid #e4dfd6", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, padding: 10 }}>
+        {brand.logo_url ? (
+          <img src={brand.logo_url} alt={brand.name} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
+        ) : (
+          <div style={{ fontWeight: 700, fontSize: 14, color: navy[900] }}>{brand.name}</div>
+        )}
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", color: "#a39a8d", marginBottom: 4 }}>
+          {started ? "Continue where you left off" : "Pick up next"}
+        </div>
+        <div style={{ fontWeight: 700, fontSize: 18, color: navy[900], marginBottom: 8 }}>{brand.name}</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ flex: 1, maxWidth: 240, height: 6, background: "#e4dfd6", borderRadius: 999, overflow: "hidden" }}>
+            <div style={{ height: "100%", width: `${pct}%`, background: navy[700] }} />
+          </div>
+          <div style={{ fontSize: 13, color: "#8a8074", whiteSpace: "nowrap" }}>{done} of {total} steps complete</div>
+        </div>
+      </div>
+      <div
+        style={{
+          flexShrink: 0, background: navy[900], color: "#fff", fontSize: 14, fontWeight: 700,
+          padding: "10px 22px", borderRadius: 8, whiteSpace: "nowrap",
+        }}
+      >
+        {started ? "Continue" : "Start"}
+      </div>
+    </button>
+  );
+}
+
 function CustomerHome({ brands, completedStepIds, participantName, onOpenBrand }) {
   const totalSteps = brands.reduce((s, b) => s + b.steps.length, 0);
   const totalDone = brands.reduce((s, b) => s + b.steps.filter((st) => completedStepIds.has(st.id)).length, 0);
   const certifiedCount = brands.filter((b) => b.steps.length > 0 && b.steps.every((st) => completedStepIds.has(st.id))).length;
   const overallPct = totalSteps ? Math.round((totalDone / totalSteps) * 100) : 0;
+  const continuePick = pickContinueBrand(brands, completedStepIds);
 
   return (
     <div>
@@ -1444,6 +1513,8 @@ function CustomerHome({ brands, completedStepIds, participantName, onOpenBrand }
           </div>
         </div>
       </div>
+
+      <ContinueCard pick={continuePick} onOpenBrand={onOpenBrand} />
 
       {brands.length > 0 && (
         <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 16, padding: "24px 0" }}>
