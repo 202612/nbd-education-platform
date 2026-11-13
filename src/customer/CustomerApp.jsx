@@ -1518,9 +1518,6 @@ function CustomerHome({ brands, completedStepIds, participantName, onOpenBrand }
 
       {brands.length > 0 && (
         <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 16, padding: "24px 0" }}>
-          <div style={{ padding: "0 28px", marginBottom: 14, fontSize: 13, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", color: "#a39a8d" }}>
-            Your brands
-          </div>
           <BrandMarquee brands={brands} onLogoClick={onOpenBrand} height={44} />
         </div>
       )}
