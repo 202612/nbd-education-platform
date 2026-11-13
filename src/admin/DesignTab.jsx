@@ -201,6 +201,14 @@ function BrandHeroLogos({ draft, setDraft }) {
 
   async function uploadLogo(brand, file) {
     setNotice("");
+    // The file picker's "images only" filter and drag-and-drop can both be
+    // bypassed (e.g. choosing "All Files" in the OS dialog) — a PDF or any
+    // non-image file would upload "successfully" but just show as a broken
+    // image everywhere, since a browser can't render a PDF as an <img>.
+    if (!file.type.startsWith("image/")) {
+      setNotice(`"${file.name}" isn't an image file (it's a ${file.type || "non-image"} file) — logos need to be a PNG, JPG, SVG, or WebP. If you only have a PDF, convert it to a PNG first.`);
+      return;
+    }
     const path = `${brand.id}/${Date.now()}-${file.name}`;
     const { error: uploadError } = await supabase.storage.from("brand-logos").upload(path, file);
     if (uploadError) { setNotice(uploadError.message); return; }
