@@ -182,6 +182,7 @@ function BrandHeroLogos({ draft, setDraft }) {
   const [selectedId, setSelectedId] = useState(null);
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState("");
+  const [dragOverId, setDragOverId] = useState(null);
   const stageRef = React.useRef(null);
 
   async function reload() {
@@ -372,11 +373,28 @@ function BrandHeroLogos({ draft, setDraft }) {
 
       <div style={{ fontWeight: 700, color: navy[900], fontSize: 14, margin: "20px 0 10px" }}>Brand logo files</div>
       <p style={{ fontSize: 13, color: grey, margin: "0 0 12px" }}>
-        Upload a logo for a new brand, replace an existing one, or remove one. Removing a logo automatically takes it off the landing page.
+        Upload a logo for a new brand, replace an existing one, or remove one — or just drag a file onto a row. Removing a logo automatically takes it off the landing page.
       </p>
       {brands.map((b) => (
-        <div key={b.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "10px 0", borderBottom: "1px solid #f0ebe0" }}>
-          <div style={{ width: 56, height: 44, background: navy[100], borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        <div
+          key={b.id}
+          onDragOver={(e) => { e.preventDefault(); setDragOverId(b.id); }}
+          onDragLeave={() => setDragOverId((id) => (id === b.id ? null : id))}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragOverId(null);
+            const file = e.dataTransfer.files?.[0];
+            if (file) uploadLogo(b, file);
+          }}
+          style={{
+            display: "flex", alignItems: "center", gap: 14, padding: "10px 8px", borderBottom: "1px solid #f0ebe0",
+            borderRadius: 8,
+            background: dragOverId === b.id ? "#f2f7e9" : "transparent",
+            outline: dragOverId === b.id ? "2px dashed #a8cb63" : "none",
+            outlineOffset: -2,
+          }}
+        >
+          <div style={{ width: 56, height: 44, background: "#fff", border: "1px solid #e4dfd6", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
             {b.logo_url ? (
               <img src={b.logo_url} alt={b.name} style={{ maxHeight: 36, maxWidth: 48, objectFit: "contain" }} />
             ) : (
