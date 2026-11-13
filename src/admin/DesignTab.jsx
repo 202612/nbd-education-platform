@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Loader2, Upload, Trash2, Image as ImageIcon } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
-import { navy, gold, grey, useSiteSettings } from "../lib/ui.jsx";
+import { navy, gold, grey, useSiteSettings, PageBanner } from "../lib/ui.jsx";
 
 function Slider({ label, value, onChange, min = 0, max = 100, step = 1 }) {
   return (
@@ -451,10 +451,7 @@ export default function DesignTab() {
 
   return (
     <div>
-      <h2 style={{ fontSize: 20, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Design</h2>
-      <p style={{ color: grey, fontSize: 14, margin: "0 0 20px" }}>
-        Customize the hero banner on the sign-in and request-access screens. The form section below it always stays as-is.
-      </p>
+      <PageBanner title="Design" subtitle="Customise the hero banner on the sign-in and request-access screens." colorIndex={3} />
 
       <LogoEditor draft={draft} setDraft={setDraft} uploading={uploadingLogo} onUpload={(e) => e.target.files[0] && uploadFile(e.target.files[0], setUploadingLogo, "logo_url")} />
       <BackgroundEditor draft={draft} setDraft={setDraft} uploading={uploadingBg} onUpload={(e) => e.target.files[0] && uploadFile(e.target.files[0], setUploadingBg, "background_url")} />

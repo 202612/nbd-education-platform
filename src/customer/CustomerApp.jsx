@@ -5,7 +5,7 @@ import {
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { supabase } from "../lib/supabaseClient.js";
-import { navy, gold, grey, Badge, WORDMARK_SRC } from "../lib/ui.jsx";
+import { navy, gold, grey, Badge, WORDMARK_SRC, BRAND_ACCENTS } from "../lib/ui.jsx";
 
 // NBD-brand accent colours cycled per connection line, so each matched pair
 // gets its own recognisable colour across both columns and the line itself.
@@ -1413,6 +1413,7 @@ function CustomerDashboard({ brands, completedStepIds, onStepCompleted, particip
     <div>
       <div
         style={{
+          position: "relative", overflow: "hidden",
           background: `linear-gradient(120deg, ${navy[700]} 0%, ${navy[500]} 100%)`,
           borderRadius: 18,
           padding: "36px 40px",
@@ -1425,7 +1426,9 @@ function CustomerDashboard({ brands, completedStepIds, onStepCompleted, particip
           gap: 24,
         }}
       >
-        <div>
+        <div style={{ position: "absolute", right: -40, top: -40, width: 180, height: 180, borderRadius: "50%", background: "rgba(255,255,255,0.1)" }} />
+        <div style={{ position: "absolute", right: 60, bottom: -70, width: 120, height: 120, borderRadius: "50%", background: "rgba(255,255,255,0.08)" }} />
+        <div style={{ position: "relative" }}>
           <h2 style={{ fontSize: 28, fontWeight: 700, margin: 0 }}>Welcome back{participantName ? `, ${participantName.split(" ")[0]}` : ""}</h2>
         </div>
         <div style={{ display: "flex", gap: 32 }}>
@@ -1446,11 +1449,11 @@ function CustomerDashboard({ brands, completedStepIds, onStepCompleted, particip
 
       {brands.length === 0 && <div style={{ color: "#8a8074", fontSize: 16 }}>No brands approved on this account yet.</div>}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
-        {brands.map((b) => {
+        {brands.map((b, i) => {
           const done = b.steps.filter((s) => completedStepIds.has(s.id)).length;
           const pct = b.steps.length ? Math.round((done / b.steps.length) * 100) : 0;
           return (
-            <button key={b.id} onClick={() => setOpenBrandId(b.id)} style={{ textAlign: "left", background: "#fff", border: "1px solid #e4dfd6", borderRadius: 16, padding: 0, overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+            <button key={b.id} onClick={() => setOpenBrandId(b.id)} style={{ textAlign: "left", background: "#fff", border: "1px solid #e4dfd6", borderTop: `4px solid ${BRAND_ACCENTS[i % BRAND_ACCENTS.length]}`, borderRadius: 16, padding: 0, overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
               <div style={{ height: 140, display: "flex", alignItems: "center", justifyContent: "center", background: "#fff", borderBottom: "1px solid #f0ece3", padding: 24 }}>
                 {b.logo_url ? (
                   <img src={b.logo_url} alt={b.name} style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }} />

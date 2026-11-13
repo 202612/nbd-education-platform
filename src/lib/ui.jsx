@@ -61,13 +61,48 @@ export function Badge({ children, tone = "navy" }) {
   return <span style={{ ...tones[tone], fontSize: 14, fontWeight: 500, padding: "3px 10px", borderRadius: 999 }}>{children}</span>;
 }
 
-export function StatCard({ label, value, icon: Icon }) {
+export function StatCard({ label, value, icon: Icon, tint }) {
+  const onColor = !!tint;
   return (
-    <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 12, padding: "16px 18px", flex: 1, minWidth: 140 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#8a8074", fontSize: 15, marginBottom: 8 }}>
+    <div
+      style={{
+        background: tint || "#fff", border: tint ? "none" : "1px solid #e4dfd6", borderRadius: 12,
+        padding: "16px 18px", flex: 1, minWidth: 140,
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 8, color: onColor ? "rgba(255,255,255,0.85)" : "#8a8074", fontSize: 15, marginBottom: 8 }}>
         <Icon size={15} /> {label}
       </div>
-      <div style={{ fontSize: 28, fontWeight: 600, color: navy[900] }}>{value}</div>
+      <div style={{ fontSize: 28, fontWeight: 600, color: onColor ? "#fff" : navy[900] }}>{value}</div>
+    </div>
+  );
+}
+
+// On-brand accent set for giving stat cards / tiles distinct personality
+// without reaching for colours outside the actual NBD palette — variations
+// of the brand green, the logo's own brown, and charcoal.
+export const BRAND_ACCENTS = ["#201b15", "#4d6b2c", "#7d6657", "#5e8f1e"];
+
+const PAGE_BANNER_GRADIENTS = [
+  `linear-gradient(120deg, ${navy[700]} 0%, ${navy[300]} 100%)`,
+  "linear-gradient(120deg, #201b15 0%, #4a4030 100%)",
+  "linear-gradient(120deg, #7d6657 0%, #a68d78 100%)",
+  "linear-gradient(120deg, #4d6b2c 0%, #7a9c4a 100%)",
+];
+
+// A small, repeatable "fun but on-brand" page header — replaces a plain
+// <h2> with a colour-blocked banner, cycling through a fixed on-brand
+// gradient set (index 0-3) so pages feel distinct without introducing any
+// colour outside the actual NBD palette.
+export function PageBanner({ title, subtitle, colorIndex = 0 }) {
+  const gradient = PAGE_BANNER_GRADIENTS[colorIndex % PAGE_BANNER_GRADIENTS.length];
+  const isDark = colorIndex % 4 !== 0; // the green gradient reads fine with dark text; the rest need white
+  return (
+    <div style={{ position: "relative", overflow: "hidden", borderRadius: 16, background: gradient, padding: "26px 28px", marginBottom: 20 }}>
+      <div style={{ position: "absolute", right: -30, top: -30, width: 140, height: 140, borderRadius: "50%", background: "rgba(255,255,255,0.14)" }} />
+      <div style={{ position: "absolute", right: 40, bottom: -50, width: 90, height: 90, borderRadius: "50%", background: "rgba(255,255,255,0.1)" }} />
+      <h2 style={{ position: "relative", fontSize: 24, fontWeight: 800, color: isDark ? "#fff" : navy[900], margin: "0 0 4px" }}>{title}</h2>
+      {subtitle && <p style={{ position: "relative", fontSize: 14, fontWeight: 600, color: isDark ? "rgba(255,255,255,0.8)" : "rgba(32,27,21,0.7)", margin: 0 }}>{subtitle}</p>}
     </div>
   );
 }

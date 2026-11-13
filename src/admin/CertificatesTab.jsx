@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Loader2, Search, Download, Award, Upload } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
-import { navy } from "../lib/ui.jsx";
+import { navy, PageBanner } from "../lib/ui.jsx";
 
 // Record of every certificate the platform has issued. Admins have full RLS
 // access to `certificates` and to the `certificates` storage bucket, so both
@@ -102,10 +102,7 @@ export default function CertificatesTab() {
 
   return (
     <div>
-      <h2 style={{ fontSize: 20, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Certificates</h2>
-      <p style={{ color: "#8a8074", fontSize: 14, margin: "0 0 18px" }}>
-        Every certificate issued, newest first. A row is created automatically the moment a learner finishes a brand.
-      </p>
+      <PageBanner title="Certificates" subtitle="Every certificate issued, newest first — created automatically the moment a learner finishes a brand." colorIndex={2} />
 
       {rows === null && (
         <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#8a8074", fontSize: 15 }}>

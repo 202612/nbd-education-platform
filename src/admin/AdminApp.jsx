@@ -4,7 +4,7 @@ import {
   ChevronRight, ChevronLeft, ArrowUp, ArrowDown, Search, Loader2, Sparkles, Users, Image as ImageIcon, Pencil, Palette, Eye, Radio,
 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
-import { navy, Badge, StatCard } from "../lib/ui.jsx";
+import { navy, Badge, StatCard, BRAND_ACCENTS, PageBanner } from "../lib/ui.jsx";
 import { AdminAssistant } from "./AdminMock.jsx";
 import DesignTab from "./DesignTab.jsx";
 import CertificatesTab from "./CertificatesTab.jsx";
@@ -923,11 +923,10 @@ function AdminBrandsLive() {
 
   return (
     <div>
-      <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Brands & modules</h2>
-      <p style={{ color: "#8a8074", fontSize: 16, margin: "0 0 18px" }}>Each brand is a sequence of steps customers work through in order.</p>
+      <PageBanner title="Brands & modules" subtitle="Each brand is a sequence of steps customers work through in order." colorIndex={2} />
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
-        {brands.map((b) => (
-          <button key={b.id} className="nbd-rowcard" onClick={() => setActiveBrandId(b.id)}>
+        {brands.map((b, i) => (
+          <button key={b.id} className="nbd-rowcard" onClick={() => setActiveBrandId(b.id)} style={{ borderLeft: `4px solid ${BRAND_ACCENTS[i % BRAND_ACCENTS.length]}` }}>
             {b.logo_url ? (
               <img src={b.logo_url} alt={b.name} style={{ height: 32, width: 32, objectFit: "contain", borderRadius: 6, flexShrink: 0 }} />
             ) : (
@@ -1039,8 +1038,7 @@ function AdminApprovalsLive() {
 
   return (
     <div>
-      <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Account approvals</h2>
-      <p style={{ color: "#8a8074", fontSize: 16, margin: "0 0 20px" }}>Pick which brands to grant, then approve or decline.</p>
+      <PageBanner title="Account approvals" subtitle="Pick which brands to grant, then approve or decline." colorIndex={1} />
       {toast && <div style={{ background: "#eef5e6", color: "#4d6b2c", fontSize: 15, padding: "8px 14px", borderRadius: 8, marginBottom: 14 }}>{toast}</div>}
       {pending.length === 0 && <div style={{ color: "#8a8074", fontSize: 16 }}>No pending requests.</div>}
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -1480,8 +1478,7 @@ function AdminCustomersLive() {
 
   return (
     <div>
-      <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Customers</h2>
-      <p style={{ color: "#8a8074", fontSize: 16, margin: "0 0 16px" }}>Every account, organised by salon name and customer number.</p>
+      <PageBanner title="Customers" subtitle="Every account, organised by salon name and customer number." colorIndex={3} />
       <div style={{ position: "relative", marginBottom: 16 }}>
         <Search size={15} color="#a39a8d" style={{ position: "absolute", left: 12, top: 11 }} />
         <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search by salon name or customer number…" style={{ width: "100%", padding: "9px 12px 9px 34px", border: "1px solid #ddd5cb", borderRadius: 8, fontSize: 16, boxSizing: "border-box" }} />
@@ -1679,10 +1676,10 @@ function AdminReporting() {
   return (
     <div>
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 20 }}>
-        <StatCard label="Steps completed this week" value={report.completionsThisWeek} icon={PlayCircle} />
-        <StatCard label="Certificates this week" value={report.certsThisWeek} icon={Award} />
-        <StatCard label="Total number of certificates completed" value={report.totalCerts} icon={CheckCircle2} />
-        <StatCard label="Completion rate" value={`${report.completionRate}%`} icon={Award} />
+        <StatCard label="Steps completed this week" value={report.completionsThisWeek} icon={PlayCircle} tint={BRAND_ACCENTS[3]} />
+        <StatCard label="Certificates this week" value={report.certsThisWeek} icon={Award} tint={BRAND_ACCENTS[1]} />
+        <StatCard label="Total number of certificates completed" value={report.totalCerts} icon={CheckCircle2} tint={BRAND_ACCENTS[2]} />
+        <StatCard label="Completion rate" value={`${report.completionRate}%`} icon={Award} tint={BRAND_ACCENTS[0]} />
       </div>
       <p style={{ fontSize: 13, color: "#a39a8d", margin: "-14px 0 20px" }}>
         {report.completedCount} of {report.enrolledCount} enrolled staff have earned at least one certificate.
@@ -1827,15 +1824,12 @@ function AdminWebinars() {
 
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-        <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: 0 }}>Live Webinars</h2>
-        {!showAdd && !editing && brands.length > 0 && (
+      <PageBanner title="Live Webinars" subtitle="Every webinar ever scheduled stays listed here, with who watched it and when." colorIndex={1} />
+      {!showAdd && !editing && brands.length > 0 && (
+        <div style={{ textAlign: "right", marginTop: -10, marginBottom: 16 }}>
           <button className="nbd-btn nbd-btn--primary" onClick={() => setShowAdd(true)}><Plus size={14} /> Add webinar</button>
-        )}
-      </div>
-      <p style={{ color: "#8a8074", fontSize: 15, margin: "-10px 0 20px" }}>
-        Every webinar ever scheduled stays listed here, with who watched it and when — customers only see it until they've watched it, then it drops off their list.
-      </p>
+        </div>
+      )}
 
       {brands.length === 0 && <div style={{ color: "#8a8074", fontSize: 15, marginBottom: 16 }}>Add a brand first (Brands & modules) before scheduling a webinar for it.</div>}
 
@@ -1924,12 +1918,12 @@ function AdminOverview() {
 
   return (
     <div>
-      <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: "0 0 16px" }}>Overview</h2>
+      <PageBanner title="Overview" subtitle="What's happening across your brands." colorIndex={0} />
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 24 }}>
-        <StatCard label="Brands" value={stats?.brands ?? "…"} icon={ShieldCheck} />
-        <StatCard label="Hours of weekly activity" value={stats ? `${stats.weeklyHours} hrs` : "…"} icon={Clock} />
-        <StatCard label="Customers" value={stats?.customers ?? "…"} icon={Building2} />
-        <StatCard label="Pending approvals" value={stats?.pending ?? "…"} icon={Clock} />
+        <StatCard label="Brands" value={stats?.brands ?? "…"} icon={ShieldCheck} tint={BRAND_ACCENTS[0]} />
+        <StatCard label="Hours of weekly activity" value={stats ? `${stats.weeklyHours} hrs` : "…"} icon={Clock} tint={BRAND_ACCENTS[1]} />
+        <StatCard label="Customers" value={stats?.customers ?? "…"} icon={Building2} tint={BRAND_ACCENTS[2]} />
+        <StatCard label="Pending approvals" value={stats?.pending ?? "…"} icon={Clock} tint={BRAND_ACCENTS[3]} />
       </div>
 
       <h3 style={{ fontSize: 18, fontWeight: 600, color: navy[900], margin: "0 0 14px" }}>Reporting</h3>
