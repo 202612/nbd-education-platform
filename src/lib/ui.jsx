@@ -72,6 +72,49 @@ export function StatCard({ label, value, icon: Icon }) {
   );
 }
 
+// A continuously auto-scrolling strip of brand logos (the "trusted by" /
+// Squarespace-style marquee pattern). The list is duplicated once so the
+// loop point is invisible — the track scrolls exactly one copy's width
+// then resets, which looks seamless since copy #2 is identical to #1.
+// Pass onLogoClick to make each logo clickable (e.g. jump to that brand's
+// training); omit it for a purely decorative strip (e.g. the public login page).
+export function BrandMarquee({ brands, onLogoClick, height = 48 }) {
+  const list = brands.filter((b) => b.logo_url);
+  if (list.length === 0) return null;
+  const items = [...list, ...list];
+  return (
+    <div style={{ overflow: "hidden", position: "relative", maskImage: "linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent)" }}>
+      <style>{`
+        @keyframes nbd-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+        .nbd-marquee-track { display: flex; width: max-content; animation: nbd-marquee 28s linear infinite; }
+        .nbd-marquee-track:hover { animation-play-state: paused; }
+        @media (prefers-reduced-motion: reduce) { .nbd-marquee-track { animation: none; } }
+      `}</style>
+      <div className="nbd-marquee-track">
+        {items.map((b, i) => {
+          const Tag = onLogoClick ? "button" : "div";
+          return (
+            <Tag
+              key={`${b.id}-${i}`}
+              onClick={onLogoClick ? () => onLogoClick(b.id) : undefined}
+              title={b.name}
+              style={{
+                display: "flex", alignItems: "center", justifyContent: "center",
+                padding: "0 36px", background: "none", border: "none", cursor: onLogoClick ? "pointer" : "default",
+                flexShrink: 0, opacity: 0.7, transition: "opacity .15s ease",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.opacity = 1; }}
+              onMouseLeave={(e) => { e.currentTarget.style.opacity = 0.7; }}
+            >
+              <img src={b.logo_url} alt={b.name} style={{ height, maxWidth: 120, objectFit: "contain", display: "block" }} />
+            </Tag>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function Logo({ size = 40 }) {
   return <img src={MARK_SRC} alt="National Beauty Distribution" style={{ height: size, width: "auto", display: "block", flexShrink: 0 }} />;
 }
@@ -121,6 +164,7 @@ export const HERO_STAGE_HEIGHT = "clamp(420px, 46vw, 520px)";
 export function AuthHero() {
   const { settings } = useSiteSettings();
   const [brandLogos, setBrandLogos] = useState([]);
+  const [allBrands, setAllBrands] = useState([]);
   const [bgReady, setBgReady] = useState(false);
 
   useEffect(() => {
@@ -131,6 +175,12 @@ export function AuthHero() {
       .not("logo_url", "is", null)
       .eq("hero_visible", true)
       .then(({ data }) => { if (!cancelled) setBrandLogos(data || []); });
+    supabase
+      .from("brands")
+      .select("id,name,logo_url")
+      .not("logo_url", "is", null)
+      .order("name")
+      .then(({ data }) => { if (!cancelled) setAllBrands(data || []); });
     return () => { cancelled = true; };
   }, []);
 
@@ -150,6 +200,7 @@ export function AuthHero() {
   }, []);
 
   return (
+    <>
     <div
       className="nbd-auth-hero"
       style={{
@@ -273,5 +324,11 @@ export function AuthHero() {
         </div>
       </div>
     </div>
+    {allBrands.length > 0 && (
+      <div style={{ background: "#fff", borderBottom: "1px solid #e4dfd6", padding: "20px 0" }}>
+        <BrandMarquee brands={allBrands} />
+      </div>
+    )}
+    </>
   );
 }

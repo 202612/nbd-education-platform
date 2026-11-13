@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
-  PlayCircle, CheckCircle2, Lock, Award, Users, Trash2, Loader2, ChevronLeft, Clock, Mail, Download, Settings, GripVertical, BookOpen, Maximize2, BarChart3, XCircle, Radio,
+  PlayCircle, CheckCircle2, Lock, Award, Users, Trash2, Loader2, ChevronLeft, Clock, Mail, Download, Settings, GripVertical, BookOpen, Maximize2, BarChart3, XCircle, Radio, Home,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { supabase } from "../lib/supabaseClient.js";
-import { navy, gold, grey, Badge, WORDMARK_SRC } from "../lib/ui.jsx";
+import { navy, gold, grey, Badge, WORDMARK_SRC, BrandMarquee } from "../lib/ui.jsx";
 
 // NBD-brand accent colours cycled per connection line, so each matched pair
 // gets its own recognisable colour across both columns and the line itself.
@@ -1401,9 +1401,7 @@ function CustomerWebinars() {
 
 // ================= DASHBOARD =================
 
-function CustomerDashboard({ brands, completedStepIds, onStepCompleted, participantName, openBrandId, setOpenBrandId }) {
-  const brand = brands.find((b) => b.id === openBrandId);
-  if (brand) return <CustomerBrandDetail brand={brand} completedStepIds={completedStepIds} onStepCompleted={onStepCompleted} participantName={participantName} onBack={() => setOpenBrandId(null)} />;
+function CustomerHome({ brands, completedStepIds, participantName, onOpenBrand }) {
   const totalSteps = brands.reduce((s, b) => s + b.steps.length, 0);
   const totalDone = brands.reduce((s, b) => s + b.steps.filter((st) => completedStepIds.has(st.id)).length, 0);
   const certifiedCount = brands.filter((b) => b.steps.length > 0 && b.steps.every((st) => completedStepIds.has(st.id))).length;
@@ -1413,6 +1411,7 @@ function CustomerDashboard({ brands, completedStepIds, onStepCompleted, particip
     <div>
       <div
         style={{
+          position: "relative", overflow: "hidden",
           background: `linear-gradient(120deg, ${navy[700]} 0%, ${navy[500]} 100%)`,
           borderRadius: 18,
           padding: "36px 40px",
@@ -1425,10 +1424,12 @@ function CustomerDashboard({ brands, completedStepIds, onStepCompleted, particip
           gap: 24,
         }}
       >
-        <div>
+        <div style={{ position: "absolute", right: -40, top: -40, width: 180, height: 180, borderRadius: "50%", background: "rgba(255,255,255,0.1)" }} />
+        <div style={{ position: "absolute", right: 60, bottom: -70, width: 120, height: 120, borderRadius: "50%", background: "rgba(255,255,255,0.08)" }} />
+        <div style={{ position: "relative" }}>
           <h2 style={{ fontSize: 28, fontWeight: 700, margin: 0 }}>Welcome back{participantName ? `, ${participantName.split(" ")[0]}` : ""}</h2>
         </div>
-        <div style={{ display: "flex", gap: 32 }}>
+        <div style={{ position: "relative", display: "flex", gap: 32 }}>
           <div>
             <div style={{ fontSize: 32, fontWeight: 700 }}>{brands.length}</div>
             <div style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: 1, opacity: 0.85 }}>Brand{brands.length === 1 ? "" : "s"}</div>
@@ -1444,44 +1445,109 @@ function CustomerDashboard({ brands, completedStepIds, onStepCompleted, particip
         </div>
       </div>
 
-      {brands.length === 0 && <div style={{ color: "#8a8074", fontSize: 16 }}>No brands approved on this account yet.</div>}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
-        {brands.map((b) => {
-          const done = b.steps.filter((s) => completedStepIds.has(s.id)).length;
-          const pct = b.steps.length ? Math.round((done / b.steps.length) * 100) : 0;
-          return (
-            <button key={b.id} onClick={() => setOpenBrandId(b.id)} style={{ textAlign: "left", background: "#fff", border: "1px solid #e4dfd6", borderRadius: 16, padding: 0, overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
-              <div style={{ height: 140, display: "flex", alignItems: "center", justifyContent: "center", background: "#fff", borderBottom: "1px solid #f0ece3", padding: 24 }}>
-                {b.logo_url ? (
-                  <img src={b.logo_url} alt={b.name} style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }} />
-                ) : (
-                  <div style={{ fontWeight: 700, fontSize: 24, color: navy[900] }}>{b.name}</div>
-                )}
-              </div>
-              <div style={{ padding: 20 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                  <div style={{ fontWeight: 700, fontSize: 17, color: navy[900] }}>{b.name}</div>
-                  {b.steps.length > 0 && (
-                    <div
-                      style={{
-                        flexShrink: 0, fontSize: 14, fontWeight: 700, padding: "8px 18px", borderRadius: 999,
-                        background: done === 0 ? navy[700] : pct === 100 ? "#4a6b3d" : navy[500],
-                        color: "#fff",
-                      }}
-                    >
-                      {done === 0 ? "Start" : pct === 100 ? "Completed" : "Resume"}
-                    </div>
+      {brands.length > 0 && (
+        <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 16, padding: "24px 0" }}>
+          <div style={{ padding: "0 28px", marginBottom: 14, fontSize: 13, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", color: "#a39a8d" }}>
+            Your brands
+          </div>
+          <BrandMarquee brands={brands} onLogoClick={onOpenBrand} height={44} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+const TRAINING_FILTERS = ["All", "Not started", "In progress", "Completed"];
+
+function CustomerTraining({ brands, completedStepIds, onStepCompleted, participantName, openBrandId, setOpenBrandId }) {
+  const [filter, setFilter] = useState("All");
+  const brand = brands.find((b) => b.id === openBrandId);
+  if (brand) return <CustomerBrandDetail brand={brand} completedStepIds={completedStepIds} onStepCompleted={onStepCompleted} participantName={participantName} onBack={() => setOpenBrandId(null)} />;
+
+  const rows = brands.map((b) => {
+    const done = b.steps.filter((s) => completedStepIds.has(s.id)).length;
+    const pct = b.steps.length ? Math.round((done / b.steps.length) * 100) : 0;
+    const status = done === 0 ? "Not started" : pct === 100 ? "Completed" : "In progress";
+    return { brand: b, done, pct, status };
+  });
+  const filtered = filter === "All" ? rows : rows.filter((r) => r.status === filter);
+
+  return (
+    <div>
+      <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Training</h2>
+      <p style={{ color: "#8a8074", fontSize: 16, margin: "0 0 20px" }}>Every brand you're approved for, and where you stand with each.</p>
+
+      {brands.length === 0 ? (
+        <div style={{ color: "#8a8074", fontSize: 16 }}>No brands approved on this account yet.</div>
+      ) : (
+        <>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 18 }}>
+            {TRAINING_FILTERS.map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                style={{
+                  padding: "7px 16px", borderRadius: 999, fontSize: 14, fontWeight: 600, cursor: "pointer",
+                  border: `1px solid ${filter === f ? navy[900] : "#e4dfd6"}`,
+                  background: filter === f ? navy[900] : "#fff",
+                  color: filter === f ? "#fff" : "#6b6155",
+                }}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 14, overflow: "hidden" }}>
+            {filtered.length === 0 && (
+              <div style={{ padding: "32px 24px", textAlign: "center", color: "#a39a8d", fontSize: 15 }}>No brands match this filter.</div>
+            )}
+            {filtered.map(({ brand: b, done, pct, status }, i) => (
+              <button
+                key={b.id}
+                onClick={() => setOpenBrandId(b.id)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 18, width: "100%", textAlign: "left",
+                  padding: "18px 24px", background: "none", border: "none", cursor: "pointer",
+                  borderTop: i === 0 ? "none" : "1px solid #f0ece3",
+                }}
+              >
+                <div style={{ width: 56, height: 56, borderRadius: 10, border: "1px solid #e4dfd6", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, padding: 8 }}>
+                  {b.logo_url ? (
+                    <img src={b.logo_url} alt={b.name} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
+                  ) : (
+                    <div style={{ fontWeight: 700, fontSize: 14, color: navy[900] }}>{b.name}</div>
                   )}
                 </div>
-                <div style={{ fontSize: 15, color: "#8a8074", marginBottom: 12 }}>{done} of {b.steps.length} steps complete</div>
-                <div style={{ height: 8, background: "#e4dfd6", borderRadius: 999, overflow: "hidden" }}>
-                  <div style={{ height: "100%", width: `${pct}%`, background: pct === 100 ? "#4a6b3d" : navy[500] }} />
+
+                <div style={{ flex: "1 1 180px", minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, fontSize: 17, color: navy[900] }}>{b.name}</div>
+                  <div style={{ fontSize: 14, color: "#8a8074" }}>{done} of {b.steps.length} steps complete</div>
                 </div>
-              </div>
-            </button>
-          );
-        })}
-      </div>
+
+                <div className="nbd-training-progress" style={{ width: 160, flexShrink: 0 }}>
+                  <div style={{ height: 6, background: "#e4dfd6", borderRadius: 999, overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: `${pct}%`, background: pct === 100 ? "#4a6b3d" : navy[700] }} />
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    flexShrink: 0, fontSize: 13, fontWeight: 700, padding: "6px 14px", borderRadius: 999, whiteSpace: "nowrap",
+                    background: status === "Not started" ? "#f1efe9" : status === "Completed" ? "#eef5e2" : "#eef2f8",
+                    color: status === "Not started" ? "#8a8074" : status === "Completed" ? "#4a6b3d" : navy[900],
+                  }}
+                >
+                  {status}
+                </div>
+
+                <ChevronLeft size={16} color="#c7bfae" style={{ transform: "rotate(180deg)", flexShrink: 0 }} />
+              </button>
+            ))}
+          </div>
+          <style>{`@media (max-width: 700px) { .nbd-training-progress { display: none; } }`}</style>
+        </>
+      )}
     </div>
   );
 }
@@ -1933,7 +1999,7 @@ function AccountSettings({ user, account, onNameSaved }) {
 // ================= ROOT =================
 
 export default function CustomerApp({ user, account }) {
-  const [tab, setTab] = useState("training");
+  const [tab, setTab] = useState("home");
   const [displayName, setDisplayName] = useState(user.name);
   const [brands, setBrands] = useState(null);
   const [completedStepIds, setCompletedStepIds] = useState(new Map());
@@ -2034,6 +2100,7 @@ export default function CustomerApp({ user, account }) {
       {!isDrilledIntoTraining && (
         <div className="nbd-shell-nav">
           {[
+            { id: "home", label: "Home", icon: Home },
             { id: "training", label: "Training", icon: PlayCircle },
             { id: "webinars", label: "Live Webinars", icon: Radio },
             { id: "certificates", label: "Certificates", icon: Award },
@@ -2059,8 +2126,16 @@ export default function CustomerApp({ user, account }) {
         </div>
       )}
       <div style={{ flex: 1, minWidth: 0 }}>
+        {tab === "home" && (
+          <CustomerHome
+            brands={approvedBrands}
+            completedStepIds={completedStepIds}
+            participantName={displayName}
+            onOpenBrand={(brandId) => { setTab("training"); setOpenBrandId(brandId); }}
+          />
+        )}
         {tab === "training" && (
-          <CustomerDashboard
+          <CustomerTraining
             brands={approvedBrands}
             completedStepIds={completedStepIds}
             onStepCompleted={handleStepCompleted}
