@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { ShieldCheck, Loader2, Trash2 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
-import { navy, grey, PageBanner } from "../lib/ui.jsx";
+import { navy, grey } from "../lib/ui.jsx";
 
 // Admin-only two-factor auth management, using Supabase Auth's built-in TOTP
 // support. Enrolling here means the "Enter your 2FA code" challenge in
@@ -73,7 +73,10 @@ export default function AdminSecurity() {
 
   return (
     <div>
-      <PageBanner title="Security" subtitle="Two-factor authentication for admin logins." colorIndex={0} />
+      <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Security</h2>
+      <p style={{ color: grey, fontSize: 16, margin: "0 0 24px" }}>
+        Two-factor authentication for admin logins. Once enabled, signing in needs your password plus a 6-digit code from an authenticator app (Google Authenticator, Authy, 1Password, etc).
+      </p>
 
       {verified.length > 0 && !enrolling && (
         <div style={{ background: "#f2f7e9", border: "1px solid #cde3ab", borderRadius: 10, padding: 16, marginBottom: 20 }}>
