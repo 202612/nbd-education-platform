@@ -786,8 +786,8 @@ function QuizStep({ step, onComplete, onBack, nextStep, onGoToNext }) {
         onClick={onBack}
         style={{
           display: "inline-flex", alignItems: "center", gap: 6, fontSize: 15, fontWeight: 600,
-          color: navy[700], marginBottom: 14, background: "#fff", border: "1px solid #e4dfd6",
-          borderRadius: 999, padding: "8px 16px", cursor: "pointer",
+          color: navy[900], marginBottom: 14, background: "#fff", border: "1px solid #e4dfd6",
+          borderRadius: 10, padding: "8px 16px", cursor: "pointer",
         }}
       >
         <ChevronLeft size={15} /> Back
@@ -831,11 +831,11 @@ function QuizStep({ step, onComplete, onBack, nextStep, onGoToNext }) {
       })}
       {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 10 }}>{error}</div>}
       {result === "fail" ? (
-        <button onClick={tryAgain} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 8, padding: "9px 18px", fontSize: 16, fontWeight: 500 }}>
+        <button onClick={tryAgain} style={{ background: navy[900], color: "#fff", border: "none", borderRadius: 8, padding: "9px 18px", fontSize: 16, fontWeight: 500 }}>
           Try again
         </button>
       ) : (
-        <button onClick={submit} disabled={submitting} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 8, padding: "9px 18px", fontSize: 16, fontWeight: 500, opacity: submitting ? 0.7 : 1 }}>
+        <button onClick={submit} disabled={submitting} style={{ background: navy[900], color: "#fff", border: "none", borderRadius: 8, padding: "9px 18px", fontSize: 16, fontWeight: 500, opacity: submitting ? 0.7 : 1 }}>
           {submitting ? "Checking…" : "Submit answers"}
         </button>
       )}
@@ -889,8 +889,8 @@ function VideoStep({ step, onComplete, onBack }) {
         onClick={onBack}
         style={{
           display: "inline-flex", alignItems: "center", gap: 6, fontSize: 15, fontWeight: 600,
-          color: navy[700], marginBottom: 14, background: "#fff", border: "1px solid #e4dfd6",
-          borderRadius: 999, padding: "8px 16px", cursor: "pointer",
+          color: navy[900], marginBottom: 14, background: "#fff", border: "1px solid #e4dfd6",
+          borderRadius: 10, padding: "8px 16px", cursor: "pointer",
         }}
       >
         <ChevronLeft size={15} /> Back
@@ -1031,8 +1031,8 @@ function CertificateStep({ step, brand, participantName, onComplete, onBack }) {
         onClick={onBack}
         style={{
           display: "inline-flex", alignItems: "center", gap: 6, fontSize: 15, fontWeight: 600,
-          color: navy[700], marginBottom: 14, background: "#fff", border: "1px solid #e4dfd6",
-          borderRadius: 999, padding: "8px 16px", cursor: "pointer",
+          color: navy[900], marginBottom: 14, background: "#fff", border: "1px solid #e4dfd6",
+          borderRadius: 10, padding: "8px 16px", cursor: "pointer",
         }}
       >
         <ChevronLeft size={15} /> Back
@@ -1091,7 +1091,7 @@ function CertificateStep({ step, brand, participantName, onComplete, onBack }) {
             <button
               onClick={downloadPdf}
               disabled={downloading}
-              style={{ display: "inline-flex", alignItems: "center", gap: 8, background: navy[700], color: "#fff", border: "none", borderRadius: 8, padding: "10px 20px", fontSize: 16, fontWeight: 500, opacity: downloading ? 0.7 : 1 }}
+              style={{ display: "inline-flex", alignItems: "center", gap: 8, background: navy[900], color: "#fff", border: "none", borderRadius: 8, padding: "10px 20px", fontSize: 16, fontWeight: 500, opacity: downloading ? 0.7 : 1 }}
             >
               <Download size={15} /> {downloading ? "Preparing PDF…" : "Download certificate (PDF)"}
             </button>
@@ -1160,8 +1160,8 @@ function CustomerBrandDetail({ brand, completedStepIds, onStepCompleted, partici
         onClick={onBack}
         style={{
           display: "inline-flex", alignItems: "center", gap: 6, fontSize: 15, fontWeight: 600,
-          color: navy[700], marginBottom: 14, background: "#fff", border: "1px solid #e4dfd6",
-          borderRadius: 999, padding: "8px 16px", cursor: "pointer",
+          color: navy[900], marginBottom: 14, background: "#fff", border: "1px solid #e4dfd6",
+          borderRadius: 10, padding: "8px 16px", cursor: "pointer",
         }}
       >
         <ChevronLeft size={15} /> All brands
@@ -1276,8 +1276,8 @@ function WebinarDetail({ webinar, onBack, onRefetch }) {
         onClick={onBack}
         style={{
           display: "inline-flex", alignItems: "center", gap: 6, fontSize: 15, fontWeight: 600,
-          color: navy[700], marginBottom: 14, background: "#fff", border: "1px solid #e4dfd6",
-          borderRadius: 999, padding: "8px 16px", cursor: "pointer",
+          color: navy[900], marginBottom: 14, background: "#fff", border: "1px solid #e4dfd6",
+          borderRadius: 10, padding: "8px 16px", cursor: "pointer",
         }}
       >
         <ChevronLeft size={15} /> Back
@@ -1345,8 +1345,8 @@ function CustomerWebinars() {
           onClick={() => setOpenBrandId(null)}
           style={{
             display: "inline-flex", alignItems: "center", gap: 6, fontSize: 15, fontWeight: 600,
-            color: navy[700], marginBottom: 14, background: "#fff", border: "1px solid #e4dfd6",
-            borderRadius: 999, padding: "8px 16px", cursor: "pointer",
+            color: navy[900], marginBottom: 14, background: "#fff", border: "1px solid #e4dfd6",
+            borderRadius: 10, padding: "8px 16px", cursor: "pointer",
           }}
         >
           <ChevronLeft size={15} /> All brands
@@ -1675,7 +1675,7 @@ function CustomerTeam({ team, currentUserId, onAdd, onRemove, isHolder = false }
             <input required value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First name" style={{ flex: 1, minWidth: 120, padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 16 }} />
             <input required value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last name" style={{ flex: 1, minWidth: 120, padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 16 }} />
             <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" style={{ flex: 1, minWidth: 140, padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 16 }} />
-            <button onClick={add} disabled={busy} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 15, opacity: busy ? 0.7 : 1 }}>Add</button>
+            <button onClick={add} disabled={busy} style={{ background: navy[900], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 15, opacity: busy ? 0.7 : 1 }}>Add</button>
           </div>
           {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 12 }}>{error}</div>}
         </>
@@ -1784,7 +1784,7 @@ function MyCertificates({ userId }) {
               <button
                 onClick={() => download(r)}
                 disabled={openingId === r.id}
-                style={{ display: "flex", alignItems: "center", gap: 6, background: navy[700], color: "#fff", border: "none", borderRadius: 8, padding: "9px 16px", fontSize: 15, fontWeight: 500 }}
+                style={{ display: "flex", alignItems: "center", gap: 6, background: navy[900], color: "#fff", border: "none", borderRadius: 8, padding: "9px 16px", fontSize: 15, fontWeight: 500 }}
               >
                 <Download size={15} /> {openingId === r.id ? "Opening…" : "Download"}
               </button>
@@ -1908,7 +1908,7 @@ function AccountSettings({ user, account, onNameSaved }) {
         <p style={{ fontSize: 14, color: "#a39a8d", margin: "0 0 12px" }}>This is the name printed on your certificates.</p>
         {nameError && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 10 }}>{nameError}</div>}
         {nameNotice && <div style={{ color: "#4d6b2c", fontSize: 15, marginBottom: 10 }}>{nameNotice}</div>}
-        <button type="submit" disabled={nameSaving} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 15, opacity: nameSaving ? 0.7 : 1 }}>{nameSaving ? "Saving…" : "Save name"}</button>
+        <button type="submit" disabled={nameSaving} style={{ background: navy[900], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 15, opacity: nameSaving ? 0.7 : 1 }}>{nameSaving ? "Saving…" : "Save name"}</button>
       </form>
 
       <form onSubmit={saveAccount} style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 18 }}>
@@ -1924,7 +1924,7 @@ function AccountSettings({ user, account, onNameSaved }) {
         <p style={{ fontSize: 14, color: "#a39a8d", margin: "0 0 12px" }}>This doesn't change the email you sign in with — that stays as-is.</p>
         {accountError && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 10 }}>{accountError}</div>}
         {accountNotice && <div style={{ color: "#4d6b2c", fontSize: 15, marginBottom: 10 }}>{accountNotice}</div>}
-        <button type="submit" disabled={accountSaving} style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 15, opacity: accountSaving ? 0.7 : 1 }}>{accountSaving ? "Saving…" : "Save company details"}</button>
+        <button type="submit" disabled={accountSaving} style={{ background: navy[900], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 15, opacity: accountSaving ? 0.7 : 1 }}>{accountSaving ? "Saving…" : "Save company details"}</button>
       </form>
     </div>
   );
@@ -2045,7 +2045,7 @@ export default function CustomerApp({ user, account }) {
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left", padding: "9px 12px", borderRadius: 8, fontSize: 16, marginBottom: 4, background: tab === t.id ? navy[100] : "transparent", color: tab === t.id ? navy[900] : "#6b6155", fontWeight: tab === t.id ? 500 : 400, border: "none" }}
+              style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left", padding: "9px 12px", borderRadius: 8, fontSize: 16, marginBottom: 4, background: tab === t.id ? navy[900] : "transparent", color: tab === t.id ? "#fff" : "#6b6155", fontWeight: tab === t.id ? 500 : 400, border: "none" }}
             >
               <t.icon size={16} /> {t.label}
             </button>

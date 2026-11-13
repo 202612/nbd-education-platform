@@ -36,12 +36,12 @@ const ADMIN_BTN_CSS = `
   transition: background .12s ease, border-color .12s ease, color .12s ease, box-shadow .12s ease;
 }
 .nbd-btn:disabled { opacity: .4; cursor: default; }
-.nbd-btn--ghost { color: #5e8f1e; padding: 6px 10px; margin-left: -10px; }
-.nbd-btn--ghost:hover:not(:disabled) { background: #f2f7e9; }
+.nbd-btn--ghost { color: #201b15; padding: 6px 10px; margin-left: -10px; }
+.nbd-btn--ghost:hover:not(:disabled) { background: #f1efe9; }
 .nbd-btn--outline { color: #333333; border-color: #ddd5cb; background: #fff; }
-.nbd-btn--outline:hover:not(:disabled) { border-color: #a8cb63; background: #f2f7e9; color: #5e8f1e; }
-.nbd-btn--primary { color: #fff; background: #5e8f1e; }
-.nbd-btn--primary:hover:not(:disabled) { background: #517d1a; box-shadow: 0 1px 4px rgba(94,143,30,.35); }
+.nbd-btn--outline:hover:not(:disabled) { border-color: #c7bfae; background: #f7f4ee; color: #201b15; }
+.nbd-btn--primary { color: #fff; background: #201b15; }
+.nbd-btn--primary:hover:not(:disabled) { background: #332b20; box-shadow: 0 1px 4px rgba(32,27,21,.3); }
 .nbd-btn--danger { color: #a3372f; border-color: #f0c9c2; background: #fff; }
 .nbd-btn--danger:hover:not(:disabled) { background: #fdecea; border-color: #e0a89f; }
 .nbd-btn--danger-solid { color: #fff; background: #a3372f; }
@@ -2004,7 +2004,7 @@ export default function AdminApp() {
       <style>{ADMIN_BTN_CSS}</style>
       <div className="nbd-shell-nav">
         {tabs.map((t) => (
-          <button key={t.id} onClick={() => setTab(t.id)} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left", padding: "9px 12px", borderRadius: 8, fontSize: 16, marginBottom: 4, background: tab === t.id ? navy[100] : "transparent", color: tab === t.id ? navy[900] : "#6b6155", fontWeight: tab === t.id ? 500 : 400, border: "none" }}>
+          <button key={t.id} onClick={() => setTab(t.id)} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left", padding: "9px 12px", borderRadius: 8, fontSize: 16, marginBottom: 4, background: tab === t.id ? navy[900] : "transparent", color: tab === t.id ? "#fff" : "#6b6155", fontWeight: tab === t.id ? 500 : 400, border: "none" }}>
             <t.icon size={16} /> {t.label}
             {!!t.badge && (
               <span style={{ marginLeft: "auto", background: "#a3372f", color: "#fff", fontSize: 12, fontWeight: 700, borderRadius: 999, minWidth: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 5px" }}>

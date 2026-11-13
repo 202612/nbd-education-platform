@@ -128,7 +128,7 @@ function MfaChallengeScreen({ onVerified, onSignOut }) {
           style={{ width: "100%", padding: "11px 12px", border: "1px solid #d8d8d8", borderRadius: 6, marginBottom: 14, fontSize: 20, textAlign: "center", letterSpacing: 4, boxSizing: "border-box" }}
         />
         {error && <div style={{ color: "#a3372f", fontSize: 14, marginBottom: 14 }}>{error}</div>}
-        <button type="submit" disabled={busy} style={{ width: "100%", background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "13px 16px", fontSize: 16, fontWeight: 700, marginBottom: 12 }}>
+        <button type="submit" disabled={busy} style={{ width: "100%", background: navy[900], color: "#fff", border: "none", borderRadius: 6, padding: "13px 16px", fontSize: 16, fontWeight: 700, marginBottom: 12 }}>
           {busy ? "Checking…" : "Verify"}
         </button>
         <button type="button" onClick={onSignOut} style={{ background: "none", border: "none", color: grey, fontSize: 14 }}>
@@ -180,7 +180,7 @@ function ResetPasswordScreen({ onDone }) {
           <PasswordField value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="new-password" />
         </div>
         {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 16 }}>{error}</div>}
-        <button type="submit" disabled={busy} style={{ width: "100%", background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "13px 16px", fontSize: 16, fontWeight: 700 }}>
+        <button type="submit" disabled={busy} style={{ width: "100%", background: navy[900], color: "#fff", border: "none", borderRadius: 6, padding: "13px 16px", fontSize: 16, fontWeight: 700 }}>
           {busy ? "Saving…" : "Save password"}
         </button>
       </form>
@@ -214,7 +214,7 @@ class ErrorBoundary extends React.Component {
             </p>
             <button
               onClick={() => window.location.reload()}
-              style={{ background: navy[700], color: "#fff", border: "none", borderRadius: 999, padding: "10px 24px", fontSize: 16, fontWeight: 600, cursor: "pointer" }}
+              style={{ background: navy[900], color: "#fff", border: "none", borderRadius: 8, padding: "10px 24px", fontSize: 16, fontWeight: 600, cursor: "pointer" }}
             >
               Reload
             </button>

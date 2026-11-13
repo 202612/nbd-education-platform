@@ -160,7 +160,7 @@ export default function ApplyForAccess({ onSwitchToLogin, onSwitchToTeam }) {
           <button
             type="submit"
             disabled={busy}
-            style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: navy[700], color: "#fff", border: "none", borderRadius: 6, padding: "13px 16px", fontSize: 17, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", opacity: busy ? 0.7 : 1, fontFamily: "inherit" }}
+            style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: navy[900], color: "#fff", border: "none", borderRadius: 6, padding: "13px 16px", fontSize: 17, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", opacity: busy ? 0.7 : 1, fontFamily: "inherit" }}
           >
             {busy && <Loader2 size={14} className="spin" />}
             Submit request
