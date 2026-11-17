@@ -33,8 +33,8 @@ Deno.serve(async () => {
 
   const { data: due, error } = await supabase
     .from("training_schedule")
-    .select("id, assigned_to, brand_id, scheduled_date, app_users:assigned_to(name, email), brands(name, steps:brand_steps(id))")
-    .eq("scheduled_date", tomorrowStr)
+    .select("id, assigned_to, brand_id, deadline_date, app_users:assigned_to(name, email), brands(name, steps:brand_steps(id))")
+    .eq("deadline_date", tomorrowStr)
     .is("reminder_sent_at", null);
 
   if (error) {

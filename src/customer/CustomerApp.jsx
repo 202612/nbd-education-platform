@@ -1326,6 +1326,12 @@ function WebinarDetail({ webinar, onBack, onRefetch }) {
 const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTH_LABELS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
+function addDays(dateStr, n) {
+  const d = new Date(dateStr + "T00:00:00");
+  d.setDate(d.getDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+
 function CustomerCalendar({ account, currentUser, team, brands, teamProgress, completedStepIds, isHolder }) {
   const [rows, setRows] = useState(null);
   const [error, setError] = useState("");
@@ -1333,16 +1339,18 @@ function CustomerCalendar({ account, currentUser, team, brands, teamProgress, co
   const today = new Date();
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
-  const [modalDate, setModalDate] = useState(null); // "yyyy-mm-dd" or null when closed
+  const [modalDate, setModalDate] = useState(null); // the clicked date, or null when the modal's closed
   const [assignedTo, setAssignedTo] = useState(currentUser.id);
   const [brandId, setBrandId] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [deadlineDate, setDeadlineDate] = useState("");
   const [note, setNote] = useState("");
 
   async function load() {
     const { data, error: err } = await supabase
       .from("training_schedule")
-      .select("id,assigned_to,brand_id,scheduled_date,note,created_by,app_users:assigned_to(name),brands(name,logo_url,steps:brand_steps(id))")
-      .order("scheduled_date", { ascending: true });
+      .select("id,assigned_to,brand_id,start_date,deadline_date,note,created_by,app_users:assigned_to(name),brands(name,logo_url,steps:brand_steps(id))")
+      .order("deadline_date", { ascending: true });
     if (err) { setError(err.message); return; }
     setRows(data || []);
   }
@@ -1360,27 +1368,33 @@ function CustomerCalendar({ account, currentUser, team, brands, teamProgress, co
     const done = doneSetFor(r.assigned_to);
     const doneCount = stepIds.filter((id) => done.has(id)).length;
     const completed = stepIds.length > 0 && doneCount === stepIds.length;
-    const overdue = !completed && r.scheduled_date < todayStr;
+    const overdue = !completed && r.deadline_date < todayStr;
     const status = completed ? "Completed" : overdue ? "Overdue" : "Upcoming";
     return { ...r, doneCount, totalSteps: stepIds.length, status };
   });
 
+  // Shows the logo on both the day it starts and its deadline — a quick
+  // glance at the grid shows both when something begins and when it's due.
   const byDate = {};
   for (const r of withStatus) {
-    (byDate[r.scheduled_date] ||= []).push(r);
+    (byDate[r.start_date] ||= []).push(r);
+    if (r.deadline_date !== r.start_date) (byDate[r.deadline_date] ||= []).push(r);
   }
 
   function openModal(dateStr) {
     setModalDate(dateStr);
     setAssignedTo(currentUser.id);
     setBrandId("");
+    setStartDate(dateStr);
+    setDeadlineDate(addDays(dateStr, 7));
     setNote("");
     setError("");
   }
 
   async function submitSchedule(e) {
     e.preventDefault();
-    if (!brandId || !modalDate) { setError("Pick a brand first."); return; }
+    if (!brandId || !startDate || !deadlineDate) { setError("Pick a brand, start, and deadline first."); return; }
+    if (deadlineDate < startDate) { setError("Deadline can't be before the start date."); return; }
     setBusy(true);
     setError("");
     const { error: err } = await supabase.from("training_schedule").insert({
@@ -1388,7 +1402,8 @@ function CustomerCalendar({ account, currentUser, team, brands, teamProgress, co
       assigned_to: assignedTo,
       created_by: currentUser.id,
       brand_id: brandId,
-      scheduled_date: modalDate,
+      start_date: startDate,
+      deadline_date: deadlineDate,
       note: note.trim() || null,
     });
     setBusy(false);
@@ -1476,22 +1491,22 @@ function CustomerCalendar({ account, currentUser, team, brands, teamProgress, co
                 className="nbd-cal-day"
                 onClick={() => openModal(dateStr)}
                 style={{
-                  minHeight: 72, border: isToday ? "1.5px solid #98cb63" : "1px solid #f0ece3", borderRadius: 10,
+                  minHeight: 92, border: isToday ? "1.5px solid #98cb63" : "1px solid #f0ece3", borderRadius: 10,
                   background: "none", cursor: "pointer", padding: "6px 6px", display: "flex", flexDirection: "column", alignItems: "flex-start", textAlign: "left",
                 }}
               >
                 <div style={{ fontSize: 13, fontWeight: isToday ? 800 : 600, color: isToday ? "#4d6b2c" : navy[900], marginBottom: 4 }}>{day}</div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
-                  {entries.slice(0, 3).map((e) => (
-                    <div key={e.id} title={`${e.brands?.name} — ${e.app_users?.name}`} style={{ width: 20, height: 20, borderRadius: 5, background: "#fff", border: "1px solid #e4dfd6", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                  {entries.slice(0, 2).map((e) => (
+                    <div key={e.id} title={`${e.brands?.name} — ${e.app_users?.name}`} style={{ width: 32, height: 32, borderRadius: 7, background: "#fff", border: "1px solid #e4dfd6", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0, padding: 3 }}>
                       {e.brands?.logo_url ? (
                         <img src={e.brands.logo_url} alt={e.brands.name} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
                       ) : (
-                        <div style={{ width: 6, height: 6, borderRadius: "50%", background: e.status === "Overdue" ? "#a3372f" : e.status === "Completed" ? "#4a6b3d" : "#98cb63" }} />
+                        <div style={{ width: 8, height: 8, borderRadius: "50%", background: e.status === "Overdue" ? "#a3372f" : e.status === "Completed" ? "#4a6b3d" : "#98cb63" }} />
                       )}
                     </div>
                   ))}
-                  {entries.length > 3 && <div style={{ fontSize: 10, color: "#a39a8d", alignSelf: "center" }}>+{entries.length - 3}</div>}
+                  {entries.length > 2 && <div style={{ fontSize: 11, color: "#a39a8d", alignSelf: "center" }}>+{entries.length - 2}</div>}
                 </div>
               </button>
             );
@@ -1527,6 +1542,17 @@ function CustomerCalendar({ account, currentUser, team, brands, teamProgress, co
               <option value="">Pick a brand…</option>
               {brands.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
             </select>
+
+            <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: 13, fontWeight: 700, color: "#6b6155", display: "block", marginBottom: 4 }}>Start date</label>
+                <input className="nbd-cal-input" type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} style={{ width: "100%", padding: "9px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 15, boxSizing: "border-box" }} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={{ fontSize: 13, fontWeight: 700, color: "#6b6155", display: "block", marginBottom: 4 }}>Deadline</label>
+                <input className="nbd-cal-input" type="date" min={startDate} value={deadlineDate} onChange={(e) => setDeadlineDate(e.target.value)} style={{ width: "100%", padding: "9px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 15, boxSizing: "border-box" }} />
+              </div>
+            </div>
 
             <label style={{ fontSize: 13, fontWeight: 700, color: "#6b6155", display: "block", marginBottom: 4 }}>Note (optional)</label>
             <input className="nbd-cal-input" value={note} onChange={(e) => setNote(e.target.value)} style={{ width: "100%", padding: "9px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 15, marginBottom: 14, boxSizing: "border-box" }} />
@@ -1565,7 +1591,7 @@ function CustomerCalendar({ account, currentUser, team, brands, teamProgress, co
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 600, fontSize: 16, color: navy[900] }}>{r.brands?.name || "—"}</div>
                 <div style={{ fontSize: 14, color: "#8a8074" }}>
-                  {r.app_users?.name}{r.assigned_to === currentUser.id ? " (you)" : ""} &middot; {formatDate(r.scheduled_date)}
+                  {r.app_users?.name}{r.assigned_to === currentUser.id ? " (you)" : ""} &middot; {formatDate(r.start_date)} → {formatDate(r.deadline_date)}
                   {r.totalSteps > 0 && ` · ${r.doneCount} of ${r.totalSteps} steps complete`}
                 </div>
                 {r.note && <div style={{ fontSize: 13, color: "#a39a8d", marginTop: 2 }}>{r.note}</div>}
