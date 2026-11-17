@@ -397,16 +397,7 @@ export function PublicBrandStrip() {
 // styled with a bit more presence and some hover interactivity.
 export function PublicFooter() {
   return (
-    <div style={{ background: "#f1f7e9", position: "relative", overflow: "hidden" }}>
-      {/* Faint green scribble texture, same doodle language as the Home
-          welcome banner and the sidebar icons — restrained, not a block
-          of color, just a bit of life behind the footer content. */}
-      <svg viewBox="0 0 800 220" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0.35, pointerEvents: "none" }} preserveAspectRatio="xMidYMid slice">
-        <path d="M-20 180 C 60 120 100 190 160 140 C 220 90 260 160 320 130 C 380 100 420 170 480 140 C 540 110 580 60 640 90 C 700 120 740 70 820 100" stroke="#98cb63" strokeWidth="2.5" strokeLinecap="round" />
-        <path d="M60 40 C 100 10 140 40 170 20" stroke="#98cb63" strokeWidth="2" strokeLinecap="round" opacity="0.7" />
-        <circle cx="700" cy="40" r="26" stroke="#98cb63" strokeWidth="2" opacity="0.6" />
-        <path d="M400 200 C 430 220 470 220 500 200" stroke="#98cb63" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
-      </svg>
+    <div style={{ background: "#f7f9f4", position: "relative", overflow: "hidden" }}>
       <style>{`
         .nbd-footer-social { transition: transform .2s cubic-bezier(.34,1.56,.64,1), background .15s ease, color .15s ease; }
         .nbd-footer-social:hover { transform: translateY(-3px) scale(1.08); background: #4d6b2c !important; color: #fff !important; }
