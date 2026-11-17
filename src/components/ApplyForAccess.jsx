@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
-import { navy, cream, grey, AuthHero, PasswordField, validatePassword } from "../lib/ui.jsx";
+import { navy, cream, grey, AuthHero, PasswordField, validatePassword, PublicFooter, PublicBrandStrip } from "../lib/ui.jsx";
 
 export default function ApplyForAccess({ onSwitchToLogin, onSwitchToTeam }) {
   const [brands, setBrands] = useState(null);
@@ -210,6 +210,9 @@ export default function ApplyForAccess({ onSwitchToLogin, onSwitchToTeam }) {
           .nbd-auth-card { max-width: 100% !important; }
         }
       `}</style>
+
+      <PublicBrandStrip />
+      <PublicFooter />
     </div>
   );
 }

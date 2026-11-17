@@ -176,7 +176,6 @@ export const HERO_STAGE_HEIGHT = "clamp(420px, 46vw, 520px)";
 export function AuthHero() {
   const { settings } = useSiteSettings();
   const [brandLogos, setBrandLogos] = useState([]);
-  const [allBrands, setAllBrands] = useState([]);
   const [bgReady, setBgReady] = useState(false);
   const [coverPct, setCoverPct] = useState(100);
   const stageRef = useRef(null);
@@ -190,12 +189,6 @@ export function AuthHero() {
       .not("logo_url", "is", null)
       .eq("hero_visible", true)
       .then(({ data }) => { if (!cancelled) setBrandLogos(data || []); });
-    supabase
-      .from("brands")
-      .select("id,name,logo_url")
-      .not("logo_url", "is", null)
-      .order("name")
-      .then(({ data }) => { if (!cancelled) setAllBrands(data || []); });
     return () => { cancelled = true; };
   }, []);
 
@@ -308,11 +301,7 @@ export function AuthHero() {
         style={{
           position: "absolute",
           left: `${settings.content_x ?? 50}%`,
-          // Capped so the text block can never sit low enough to reach the
-          // marquee band at the bottom of the hero, no matter what's saved
-          // from the drag handle — that gap is what was swallowing the
-          // headline before.
-          top: `${allBrands.length > 0 ? Math.min(settings.content_y ?? 50, 40) : settings.content_y ?? 50}%`,
+          top: `${settings.content_y ?? 50}%`,
           transform: "translate(-50%, -50%)",
           width: "clamp(300px, 68vw, 620px)",
           textAlign: "center",
@@ -374,27 +363,65 @@ export function AuthHero() {
         </div>
       </div>
 
-      {/* Translucent glass band holding the brand marquee, sitting directly
-          on the hero photo instead of a separate white strip below it —
-          logos get a frosted chip background so they stay legible over
-          whatever's behind them. Login page only; internal pages don't
-          repeat this (see CustomerHome). */}
-      {allBrands.length > 0 && (
-        <div
-          style={{
-            position: "absolute", left: 0, right: 0, bottom: 0,
-            padding: "18px 0 22px",
-            background: "rgba(10,9,7,0.1)",
-            backdropFilter: "blur(10px)",
-            WebkitBackdropFilter: "blur(10px)",
-            borderTop: "1px solid rgba(255,255,255,0.14)",
-            zIndex: 1,
-          }}
-        >
-          <BrandMarquee brands={allBrands} height={52} chip />
-        </div>
-      )}
     </div>
     </>
+  );
+}
+
+// The rotating brand-logo strip, now a page-bottom section (near the
+// footer) instead of overlaid on the hero photo — moved there because it
+// was making the top of the page feel too busy. Lives on a plain cream
+// background, so the chips don't need the hero's frosted/blur treatment.
+export function PublicBrandStrip() {
+  const [allBrands, setAllBrands] = useState([]);
+  useEffect(() => {
+    let cancelled = false;
+    supabase
+      .from("brands")
+      .select("id,name,logo_url")
+      .not("logo_url", "is", null)
+      .order("name")
+      .then(({ data }) => { if (!cancelled) setAllBrands(data || []); });
+    return () => { cancelled = true; };
+  }, []);
+  if (allBrands.length === 0) return null;
+  return (
+    <div style={{ background: "#fff", borderTop: "1px solid #e4dfd6", padding: "32px 0" }}>
+      <div style={{ textAlign: "center", fontSize: 12, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: "#a39a8d", marginBottom: 18 }}>
+        Brands we distribute
+      </div>
+      <BrandMarquee brands={allBrands} height={44} />
+    </div>
+  );
+}
+
+// Footer for the public login/request-access pages, matching
+// nationalbeauty.ie's own footer (same address, phone, and social links).
+export function PublicFooter() {
+  return (
+    <div style={{ background: "#efefef", borderTop: "1px solid #e4dfd6" }}>
+      <div
+        style={{
+          maxWidth: 1080, margin: "0 auto", padding: "28px 24px",
+          display: "flex", justifyContent: "space-between", alignItems: "flex-start",
+          flexWrap: "wrap", gap: 16,
+        }}
+      >
+        <div style={{ fontSize: 15, color: "#2b2b2b", lineHeight: 2 }}>
+          <div>Unit 5/6 Blarney Business Park,</div>
+          <div>Blarney,</div>
+          <div>Cork T23 CD71</div>
+          <div>021-234 0142</div>
+        </div>
+        <div style={{ display: "flex", gap: 14, paddingTop: 2 }}>
+          <a href="https://www.facebook.com/nationalbeautydistribution/" target="_blank" rel="noreferrer" aria-label="Facebook" style={{ color: "#1a1a1a" }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M22 12a10 10 0 10-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.4h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.4v7A10 10 0 0022 12z"/></svg>
+          </a>
+          <a href="http://instagram.com/national_b" target="_blank" rel="noreferrer" aria-label="Instagram" style={{ color: "#1a1a1a" }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
   );
 }

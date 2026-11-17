@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
-import { navy, cream, grey, AuthHero, PasswordField, validatePassword } from "../lib/ui.jsx";
+import { navy, cream, grey, AuthHero, PasswordField, validatePassword, PublicFooter, PublicBrandStrip } from "../lib/ui.jsx";
 
 export default function Login({ onSwitchToApply, initialMode = "signin" }) {
   const [mode, setMode] = useState(initialMode); // "signin" | "signup" | "forgot"
@@ -189,6 +189,9 @@ export default function Login({ onSwitchToApply, initialMode = "signin" }) {
           .nbd-auth-card { max-width: 100%; }
         }
       `}</style>
+
+      <PublicBrandStrip />
+      <PublicFooter />
     </div>
   );
 }
