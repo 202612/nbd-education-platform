@@ -1664,6 +1664,7 @@ function CustomerTraining({ brands, completedStepIds, onStepCompleted, participa
             {filtered.map(({ brand: b, done, pct, status }, i) => (
               <button
                 key={b.id}
+                className="nbd-training-row"
                 onClick={() => setOpenBrandId(b.id)}
                 style={{
                   display: "flex", alignItems: "center", gap: 18, width: "100%", textAlign: "left",
@@ -1686,7 +1687,7 @@ function CustomerTraining({ brands, completedStepIds, onStepCompleted, participa
 
                 <div className="nbd-training-progress" style={{ width: 160, flexShrink: 0 }}>
                   <div style={{ height: 6, background: "#e4dfd6", borderRadius: 999, overflow: "hidden" }}>
-                    <div style={{ height: "100%", width: `${pct}%`, background: pct === 100 ? "#4a6b3d" : navy[700] }} />
+                    <div className="nbd-training-fill" style={{ height: "100%", width: `${pct}%`, background: pct === 100 ? "linear-gradient(90deg, #4d6b2c, #98cb63)" : "linear-gradient(90deg, #5c6e46, #98cb63)" }} />
                   </div>
                 </div>
 
@@ -1695,16 +1696,26 @@ function CustomerTraining({ brands, completedStepIds, onStepCompleted, participa
                     flexShrink: 0, fontSize: 13, fontWeight: 700, padding: "6px 14px", borderRadius: 999, whiteSpace: "nowrap",
                     background: status === "Not started" ? "#f1efe9" : status === "Completed" ? "#eef5e2" : "#eef2f8",
                     color: status === "Not started" ? "#8a8074" : status === "Completed" ? "#4a6b3d" : navy[900],
+                    display: "flex", alignItems: "center", gap: 5,
                   }}
                 >
+                  {status === "Completed" && <Check size={13} />}
                   {status}
                 </div>
 
-                <ChevronLeft size={16} color="#c7bfae" style={{ transform: "rotate(180deg)", flexShrink: 0 }} />
+                <ChevronLeft size={16} color="#c7bfae" className="nbd-training-chevron" style={{ transform: "rotate(180deg)", flexShrink: 0 }} />
               </button>
             ))}
           </div>
-          <style>{`@media (max-width: 700px) { .nbd-training-progress { display: none; } }`}</style>
+          <style>{`
+            @media (max-width: 700px) { .nbd-training-progress { display: none; } }
+            .nbd-training-row { transition: background .15s ease; }
+            .nbd-training-row:hover { background: #faf8f4 !important; }
+            .nbd-training-row:hover .nbd-training-chevron { transform: rotate(180deg) translateX(-3px); }
+            .nbd-training-chevron { transition: transform .15s ease; }
+            .nbd-training-fill { animation: nbd-fill-in 1s cubic-bezier(.2,.8,.2,1) 0.1s backwards; }
+            @keyframes nbd-fill-in { from { width: 0%; } }
+          `}</style>
         </>
       )}
     </div>
@@ -1724,6 +1735,10 @@ function DonutRing({ segments, size = 84, strokeWidth = 10, centerLabel, centerS
   let offset = 0;
   return (
     <div style={{ position: "relative", width: size, height: size, flexShrink: 0 }}>
+      <style>{`
+        .nbd-donut-seg { animation: nbd-donut-draw .9s cubic-bezier(.2,.8,.2,1) backwards; }
+        @keyframes nbd-donut-draw { from { stroke-dasharray: 0 ${c}; } }
+      `}</style>
       <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#efe9e3" strokeWidth={strokeWidth} />
         {segments.map((seg, i) => {
@@ -1732,9 +1747,11 @@ function DonutRing({ segments, size = 84, strokeWidth = 10, centerLabel, centerS
           const circle = (
             <circle
               key={i}
+              className="nbd-donut-seg"
               cx={size / 2} cy={size / 2} r={r} fill="none"
-              stroke={seg.color} strokeWidth={strokeWidth}
+              stroke={seg.color} strokeWidth={strokeWidth} strokeLinecap="round"
               strokeDasharray={`${len} ${c - len}`} strokeDashoffset={-offset}
+              style={{ animationDelay: `${i * 0.12}s` }}
             />
           );
           offset += len;
@@ -1785,13 +1802,26 @@ function StaffTrainingDashboard({ team, brands, teamProgress, big = false }) {
 
   return (
     <div style={{ marginBottom: 28 }}>
-      <h3 style={{ fontSize: big ? 24 : 17, fontWeight: 700, color: navy[900], margin: "0 0 4px" }}>Team training status</h3>
+      {big && (
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
+          <div style={{ width: 24, height: 1, background: "#e4dfd6" }} />
+          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: "#a39a8d" }}>At a glance</div>
+        </div>
+      )}
+      <h3 style={{ fontSize: big ? 26 : 17, fontWeight: big ? 300 : 700, color: navy[900], margin: "0 0 6px" }}>Team training status</h3>
       <p style={{ color: "#8a8074", fontSize: big ? 16 : 15, margin: "0 0 20px" }}>Pick a name to see their own course-by-course status — nobody sees anyone else's.</p>
 
+      <style>{`
+        .nbd-staff-pill { transition: transform .15s ease, box-shadow .15s ease; }
+        .nbd-staff-pill:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(32,27,21,0.12); }
+        .nbd-progress-row { transition: background .15s ease; }
+        .nbd-progress-row:hover { background: #faf8f4; }
+      `}</style>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 24 }}>
         {team.map((u) => (
           <button
             key={u.id}
+            className="nbd-staff-pill"
             onClick={() => setSelectedId(u.id)}
             style={{
               padding: big ? "11px 22px" : "8px 16px", borderRadius: 999, fontSize: big ? 16 : 14, fontWeight: 600, cursor: "pointer",
@@ -1844,7 +1874,7 @@ function StaffTrainingDashboard({ team, brands, teamProgress, big = false }) {
           </thead>
           <tbody>
             {rows.map(({ brand, total, done, pct, status, quizStep, quizDone, brandLastActivity }) => (
-              <tr key={brand.id}>
+              <tr key={brand.id} className="nbd-progress-row">
                 <td style={{ padding: big ? "14px 16px" : "10px 12px", borderBottom: "1px solid #f0ece3" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     {brand.logo_url && <img src={brand.logo_url} alt={brand.name} style={{ height: big ? 26 : 20, maxWidth: big ? 90 : 70, objectFit: "contain" }} />}
@@ -1898,35 +1928,50 @@ function CustomerTeam({ team, currentUserId, onAdd, onRemove, isHolder = false }
           : "Everyone on your account's team."}
       </p>
 
+      <style>{`
+        .nbd-team-input { transition: border-color .15s ease, box-shadow .15s ease; }
+        .nbd-team-input:focus { outline: none; border-color: #98cb63 !important; box-shadow: 0 0 0 3px rgba(152,203,99,0.25); }
+        .nbd-team-add { transition: transform .15s ease, box-shadow .15s ease; }
+        .nbd-team-add:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(32,27,21,0.2); }
+        .nbd-team-row { transition: transform .15s ease, box-shadow .15s ease; }
+        .nbd-team-row:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(32,27,21,0.08); }
+        .nbd-team-remove { transition: color .15s ease, transform .15s ease; }
+        .nbd-team-remove:hover { color: #a3372f !important; transform: scale(1.1); }
+      `}</style>
       {isHolder && (
         <>
           <div style={{ display: "flex", gap: 8, marginBottom: 18, flexWrap: "wrap" }}>
-            <input required value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First name" style={{ flex: 1, minWidth: 120, padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 16 }} />
-            <input required value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last name" style={{ flex: 1, minWidth: 120, padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 16 }} />
-            <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" style={{ flex: 1, minWidth: 140, padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 16 }} />
-            <button onClick={add} disabled={busy} style={{ background: navy[900], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 15, opacity: busy ? 0.7 : 1 }}>Add</button>
+            <input required className="nbd-team-input" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First name" style={{ flex: 1, minWidth: 120, padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 16 }} />
+            <input required className="nbd-team-input" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last name" style={{ flex: 1, minWidth: 120, padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 16 }} />
+            <input required className="nbd-team-input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" style={{ flex: 1, minWidth: 140, padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 16 }} />
+            <button className="nbd-team-add" onClick={add} disabled={busy} style={{ background: navy[900], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 15, opacity: busy ? 0.7 : 1, cursor: "pointer" }}>Add</button>
           </div>
           {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 12 }}>{error}</div>}
         </>
       )}
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        {team.map((u) => (
-          <div key={u.id} style={{ display: "flex", alignItems: "center", gap: 10, background: u.role === "holder" ? navy[50] : "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: "12px 14px" }}>
-            <Users size={16} color={navy[700]} />
-            <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 500, fontSize: 16, color: navy[900], display: "flex", alignItems: "center", gap: 8 }}>
-                {u.name}{u.id === currentUserId ? " (you)" : ""}{u.role === "holder" ? " · main account holder" : ""}
-                {u.status === "pending" && <Badge tone="muted">Pending NBD approval</Badge>}
+        {team.map((u) => {
+          const initials = u.name.split(" ").filter(Boolean).slice(0, 2).map((p) => p[0].toUpperCase()).join("");
+          return (
+            <div key={u.id} className="nbd-team-row" style={{ display: "flex", alignItems: "center", gap: 14, background: u.role === "holder" ? "#f1f7e9" : "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: "12px 14px" }}>
+              <div style={{ width: 38, height: 38, borderRadius: "50%", flexShrink: 0, background: u.role === "holder" ? "#4d6b2c" : "#58514a", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 700 }}>
+                {initials || <Users size={15} />}
               </div>
-              <div style={{ fontSize: 14, color: "#8a8074" }}>{u.email}</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 500, fontSize: 16, color: navy[900], display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                  {u.name}{u.id === currentUserId ? " (you)" : ""}{u.role === "holder" ? " · main account holder" : ""}
+                  {u.status === "pending" && <Badge tone="muted">Pending NBD approval</Badge>}
+                </div>
+                <div style={{ fontSize: 14, color: "#8a8074" }}>{u.email}</div>
+              </div>
+              {isHolder && u.role === "staff" && (
+                <button className="nbd-team-remove" onClick={() => onRemove(u.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#a39a8d" }}>
+                  <Trash2 size={15} color="currentColor" />
+                </button>
+              )}
             </div>
-            {isHolder && u.role === "staff" && (
-              <button onClick={() => onRemove(u.id)} style={{ background: "none" }}>
-                <Trash2 size={15} color="#a39a8d" />
-              </button>
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -1996,17 +2041,29 @@ function MyCertificates({ userId }) {
         <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#8a8074", fontSize: 16 }}><Loader2 size={16} className="spin" /> Loading…</div>
       )}
       {rows && rows.length === 0 && (
-        <div style={{ color: "#a39a8d", fontSize: 16 }}>No certificates yet — complete a brand's training to earn one.</div>
+        <div style={{ background: "#fff", border: "1px dashed #e4dfd6", borderRadius: 18, padding: "56px 32px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
+          <div style={{ width: 72, height: 72, borderRadius: 18, background: "#f1f7e9", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#3f7a1a" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8.3" r="4.6" /><path d="M8.3 12.2 L6 20.5 L12 17.8 L18 20.5 L15.7 12.2" /></svg>
+          </div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: navy[900] }}>No certificates yet</div>
+          <div style={{ fontSize: 14, color: "#8a8074", maxWidth: 320, lineHeight: 1.5 }}>Complete a brand's training in the Training tab to earn your first one.</div>
+        </div>
       )}
 
+      <style>{`
+        .nbd-cert-row { transition: transform .15s ease, box-shadow .15s ease; }
+        .nbd-cert-row:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(32,27,21,0.08); }
+        .nbd-cert-download { transition: transform .15s ease, box-shadow .15s ease; }
+        .nbd-cert-download:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(32,27,21,0.2); }
+      `}</style>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {(rows || []).map((r) => (
-          <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 16, background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: "14px 16px" }}>
-            <div style={{ width: 48, height: 40, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div key={r.id} className="nbd-cert-row" style={{ display: "flex", alignItems: "center", gap: 16, background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: "14px 16px" }}>
+            <div style={{ width: 48, height: 48, flexShrink: 0, borderRadius: 10, background: "#f1f7e9", display: "flex", alignItems: "center", justifyContent: "center" }}>
               {r.brands?.logo_url ? (
-                <img src={r.brands.logo_url} alt={r.brands.name} style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }} />
+                <img src={r.brands.logo_url} alt={r.brands.name} style={{ maxHeight: "70%", maxWidth: "70%", objectFit: "contain" }} />
               ) : (
-                <Award size={22} color={navy[500]} />
+                <Award size={22} color="#4d6b2c" />
               )}
             </div>
             <div style={{ flex: 1 }}>
@@ -2015,9 +2072,10 @@ function MyCertificates({ userId }) {
             </div>
             {r.pdf_path ? (
               <button
+                className="nbd-cert-download"
                 onClick={() => download(r)}
                 disabled={openingId === r.id}
-                style={{ display: "flex", alignItems: "center", gap: 6, background: navy[900], color: "#fff", border: "none", borderRadius: 8, padding: "9px 16px", fontSize: 15, fontWeight: 500 }}
+                style={{ display: "flex", alignItems: "center", gap: 6, background: navy[900], color: "#fff", border: "none", borderRadius: 8, padding: "9px 16px", fontSize: 15, fontWeight: 500, cursor: "pointer" }}
               >
                 <Download size={15} /> {openingId === r.id ? "Opening…" : "Download"}
               </button>
@@ -2048,11 +2106,22 @@ function EducationBrochure() {
 
   return (
     <div>
+      <style>{`
+        .nbd-brochure-fullscreen { transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease; }
+        .nbd-brochure-fullscreen:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(32,27,21,0.1); border-color: #98cb63 !important; color: #4d6b2c !important; }
+      `}</style>
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginBottom: 4 }}>
-        <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: 0 }}>Education Brochure</h2>
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
+            <div style={{ width: 24, height: 1, background: "#e4dfd6" }} />
+            <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: "#a39a8d" }}>Keep learning</div>
+          </div>
+          <h2 style={{ fontSize: 26, fontWeight: 300, color: navy[900], margin: 0 }}>Education Brochure</h2>
+        </div>
         <button
+          className="nbd-brochure-fullscreen"
           onClick={goFullscreen}
-          style={{ display: "flex", alignItems: "center", gap: 6, background: "#fff", border: "1px solid #e4dfd6", color: navy[700], borderRadius: 8, padding: "8px 14px", fontSize: 14, fontWeight: 600, whiteSpace: "nowrap" }}
+          style={{ display: "flex", alignItems: "center", gap: 6, background: "#fff", border: "1px solid #e4dfd6", color: navy[700], borderRadius: 8, padding: "8px 14px", fontSize: 14, fontWeight: 600, whiteSpace: "nowrap", cursor: "pointer" }}
         >
           <Maximize2 size={14} /> View full screen
         </button>
@@ -2138,30 +2207,37 @@ function AccountSettings({ user, account, onNameSaved }) {
       <h2 style={{ fontSize: 26, fontWeight: 300, color: navy[900], margin: "0 0 6px" }}>Settings</h2>
       <p style={{ color: "#8a8074", fontSize: 16, margin: "0 0 24px" }}>Update your own details and your company's account details.</p>
 
+      <style>{`
+        .nbd-settings-input { transition: border-color .15s ease, box-shadow .15s ease; }
+        .nbd-settings-input:focus { outline: none; border-color: #98cb63 !important; box-shadow: 0 0 0 3px rgba(152,203,99,0.25); }
+        .nbd-settings-save { transition: transform .15s ease, box-shadow .15s ease; }
+        .nbd-settings-save:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(32,27,21,0.2); }
+      `}</style>
+
       <form onSubmit={saveName} style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 18, marginBottom: 18 }}>
         <div style={{ fontSize: 15, fontWeight: 600, color: "#6b6155", marginBottom: 12 }}>Your profile</div>
         <label style={{ fontSize: 15, color: "#6b6155", display: "block", marginBottom: 4 }}>Full name</label>
-        <input value={name} onChange={(e) => setName(e.target.value)} style={{ width: "100%", padding: "9px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 16, boxSizing: "border-box" }} />
+        <input value={name} onChange={(e) => setName(e.target.value)} className="nbd-settings-input" style={{ width: "100%", padding: "9px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 16, boxSizing: "border-box" }} />
         <p style={{ fontSize: 14, color: "#a39a8d", margin: "0 0 12px" }}>This is the name printed on your certificates.</p>
         {nameError && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 10 }}>{nameError}</div>}
         {nameNotice && <div style={{ color: "#4d6b2c", fontSize: 15, marginBottom: 10 }}>{nameNotice}</div>}
-        <button type="submit" disabled={nameSaving} style={{ background: navy[900], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 15, opacity: nameSaving ? 0.7 : 1 }}>{nameSaving ? "Saving…" : "Save name"}</button>
+        <button className="nbd-settings-save" type="submit" disabled={nameSaving} style={{ background: navy[900], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 15, opacity: nameSaving ? 0.7 : 1, cursor: "pointer" }}>{nameSaving ? "Saving…" : "Save name"}</button>
       </form>
 
       <form onSubmit={saveAccount} style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 18 }}>
         <div style={{ fontSize: 15, fontWeight: 600, color: "#6b6155", marginBottom: 12 }}>Company details</div>
         <label style={{ fontSize: 15, color: "#6b6155", display: "block", marginBottom: 4 }}>Customer number</label>
-        <input value={customerNumber} onChange={(e) => setCustomerNumber(e.target.value)} style={{ width: "100%", padding: "9px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 16, boxSizing: "border-box" }} />
+        <input value={customerNumber} onChange={(e) => setCustomerNumber(e.target.value)} className="nbd-settings-input" style={{ width: "100%", padding: "9px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 16, boxSizing: "border-box" }} />
         <label style={{ fontSize: 15, color: "#6b6155", display: "block", marginBottom: 4 }}>Salon / business name</label>
-        <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} style={{ width: "100%", padding: "9px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 16, boxSizing: "border-box" }} />
+        <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="nbd-settings-input" style={{ width: "100%", padding: "9px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 16, boxSizing: "border-box" }} />
         <label style={{ fontSize: 15, color: "#6b6155", display: "block", marginBottom: 4 }}>Main contact name</label>
-        <input value={contactName} onChange={(e) => setContactName(e.target.value)} style={{ width: "100%", padding: "9px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 16, boxSizing: "border-box" }} />
+        <input value={contactName} onChange={(e) => setContactName(e.target.value)} className="nbd-settings-input" style={{ width: "100%", padding: "9px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 16, boxSizing: "border-box" }} />
         <label style={{ fontSize: 15, color: "#6b6155", display: "block", marginBottom: 4 }}>Main contact email</label>
-        <input value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} style={{ width: "100%", padding: "9px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 16, boxSizing: "border-box" }} />
+        <input value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} className="nbd-settings-input" style={{ width: "100%", padding: "9px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 16, boxSizing: "border-box" }} />
         <p style={{ fontSize: 14, color: "#a39a8d", margin: "0 0 12px" }}>This doesn't change the email you sign in with — that stays as-is.</p>
         {accountError && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 10 }}>{accountError}</div>}
         {accountNotice && <div style={{ color: "#4d6b2c", fontSize: 15, marginBottom: 10 }}>{accountNotice}</div>}
-        <button type="submit" disabled={accountSaving} style={{ background: navy[900], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 15, opacity: accountSaving ? 0.7 : 1 }}>{accountSaving ? "Saving…" : "Save company details"}</button>
+        <button className="nbd-settings-save" type="submit" disabled={accountSaving} style={{ background: navy[900], color: "#fff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 15, opacity: accountSaving ? 0.7 : 1, cursor: "pointer" }}>{accountSaving ? "Saving…" : "Save company details"}</button>
       </form>
     </div>
   );
