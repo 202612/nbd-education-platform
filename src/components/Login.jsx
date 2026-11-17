@@ -63,18 +63,37 @@ export default function Login({ onSwitchToApply, initialMode = "signin" }) {
     <div style={{ fontFamily: "'Lato', -apple-system, sans-serif", background: cream, minHeight: "100vh" }}>
       <AuthHero />
 
-      <div style={{ maxWidth: 400, margin: "0 auto", padding: "48px 20px 80px" }}>
-        <h2 style={{ fontSize: 24, fontWeight: 700, color: navy[900], margin: "0 0 4px", textAlign: "center" }}>
-          {mode === "signin" ? "Sign in" : mode === "forgot" ? "Reset your password" : "Create your password"}
-        </h2>
-        <p style={{ color: grey, fontSize: 16, margin: "0 0 28px", textAlign: "center" }}>
-          {mode === "signin"
-            ? "For approved account holders, staff, and admins."
-            : mode === "forgot"
-            ? "Enter your email and we'll send you a link to set a new password."
-            : "Part of a team? Use the exact email your account manager added you with, and choose a password."}
-        </p>
+      <div className="nbd-auth-section">
+        <div className="nbd-auth-eyebrow">
+          <span className="nbd-auth-eyebrow-rule" />
+          ACCESS
+        </div>
 
+        <div className="nbd-auth-grid">
+          <div className="nbd-auth-aside">
+            <h2 style={{ fontSize: 28, fontWeight: 300, color: navy[900], margin: "0 0 14px", lineHeight: 1.15 }}>
+              {mode === "signin" ? "Sign in to your account" : mode === "forgot" ? "Reset your password" : "Create your password"}
+            </h2>
+            <p style={{ color: grey, fontSize: 16, margin: "0 0 28px", lineHeight: 1.6, maxWidth: 360 }}>
+              {mode === "signin"
+                ? "For approved account holders, staff, and admins — your training, certificates, and brand updates live here."
+                : mode === "forgot"
+                ? "Enter your email and we'll send you a link to set a new password."
+                : "Use the exact email your account manager added you with, then choose a password to finish setting up your account."}
+            </p>
+
+            {mode === "signin" && (
+              <button
+                onClick={onSwitchToApply}
+                className="nbd-auth-nudge"
+              >
+                <div style={{ fontSize: 15, fontWeight: 700, color: navy[900] }}>New customer?</div>
+                <div style={{ fontSize: 14, color: grey, marginTop: 2 }}>Request training access for your salon →</div>
+              </button>
+            )}
+          </div>
+
+          <div className="nbd-auth-card">
         <form onSubmit={submit}>
           <label style={{ fontSize: 15, color: grey, display: "block", marginBottom: 4, fontWeight: 700 }}>
             Email<span style={{ color: "#a3372f", fontWeight: 400 }}> (required)</span>
@@ -152,18 +171,24 @@ export default function Login({ onSwitchToApply, initialMode = "signin" }) {
             {mode === "signin" ? "Part of a team? Create your password" : "Already have a password? Sign in"}
           </button>
         )}
-
-        {mode === "signin" && (
-          <button
-            onClick={onSwitchToApply}
-            style={{ display: "block", width: "100%", textAlign: "center", background: "none", border: "none", color: grey, fontSize: 15, marginTop: 10, fontFamily: "inherit" }}
-          >
-            New customer? Request training access
-          </button>
-        )}
+          </div>
+        </div>
       </div>
 
-      <style>{`.spin { animation: spin 1s linear infinite; } @keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <style>{`
+        .spin { animation: spin 1s linear infinite; } @keyframes spin { to { transform: rotate(360deg); } }
+        .nbd-auth-section { max-width: 1080px; margin: 0 auto; padding: 64px 24px 96px; }
+        .nbd-auth-eyebrow { display: flex; align-items: center; gap: 14px; font-size: 13px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: #a39a8d; margin-bottom: 40px; }
+        .nbd-auth-eyebrow-rule { flex: 1; max-width: 48px; height: 1px; background: #d8d0c2; }
+        .nbd-auth-grid { display: grid; grid-template-columns: minmax(260px, 380px) 1fr; gap: 64px; align-items: start; }
+        .nbd-auth-aside { padding-top: 8px; }
+        .nbd-auth-nudge { display: block; width: 100%; text-align: left; background: #fff; border: 1px solid #e4dfd6; border-radius: 10px; padding: 14px 16px; cursor: pointer; font-family: inherit; }
+        .nbd-auth-card { background: #fff; border: 1px solid #e4dfd6; border-radius: 16px; padding: 36px; max-width: 420px; }
+        @media (max-width: 860px) {
+          .nbd-auth-grid { grid-template-columns: 1fr; gap: 36px; }
+          .nbd-auth-card { max-width: 100%; }
+        }
+      `}</style>
     </div>
   );
 }

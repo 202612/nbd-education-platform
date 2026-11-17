@@ -78,7 +78,7 @@ export function StatCard({ label, value, icon: Icon }) {
 // then resets, which looks seamless since copy #2 is identical to #1.
 // Pass onLogoClick to make each logo clickable (e.g. jump to that brand's
 // training); omit it for a purely decorative strip (e.g. the public login page).
-export function BrandMarquee({ brands, onLogoClick, height = 48 }) {
+export function BrandMarquee({ brands, onLogoClick, height = 48, chip = false }) {
   const list = brands.filter((b) => b.logo_url);
   if (list.length === 0) return null;
   const items = [...list, ...list];
@@ -99,13 +99,18 @@ export function BrandMarquee({ brands, onLogoClick, height = 48 }) {
               title={b.name}
               style={{
                 display: "flex", alignItems: "center", justifyContent: "center",
-                padding: "0 36px", background: "none", border: "none", cursor: onLogoClick ? "pointer" : "default",
-                flexShrink: 0, opacity: 0.7, transition: "opacity .15s ease",
+                padding: chip ? "14px 28px" : "0 36px",
+                margin: chip ? "0 10px" : 0,
+                background: chip ? "rgba(255,255,255,0.92)" : "none",
+                borderRadius: chip ? 12 : 0,
+                boxShadow: chip ? "0 4px 18px rgba(0,0,0,0.18)" : "none",
+                border: "none", cursor: onLogoClick ? "pointer" : "default",
+                flexShrink: 0, opacity: chip ? 1 : 0.7, transition: "opacity .15s ease, transform .15s ease",
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.opacity = 1; }}
-              onMouseLeave={(e) => { e.currentTarget.style.opacity = 0.7; }}
+              onMouseEnter={(e) => { e.currentTarget.style.opacity = 1; if (chip) e.currentTarget.style.transform = "translateY(-2px)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.opacity = chip ? 1 : 0.7; if (chip) e.currentTarget.style.transform = "translateY(0)"; }}
             >
-              <img src={b.logo_url} alt={b.name} style={{ height, maxWidth: 120, objectFit: "contain", display: "block" }} />
+              <img src={b.logo_url} alt={b.name} style={{ height, maxWidth: chip ? 150 : 120, objectFit: "contain", display: "block" }} />
             </Tag>
           );
         })}
@@ -165,6 +170,7 @@ export function AuthHero() {
   const [brandLogos, setBrandLogos] = useState([]);
   const [allBrands, setAllBrands] = useState([]);
   const [bgReady, setBgReady] = useState(false);
+  const bgSrc = settings.background_url || DEFAULT_HERO_BG_SRC;
 
   useEffect(() => {
     let cancelled = false;
@@ -183,56 +189,44 @@ export function AuthHero() {
     return () => { cancelled = true; };
   }, []);
 
-  // Even embedded, a 2000x1370-ish JPEG still takes the browser a moment to
-  // decode before it can paint as a background-image — without this, the
-  // pale fallback colour shows first and the photo still pops in abruptly.
-  // Decoding it explicitly via Image() and fading in once decoded turns
-  // that pop into a smooth reveal, the same fix as before, just now keyed
-  // off the embedded constant instead of a network fetch.
+  // A 2000x1370-ish photo still takes the browser a moment to decode before
+  // it can paint as a background-image — without this, the pale fallback
+  // colour shows first and the photo pops in abruptly. Decoding it
+  // explicitly via Image() and fading in once decoded turns that pop into a
+  // smooth reveal. Re-runs if an admin swaps the photo in Design.
   useEffect(() => {
     let cancelled = false;
+    setBgReady(false);
     const img = new Image();
     img.onload = () => { if (!cancelled) setBgReady(true); };
-    img.src = DEFAULT_HERO_BG_SRC;
+    img.src = bgSrc;
     if (img.complete) setBgReady(true);
     return () => { cancelled = true; };
-  }, []);
+  }, [bgSrc]);
 
   return (
     <>
     <div
       className="nbd-auth-hero"
       style={{
-        background: navy[100],
+        background: navy[900],
         padding: "0 24px",
         position: "relative",
         height: HERO_STAGE_HEIGHT,
         overflow: "hidden",
       }}
     >
-      {/* The hero photo is baked into the app itself (DEFAULT_HERO_BG_SRC)
-          instead of being fetched from Storage on every page load — it loads
-          with the rest of the page, with no network round-trip. Position/
-          zoom still come from Design.
-          background_zoom/position are tuned against a wide desktop viewport —
+      {/* background_zoom/position are tuned against a wide desktop viewport —
           sizing by a % of width alone can shrink the photo so much vertically
           on a narrow phone that it barely covers the banner. Forcing "cover"
           below the breakpoint guarantees the photo always fills the space,
           at the cost of the admin's exact zoom/position below that width. */}
       <style>{`@media (max-width: 700px) { .nbd-auth-hero-photo { background-size: cover !important; } }`}</style>
-      {/* Rendered unconditionally — waiting on settings.background_url from
-          the database before even trying to show the (already-embedded,
-          already-local) photo was its own separate network dependency, and
-          exactly what was still showing the plain green fallback first on
-          every load regardless of how fast the image itself was. Zoom/
-          position fall back to sensible defaults until the real ones load,
-          so the photo appears immediately and just settles into the admin's
-          exact framing a moment later, rather than not appearing at all. */}
       <div
         className="nbd-auth-hero-photo"
         style={{
           position: "absolute", inset: 0,
-          backgroundImage: `url(${DEFAULT_HERO_BG_SRC})`,
+          backgroundImage: `url(${bgSrc})`,
           backgroundSize: `${(settings.background_zoom ?? 1) * 100}%`,
           backgroundPosition: `${settings.background_position_x ?? 50}% ${settings.background_position_y ?? 50}%`,
           backgroundRepeat: "no-repeat",
@@ -240,7 +234,10 @@ export function AuthHero() {
           transition: "opacity 400ms ease",
         }}
       />
-      <div style={{ position: "absolute", inset: 0, background: "rgba(255,255,255,0.55)" }} />
+      {/* Dark scrim so white heading text and the glass logo band at the
+          bottom both stay legible over whatever photo is uploaded, heavier
+          toward the bottom where the marquee band sits. */}
+      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(10,9,7,0.28) 0%, rgba(10,9,7,0.4) 55%, rgba(10,9,7,0.72) 100%)" }} />
 
       {brandLogos.map((b) => (
         <img
@@ -290,10 +287,12 @@ export function AuthHero() {
               </div>
             </div>
           ) : (
-            <img src={WORDMARK_SRC} alt="National Beauty Distribution" style={{ height: "clamp(68px, 11vw, 130px)", display: "block" }} />
+            <div style={{ background: "#fff", borderRadius: 16, padding: "clamp(14px, 2vw, 22px) clamp(24px, 4vw, 40px)", display: "inline-flex", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+              <img src={WORDMARK_SRC} alt="National Beauty Distribution" style={{ height: "clamp(50px, 8vw, 90px)", display: "block" }} />
+            </div>
           )}
         </div>
-        <div style={{ fontSize: settings.eyebrow_size || 15, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: navy[700], marginBottom: 6 }}>
+        <div style={{ fontSize: settings.eyebrow_size || 15, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: "rgba(255,255,255,0.85)", marginBottom: 6 }}>
           {settings.eyebrow}
         </div>
         <h1
@@ -301,7 +300,7 @@ export function AuthHero() {
             fontFamily: "'Lato', -apple-system, sans-serif",
             fontWeight: 300,
             fontSize: `${settings.headline_size || 42}px`,
-            color: navy[900],
+            color: "#fff",
             margin: "0 0 20px",
             lineHeight: 1.08,
           }}
@@ -313,7 +312,7 @@ export function AuthHero() {
             fontSize: settings.subtitle_size || 15,
             letterSpacing: 2,
             textTransform: "uppercase",
-            color: grey,
+            color: "rgba(255,255,255,0.72)",
             maxWidth: 640,
             margin: "0 auto",
             lineHeight: 1.7,
@@ -322,12 +321,27 @@ export function AuthHero() {
           {settings.subtitle}
         </div>
       </div>
+
+      {/* Translucent glass band holding the brand marquee, sitting directly
+          on the hero photo instead of a separate white strip below it —
+          logos get a frosted chip background so they stay legible over
+          whatever's behind them. Login page only; internal pages don't
+          repeat this (see CustomerHome). */}
+      {allBrands.length > 0 && (
+        <div
+          style={{
+            position: "absolute", left: 0, right: 0, bottom: 0,
+            padding: "18px 0 22px",
+            background: "rgba(10,9,7,0.22)",
+            backdropFilter: "blur(10px)",
+            WebkitBackdropFilter: "blur(10px)",
+            borderTop: "1px solid rgba(255,255,255,0.14)",
+          }}
+        >
+          <BrandMarquee brands={allBrands} height={40} chip />
+        </div>
+      )}
     </div>
-    {allBrands.length > 0 && (
-      <div style={{ background: "#fff", borderBottom: "1px solid #e4dfd6", padding: "20px 0" }}>
-        <BrandMarquee brands={allBrands} />
-      </div>
-    )}
     </>
   );
 }

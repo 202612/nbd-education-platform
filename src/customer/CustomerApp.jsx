@@ -5,7 +5,7 @@ import {
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { supabase } from "../lib/supabaseClient.js";
-import { navy, gold, grey, Badge, WORDMARK_SRC, BrandMarquee } from "../lib/ui.jsx";
+import { navy, gold, grey, Badge, WORDMARK_SRC } from "../lib/ui.jsx";
 
 // NBD-brand accent colours cycled per connection line, so each matched pair
 // gets its own recognisable colour across both columns and the line itself.
@@ -1515,12 +1515,6 @@ function CustomerHome({ brands, completedStepIds, participantName, onOpenBrand }
       </div>
 
       <ContinueCard pick={continuePick} onOpenBrand={onOpenBrand} />
-
-      {brands.length > 0 && (
-        <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 16, padding: "24px 0" }}>
-          <BrandMarquee brands={brands} onLogoClick={onOpenBrand} height={44} />
-        </div>
-      )}
     </div>
   );
 }
