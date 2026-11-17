@@ -1,0 +1,2 @@
+[functions.send-training-reminders]
+verify_jwt = false

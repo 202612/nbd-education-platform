@@ -477,3 +477,14 @@ export function DoodleSettings({ size = 19, active }) {
 export function DoodleBook({ size = 19, active }) {
   return <svg {...doodleProps(size, active)}><path d="M12 5.5 C 9.5 4 6 4 4 5.3 V18 C 6 16.8 9.5 16.8 12 18.3" /><path d="M12 5.5 C 14.5 4 18 4 20 5.3 V18 C 18 16.8 14.5 16.8 12 18.3 Z" /><path d="M12 5.5 V18.3" /></svg>;
 }
+
+export function DoodleCalendar({ size = 19, active }) {
+  return (
+    <svg {...doodleProps(size, active)}>
+      <path d="M5 8.5 H19 V19.5 H5 Z" />
+      <path d="M5 8.5 C 5 6 6 5 8 5 H16 C 18 5 19 6 19 8.5" />
+      <path d="M8 3.5 V6.5 M16 3.5 V6.5" />
+      <path d="M8 13 H10 M8 16 H10 M13 13 H15 M13 16 H15" />
+    </svg>
+  );
+}
