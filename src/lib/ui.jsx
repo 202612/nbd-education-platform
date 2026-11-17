@@ -273,6 +273,7 @@ export function AuthHero() {
           transform: "translate(-50%, -50%)",
           width: "clamp(300px, 68vw, 620px)",
           textAlign: "center",
+          zIndex: 2,
         }}
       >
         <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>
@@ -344,6 +345,7 @@ export function AuthHero() {
             backdropFilter: "blur(10px)",
             WebkitBackdropFilter: "blur(10px)",
             borderTop: "1px solid rgba(255,255,255,0.14)",
+            zIndex: 1,
           }}
         >
           <BrandMarquee brands={allBrands} height={52} chip />
