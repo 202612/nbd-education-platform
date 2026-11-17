@@ -425,3 +425,35 @@ export function PublicFooter() {
     </div>
   );
 }
+
+// Hand-drawn "doodle" icon set for the customer sidebar nav — thin,
+// slightly loose single-stroke sketches in brand green, standing in for
+// the clean geometric lucide icons that felt generic. `active` lightens
+// the stroke to read against the nav's dark active background.
+function doodleProps(size, active) {
+  return { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: active ? "#b4e37e" : "#3f7a1a", strokeWidth: 1.5, strokeLinecap: "round", strokeLinejoin: "round" };
+}
+export function DoodleHome({ size = 19, active }) {
+  return <svg {...doodleProps(size, active)}><path d="M4 11.5 L12 4 L20 11.3" /><path d="M6.5 10 V20 H17.5 V10" /><path d="M10 20 V14.5 H14 V20" /></svg>;
+}
+export function DoodlePlay({ size = 19, active }) {
+  return <svg {...doodleProps(size, active)}><path d="M12 3.2 C 6 3 3.2 7 3.3 12 C 3.4 17 6.5 20.7 12 20.6 C 17.6 20.5 20.7 17 20.6 12 C 20.5 7.2 17.8 3.4 12 3.2 Z" /><path d="M10 8.3 L16 12 L10 15.7 Z" /></svg>;
+}
+export function DoodleRadio({ size = 19, active }) {
+  return <svg {...doodleProps(size, active)}><circle cx="12" cy="12" r="2.6" /><path d="M7.5 8 C 5.5 10 5.5 14 7.5 16" /><path d="M16.5 8 C 18.6 10.2 18.5 13.9 16.5 16" /><path d="M4.3 5 C 0.8 9 0.9 15 4.3 19" /><path d="M19.7 5 C 23.2 9.2 23.1 14.8 19.7 19" /></svg>;
+}
+export function DoodleAward({ size = 19, active }) {
+  return <svg {...doodleProps(size, active)}><circle cx="12" cy="8.3" r="4.6" /><path d="M8.3 12.2 L6 20.5 L12 17.8 L18 20.5 L15.7 12.2" /></svg>;
+}
+export function DoodleUsers({ size = 19, active }) {
+  return <svg {...doodleProps(size, active)}><circle cx="9" cy="8" r="3.1" /><path d="M3.3 19.5 C 3.6 15 6 12.8 9 12.8 C 12 12.8 14.3 15 14.7 19.5" /><circle cx="17" cy="9.2" r="2.4" /><path d="M15.3 13 C 18 12.8 20 14.7 20.4 18.3" /></svg>;
+}
+export function DoodleChart({ size = 19, active }) {
+  return <svg {...doodleProps(size, active)}><path d="M4.5 20 V12.5" /><path d="M11.8 20 V7" /><path d="M19 20 V14.8" /><path d="M3.5 20.3 H20.5" /></svg>;
+}
+export function DoodleSettings({ size = 19, active }) {
+  return <svg {...doodleProps(size, active)}><circle cx="12" cy="12" r="2.8" /><path d="M12 3.5 V6 M12 18 V20.5 M3.5 12 H6 M18 12 H20.5 M6 6 L7.7 7.7 M16.3 16.3 L18 18 M18 6 L16.3 7.7 M7.7 16.3 L6 18" /></svg>;
+}
+export function DoodleBook({ size = 19, active }) {
+  return <svg {...doodleProps(size, active)}><path d="M12 5.5 C 9.5 4 6 4 4 5.3 V18 C 6 16.8 9.5 16.8 12 18.3" /><path d="M12 5.5 C 14.5 4 18 4 20 5.3 V18 C 18 16.8 14.5 16.8 12 18.3 Z" /><path d="M12 5.5 V18.3" /></svg>;
+}

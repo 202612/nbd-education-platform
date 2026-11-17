@@ -55,13 +55,16 @@ function Shell({ children, onSignOut, roleLabel, showViewAs }) {
             <Logo size={56} />
             <div>
               <img src={WORDMARK_SRC} alt="National Beauty Distribution Ireland" style={{ height: 80, display: "block", maxWidth: "100%" }} />
-              <div style={{ fontSize: 13, color: grey, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 700, marginTop: 8 }}>{roleLabel}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8 }}>
+                <div style={{ width: 16, height: 1, background: "#e4dfd6" }} />
+                <div style={{ fontSize: 13, color: grey, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 700 }}>{roleLabel}</div>
+              </div>
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             {showViewAs && <ViewAsDropdown />}
             {onSignOut && (
-              <button onClick={onSignOut} style={{ background: "none", border: `1px solid ${navy[700]}`, color: navy[700], borderRadius: 999, padding: "9px 20px", fontSize: 15, fontWeight: 700 }}>
+              <button className="nbd-signout-btn" onClick={onSignOut} style={{ background: "none", border: `1px solid ${navy[700]}`, color: navy[700], borderRadius: 999, padding: "9px 20px", fontSize: 15, fontWeight: 700 }}>
                 Sign out
               </button>
             )}
@@ -69,6 +72,8 @@ function Shell({ children, onSignOut, roleLabel, showViewAs }) {
         </div>
       </div>
       <style>{`
+        .nbd-signout-btn { transition: all .15s ease; }
+        .nbd-signout-btn:hover { border-color: #4d6b2c !important; color: #4d6b2c !important; background: #f1f7e9 !important; }
         .nbd-shell-body { max-width: 1100px; margin: 0 auto; padding: 32px; }
         @media (max-width: 760px) {
           .nbd-shell-body { padding: 16px; }

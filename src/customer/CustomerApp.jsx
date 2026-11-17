@@ -5,7 +5,7 @@ import {
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { supabase } from "../lib/supabaseClient.js";
-import { navy, gold, grey, Badge, WORDMARK_SRC } from "../lib/ui.jsx";
+import { navy, gold, grey, Badge, WORDMARK_SRC, DoodleHome, DoodlePlay, DoodleRadio, DoodleAward, DoodleUsers, DoodleChart, DoodleSettings, DoodleBook } from "../lib/ui.jsx";
 
 // NBD-brand accent colours cycled per connection line, so each matched pair
 // gets its own recognisable colour across both columns and the line itself.
@@ -1393,9 +1393,25 @@ function CustomerWebinars() {
 
   return (
     <div>
-      <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Live Webinars</h2>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
+        <div style={{ width: 24, height: 1, background: "#e4dfd6" }} />
+        <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: "#a39a8d" }}>Stay in the loop</div>
+      </div>
+      <h2 style={{ fontSize: 26, fontWeight: 300, color: navy[900], margin: "0 0 6px" }}>Live Webinars</h2>
       <p style={{ color: "#8a8074", fontSize: 16, margin: "0 0 20px" }}>Upcoming and available webinars for the brands you stock.</p>
-      {byBrand.length === 0 && <div style={{ color: "#8a8074", fontSize: 16 }}>No upcoming webinars right now — check back soon.</div>}
+      {byBrand.length === 0 && (
+        <div style={{ background: "#fff", border: "1px dashed #e4dfd6", borderRadius: 18, padding: "56px 32px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
+          <div style={{ width: 72, height: 72, borderRadius: 18, background: "#f1f7e9", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <svg width="40" height="40" viewBox="0 0 48 48" fill="none" stroke="#3f7a1a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M24 5 C 13 5 6 12 6 23 C 6 34 13.5 42 24 42 C 34.5 42 42 34 42 23" />
+              <path d="M24 14 V24 L31 29" />
+              <path d="M37 7 L41 11 M40 16 H44" />
+            </svg>
+          </div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: navy[900] }}>No webinars scheduled right now</div>
+          <div style={{ fontSize: 14, color: "#8a8074", maxWidth: 340, lineHeight: 1.5 }}>Check back soon — new sessions for your brands show up here as soon as they're added.</div>
+        </div>
+      )}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20 }}>
         {byBrand.map((b) => {
           const liveCount = b.items.filter((w) => w.is_live).length;
@@ -1613,7 +1629,11 @@ function CustomerTraining({ brands, completedStepIds, onStepCompleted, participa
 
   return (
     <div>
-      <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Training</h2>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
+        <div style={{ width: 24, height: 1, background: "#e4dfd6" }} />
+        <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: "#a39a8d" }}>Your training</div>
+      </div>
+      <h2 style={{ fontSize: 26, fontWeight: 300, color: navy[900], margin: "0 0 6px" }}>Training</h2>
       <p style={{ color: "#8a8074", fontSize: 16, margin: "0 0 20px" }}>Every brand you're approved for, and where you stand with each.</p>
 
       {brands.length === 0 ? (
@@ -1867,7 +1887,11 @@ function CustomerTeam({ team, currentUserId, onAdd, onRemove, isHolder = false }
 
   return (
     <div>
-      <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Team</h2>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
+        <div style={{ width: 24, height: 1, background: "#e4dfd6" }} />
+        <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: "#a39a8d" }}>Your team</div>
+      </div>
+      <h2 style={{ fontSize: 26, fontWeight: 300, color: navy[900], margin: "0 0 6px" }}>Team</h2>
       <p style={{ color: "#8a8074", fontSize: 16, margin: "0 0 20px" }}>
         {isHolder
           ? "Add staff to your account. They sign in with the exact email you enter here, choosing their own password the first time."
@@ -1960,7 +1984,11 @@ function MyCertificates({ userId }) {
 
   return (
     <div>
-      <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Certificates</h2>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
+        <div style={{ width: 24, height: 1, background: "#e4dfd6" }} />
+        <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: "#a39a8d" }}>Achievements</div>
+      </div>
+      <h2 style={{ fontSize: 26, fontWeight: 300, color: navy[900], margin: "0 0 6px" }}>Certificates</h2>
       <p style={{ color: "#8a8074", fontSize: 16, margin: "0 0 20px" }}>Every certificate you've earned, saved here for whenever you need it.</p>
 
       {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 12 }}>{error}</div>}
@@ -2103,7 +2131,11 @@ function AccountSettings({ user, account, onNameSaved }) {
 
   return (
     <div>
-      <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: "0 0 4px" }}>Settings</h2>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
+        <div style={{ width: 24, height: 1, background: "#e4dfd6" }} />
+        <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: "#a39a8d" }}>Account</div>
+      </div>
+      <h2 style={{ fontSize: 26, fontWeight: 300, color: navy[900], margin: "0 0 6px" }}>Settings</h2>
       <p style={{ color: "#8a8074", fontSize: 16, margin: "0 0 24px" }}>Update your own details and your company's account details.</p>
 
       <form onSubmit={saveName} style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: 18, marginBottom: 18 }}>
@@ -2235,25 +2267,28 @@ export default function CustomerApp({ user, account }) {
           .nbd-shell-layout { flex-direction: column; }
           .nbd-shell-nav { width: 100%; }
         }
+        .nbd-nav-item svg { transition: transform .25s cubic-bezier(.34,1.56,.64,1); }
+        .nbd-nav-item:hover svg { transform: scale(1.15) rotate(-6deg); }
       `}</style>
       {!isDrilledIntoTraining && (
         <div className="nbd-shell-nav">
           {[
-            { id: "home", label: "Home", icon: Home },
-            { id: "training", label: "Training", icon: PlayCircle },
-            { id: "webinars", label: "Live Webinars", icon: Radio },
-            { id: "certificates", label: "Certificates", icon: Award },
-            { id: "team", label: "Team", icon: Users },
-            ...(isHolder ? [{ id: "progress", label: "Team progress", icon: BarChart3 }] : []),
-            { id: "settings", label: "Settings", icon: Settings },
-            { id: "brochure", label: "Education Brochure", icon: BookOpen },
+            { id: "home", label: "Home", icon: DoodleHome },
+            { id: "training", label: "Training", icon: DoodlePlay },
+            { id: "webinars", label: "Live Webinars", icon: DoodleRadio },
+            { id: "certificates", label: "Certificates", icon: DoodleAward },
+            { id: "team", label: "Team", icon: DoodleUsers },
+            ...(isHolder ? [{ id: "progress", label: "Team progress", icon: DoodleChart }] : []),
+            { id: "settings", label: "Settings", icon: DoodleSettings },
+            { id: "brochure", label: "Education Brochure", icon: DoodleBook },
           ].map((t) => (
             <button
               key={t.id}
+              className="nbd-nav-item"
               onClick={() => setTab(t.id)}
-              style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left", padding: "9px 12px", borderRadius: 8, fontSize: 16, marginBottom: 4, background: tab === t.id ? navy[900] : "transparent", color: tab === t.id ? "#fff" : "#6b6155", fontWeight: tab === t.id ? 500 : 400, border: "none" }}
+              style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", textAlign: "left", padding: "9px 12px", borderRadius: 8, fontSize: 16, marginBottom: 4, background: tab === t.id ? "#58514a" : "transparent", color: tab === t.id ? "#fff" : "#6b6155", fontWeight: tab === t.id ? 500 : 400, border: "none" }}
             >
-              <t.icon size={16} /> {t.label}
+              <t.icon size={17} active={tab === t.id} /> {t.label}
             </button>
           ))}
           <a
