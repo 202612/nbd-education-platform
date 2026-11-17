@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { supabase } from "./supabaseClient.js";
 
@@ -178,6 +178,8 @@ export function AuthHero() {
   const [brandLogos, setBrandLogos] = useState([]);
   const [allBrands, setAllBrands] = useState([]);
   const [bgReady, setBgReady] = useState(false);
+  const [coverPct, setCoverPct] = useState(100);
+  const stageRef = useRef(null);
   const bgSrc = settings.background_url || DEFAULT_HERO_BG_SRC;
 
   useEffect(() => {
@@ -202,19 +204,58 @@ export function AuthHero() {
   // colour shows first and the photo pops in abruptly. Decoding it
   // explicitly via Image() and fading in once decoded turns that pop into a
   // smooth reveal. Re-runs if an admin swaps the photo in Design.
+  //
+  // It also measures the photo's natural size so the sizing effect below
+  // can guarantee full vertical coverage — see that effect's comment.
+  const [naturalSize, setNaturalSize] = useState(null);
   useEffect(() => {
     let cancelled = false;
     setBgReady(false);
     const img = new Image();
-    img.onload = () => { if (!cancelled) setBgReady(true); };
+    img.onload = () => {
+      if (cancelled) return;
+      setBgReady(true);
+      setNaturalSize({ w: img.naturalWidth, h: img.naturalHeight });
+    };
     img.src = bgSrc;
-    if (img.complete) setBgReady(true);
+    if (img.complete) {
+      setBgReady(true);
+      setNaturalSize({ w: img.naturalWidth, h: img.naturalHeight });
+    }
     return () => { cancelled = true; };
   }, [bgSrc]);
+
+  // background-size as a plain width percentage (what the admin's zoom
+  // slider controls) only guarantees covering the container's WIDTH — on a
+  // wide-but-short viewport, or any photo whose own aspect ratio is wider
+  // than the stage, that can leave the photo too short to cover the stage's
+  // full height, showing the stage's own dark fallback background as a band
+  // above or below it. This recomputes, on resize, the minimum width% that
+  // would guarantee full height coverage for this exact photo + container,
+  // and uses whichever is larger — so the admin's zoom can still zoom in
+  // further, but can never leave a gap.
+  useEffect(() => {
+    if (!naturalSize || !stageRef.current) return;
+    const el = stageRef.current;
+    const recompute = () => {
+      const cw = el.clientWidth, ch = el.clientHeight;
+      if (!cw || !ch || !naturalSize.w || !naturalSize.h) return;
+      const coverW = (100 * ch * naturalSize.w) / (cw * naturalSize.h);
+      setCoverPct(coverW);
+    };
+    recompute();
+    const ro = new ResizeObserver(recompute);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [naturalSize]);
+
+  const zoomPct = (settings.background_zoom ?? 1) * 100;
+  const bgWidthPct = Math.max(zoomPct, coverPct);
 
   return (
     <>
     <div
+      ref={stageRef}
       className="nbd-auth-hero"
       style={{
         background: navy[900],
@@ -224,18 +265,12 @@ export function AuthHero() {
         overflow: "hidden",
       }}
     >
-      {/* background_zoom/position are tuned against a wide desktop viewport —
-          sizing by a % of width alone can shrink the photo so much vertically
-          on a narrow phone that it barely covers the banner. Forcing "cover"
-          below the breakpoint guarantees the photo always fills the space,
-          at the cost of the admin's exact zoom/position below that width. */}
-      <style>{`@media (max-width: 700px) { .nbd-auth-hero-photo { background-size: cover !important; } }`}</style>
       <div
         className="nbd-auth-hero-photo"
         style={{
           position: "absolute", inset: 0,
           backgroundImage: `url(${bgSrc})`,
-          backgroundSize: `${(settings.background_zoom ?? 1) * 100}%`,
+          backgroundSize: `${bgWidthPct}%`,
           backgroundPosition: `${settings.background_position_x ?? 50}% ${settings.background_position_y ?? 50}%`,
           backgroundRepeat: "no-repeat",
           opacity: bgReady ? 1 : 0,
@@ -243,7 +278,7 @@ export function AuthHero() {
           // Brightens the photo itself (not just an overlay), since the
           // currently-uploaded photo already has its own dark grading baked
           // in — this compensates regardless of which photo is active.
-          filter: "brightness(1.45)",
+          filter: "brightness(1.8) contrast(0.96)",
         }}
       />
       {/* Dark scrim so white heading text and the glass logo band at the
@@ -286,7 +321,7 @@ export function AuthHero() {
       >
         <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>
           {settings.logo_url ? (
-            <div style={{ background: "#faf8f5", borderRadius: 16, padding: "clamp(16px, 2.2vw, 24px) clamp(28px, 4.5vw, 44px)", display: "inline-flex", overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.2)" }}>
+            <div style={{ background: "rgba(250,248,245,0.88)", borderRadius: 16, padding: "clamp(16px, 2.2vw, 24px) clamp(28px, 4.5vw, 44px)", display: "inline-flex", overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.2)" }}>
               <div style={{ height: "clamp(78px, 10.5vw, 140px)", width: "clamp(190px, 26vw, 320px)", overflow: "hidden", position: "relative" }}>
                 <img
                   src={settings.logo_url}
@@ -304,7 +339,7 @@ export function AuthHero() {
               </div>
             </div>
           ) : (
-            <div style={{ background: "#faf8f5", borderRadius: 16, padding: "clamp(16px, 2.2vw, 24px) clamp(26px, 4.2vw, 42px)", display: "inline-flex", boxShadow: "0 4px 20px rgba(0,0,0,0.2)" }}>
+            <div style={{ background: "rgba(250,248,245,0.88)", borderRadius: 16, padding: "clamp(16px, 2.2vw, 24px) clamp(26px, 4.2vw, 42px)", display: "inline-flex", boxShadow: "0 4px 20px rgba(0,0,0,0.2)" }}>
               <img src={WORDMARK_SRC} alt="National Beauty Distribution" style={{ height: "clamp(76px, 10vw, 140px)", display: "block" }} />
             </div>
           )}
