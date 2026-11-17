@@ -107,17 +107,17 @@ export function BrandMarquee({ brands, onLogoClick, height = 48, chip = false })
                 borderRadius: chip ? 12 : 0,
                 boxShadow: chip ? "0 4px 18px rgba(0,0,0,0.18)" : "none",
                 border: "none", cursor: onLogoClick ? "pointer" : "default",
-                flexShrink: 0, opacity: chip ? 1 : 0.7, transition: "opacity .15s ease, transform .15s ease",
+                flexShrink: 0, opacity: 1, transition: "transform .15s ease",
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.opacity = 1; if (chip) e.currentTarget.style.transform = "translateY(-2px)"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.opacity = chip ? 1 : 0.7; if (chip) e.currentTarget.style.transform = "translateY(0)"; }}
+              onMouseEnter={(e) => { if (chip) e.currentTarget.style.transform = "translateY(-2px)"; }}
+              onMouseLeave={(e) => { if (chip) e.currentTarget.style.transform = "translateY(0)"; }}
             >
               <img
                 src={b.logo_url}
                 alt={b.name}
                 style={chip
                   ? { maxWidth: "72%", maxHeight: "62%", objectFit: "contain", display: "block" }
-                  : { height, maxWidth: 120, objectFit: "contain", display: "block" }}
+                  : { height, maxWidth: 160, objectFit: "contain", display: "block" }}
               />
             </Tag>
           );
@@ -386,39 +386,58 @@ export function PublicBrandStrip() {
   }, []);
   if (allBrands.length === 0) return null;
   return (
-    <div style={{ background: "#fff", borderTop: "1px solid #e4dfd6", padding: "32px 0" }}>
-      <div style={{ textAlign: "center", fontSize: 12, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: "#a39a8d", marginBottom: 18 }}>
-        Brands we distribute
-      </div>
-      <BrandMarquee brands={allBrands} height={44} />
+    <div style={{ background: "#fff", borderTop: "1px solid #e4dfd6", padding: "36px 0" }}>
+      <BrandMarquee brands={allBrands} height={56} />
     </div>
   );
 }
 
 // Footer for the public login/request-access pages, matching
-// nationalbeauty.ie's own footer (same address, phone, and social links).
+// nationalbeauty.ie's own footer (same address, phone, and social links),
+// styled with a bit more presence and some hover interactivity.
 export function PublicFooter() {
   return (
-    <div style={{ background: "#efefef", borderTop: "1px solid #e4dfd6" }}>
+    <div style={{ background: "#201b15" }}>
+      <style>{`
+        .nbd-footer-social { transition: transform .2s cubic-bezier(.34,1.56,.64,1), background .15s ease; }
+        .nbd-footer-social:hover { transform: translateY(-3px) scale(1.08); background: #98cb63 !important; }
+        .nbd-footer-link { transition: color .15s ease; }
+        .nbd-footer-link:hover { color: #98cb63 !important; }
+      `}</style>
       <div
         style={{
-          maxWidth: 1080, margin: "0 auto", padding: "28px 24px",
+          maxWidth: 1080, margin: "0 auto", padding: "36px 24px",
           display: "flex", justifyContent: "space-between", alignItems: "flex-start",
-          flexWrap: "wrap", gap: 16,
+          flexWrap: "wrap", gap: 20,
         }}
       >
-        <div style={{ fontSize: 15, color: "#2b2b2b", lineHeight: 2 }}>
-          <div>Unit 5/6 Blarney Business Park,</div>
-          <div>Blarney,</div>
-          <div>Cork T23 CD71</div>
-          <div>021-234 0142</div>
-        </div>
-        <div style={{ display: "flex", gap: 14, paddingTop: 2 }}>
-          <a href="https://www.facebook.com/nationalbeautydistribution/" target="_blank" rel="noreferrer" aria-label="Facebook" style={{ color: "#1a1a1a" }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M22 12a10 10 0 10-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.4h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.4v7A10 10 0 0022 12z"/></svg>
+        <div style={{ fontSize: 15, color: "rgba(255,255,255,0.8)", lineHeight: 1.9 }}>
+          <a
+            className="nbd-footer-link"
+            href="https://www.google.com/maps/search/?api=1&query=Unit+5%2F6+Blarney+Business+Park%2C+Blarney%2C+Cork+T23+CD71"
+            target="_blank" rel="noreferrer"
+            style={{ color: "inherit", textDecoration: "none", display: "block" }}
+          >
+            Unit 5/6 Blarney Business Park,<br />Blarney,<br />Cork T23 CD71
           </a>
-          <a href="http://instagram.com/national_b" target="_blank" rel="noreferrer" aria-label="Instagram" style={{ color: "#1a1a1a" }}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg>
+          <a className="nbd-footer-link" href="tel:0212340142" style={{ color: "inherit", textDecoration: "none", display: "block", marginTop: 4 }}>
+            021-234 0142
+          </a>
+        </div>
+        <div style={{ display: "flex", gap: 12, paddingTop: 2 }}>
+          <a
+            className="nbd-footer-social"
+            href="https://www.facebook.com/nationalbeautydistribution/" target="_blank" rel="noreferrer" aria-label="Facebook"
+            style={{ width: 38, height: 38, borderRadius: "50%", background: "rgba(255,255,255,0.1)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M22 12a10 10 0 10-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.4h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.4v7A10 10 0 0022 12z"/></svg>
+          </a>
+          <a
+            className="nbd-footer-social"
+            href="http://instagram.com/national_b" target="_blank" rel="noreferrer" aria-label="Instagram"
+            style={{ width: 38, height: 38, borderRadius: "50%", background: "rgba(255,255,255,0.1)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg>
           </a>
         </div>
       </div>
