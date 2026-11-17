@@ -275,10 +275,10 @@ export function AuthHero() {
           textAlign: "center",
         }}
       >
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>
           {settings.logo_url ? (
-            <div style={{ background: "#fff", borderRadius: 16, padding: "clamp(20px, 3vw, 34px) clamp(34px, 6vw, 60px)", display: "inline-flex", overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.25)" }}>
-              <div style={{ height: "clamp(90px, 14vw, 170px)", width: "clamp(220px, 32vw, 380px)", overflow: "hidden", position: "relative" }}>
+            <div style={{ background: "#fff", borderRadius: 16, padding: "clamp(16px, 2.2vw, 24px) clamp(28px, 4.5vw, 44px)", display: "inline-flex", overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.25)" }}>
+              <div style={{ height: "clamp(78px, 10.5vw, 140px)", width: "clamp(190px, 26vw, 320px)", overflow: "hidden", position: "relative" }}>
                 <img
                   src={settings.logo_url}
                   alt="Logo"
@@ -295,8 +295,8 @@ export function AuthHero() {
               </div>
             </div>
           ) : (
-            <div style={{ background: "#fff", borderRadius: 16, padding: "clamp(18px, 2.6vw, 28px) clamp(30px, 5vw, 50px)", display: "inline-flex", boxShadow: "0 4px 20px rgba(0,0,0,0.25)" }}>
-              <img src={WORDMARK_SRC} alt="National Beauty Distribution" style={{ height: "clamp(66px, 11vw, 120px)", display: "block" }} />
+            <div style={{ background: "#fff", borderRadius: 16, padding: "clamp(16px, 2.2vw, 24px) clamp(26px, 4.2vw, 42px)", display: "inline-flex", boxShadow: "0 4px 20px rgba(0,0,0,0.25)" }}>
+              <img src={WORDMARK_SRC} alt="National Beauty Distribution" style={{ height: "clamp(76px, 10vw, 140px)", display: "block" }} />
             </div>
           )}
         </div>
