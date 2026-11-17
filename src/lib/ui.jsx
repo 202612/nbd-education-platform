@@ -99,8 +99,10 @@ export function BrandMarquee({ brands, onLogoClick, height = 48, chip = false })
               title={b.name}
               style={{
                 display: "flex", alignItems: "center", justifyContent: "center",
-                padding: chip ? "14px 28px" : "0 36px",
+                padding: chip ? 0 : "0 36px",
                 margin: chip ? "0 10px" : 0,
+                width: chip ? 170 : undefined,
+                height: chip ? 96 : undefined,
                 background: chip ? "rgba(255,255,255,0.92)" : "none",
                 borderRadius: chip ? 12 : 0,
                 boxShadow: chip ? "0 4px 18px rgba(0,0,0,0.18)" : "none",
@@ -110,7 +112,13 @@ export function BrandMarquee({ brands, onLogoClick, height = 48, chip = false })
               onMouseEnter={(e) => { e.currentTarget.style.opacity = 1; if (chip) e.currentTarget.style.transform = "translateY(-2px)"; }}
               onMouseLeave={(e) => { e.currentTarget.style.opacity = chip ? 1 : 0.7; if (chip) e.currentTarget.style.transform = "translateY(0)"; }}
             >
-              <img src={b.logo_url} alt={b.name} style={{ height, maxWidth: chip ? 150 : 120, objectFit: "contain", display: "block" }} />
+              <img
+                src={b.logo_url}
+                alt={b.name}
+                style={chip
+                  ? { maxWidth: "72%", maxHeight: "62%", objectFit: "contain", display: "block" }
+                  : { height, maxWidth: 120, objectFit: "contain", display: "block" }}
+              />
             </Tag>
           );
         })}
@@ -237,7 +245,7 @@ export function AuthHero() {
       {/* Dark scrim so white heading text and the glass logo band at the
           bottom both stay legible over whatever photo is uploaded, heavier
           toward the bottom where the marquee band sits. */}
-      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(10,9,7,0.12) 0%, rgba(10,9,7,0.22) 55%, rgba(10,9,7,0.5) 100%)" }} />
+      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(10,9,7,0.05) 0%, rgba(10,9,7,0.12) 55%, rgba(10,9,7,0.32) 100%)" }} />
 
       {brandLogos.map((b) => (
         <img
@@ -338,7 +346,7 @@ export function AuthHero() {
             borderTop: "1px solid rgba(255,255,255,0.14)",
           }}
         >
-          <BrandMarquee brands={allBrands} height={40} chip />
+          <BrandMarquee brands={allBrands} height={52} chip />
         </div>
       )}
     </div>
