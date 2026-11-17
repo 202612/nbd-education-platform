@@ -278,7 +278,7 @@ export function AuthHero() {
           // Brightens the photo itself (not just an overlay), since the
           // currently-uploaded photo already has its own dark grading baked
           // in — this compensates regardless of which photo is active.
-          filter: "brightness(2.3) contrast(0.94) saturate(1.05)",
+          filter: "brightness(1.05)",
         }}
       />
       {/* Dark scrim so white heading text and the glass logo band at the
