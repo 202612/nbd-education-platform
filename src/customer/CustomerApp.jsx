@@ -1177,8 +1177,23 @@ function CustomerBrandDetail({ brand, completedStepIds, onStepCompleted, partici
           alignItems: "center",
           gap: 24,
           flexWrap: "wrap",
+          position: "relative",
+          overflow: "hidden",
         }}
       >
+        {/* Small vertical brand tag, a wayfinding detail borrowed from the
+            printed education brochure — a quiet marker of which brand's
+            section you're in, same idea as the brochure's page-edge tab. */}
+        <div
+          style={{
+            position: "absolute", top: 0, right: 24, background: "rgba(0,0,0,0.35)",
+            padding: "8px 7px", borderBottomLeftRadius: 8, borderBottomRightRadius: 8,
+            writingMode: "vertical-rl", textOrientation: "mixed", transform: "rotate(180deg)",
+            fontSize: 11, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: "rgba(255,255,255,0.85)",
+          }}
+        >
+          {brand.name}
+        </div>
         {brand.logo_url && (
           <div style={{ height: 88, width: 88, flexShrink: 0, borderRadius: 16, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", padding: 14, boxShadow: "0 4px 14px rgba(0,0,0,0.18)" }}>
             <img src={brand.logo_url} alt={brand.name} style={{ maxHeight: "100%", maxWidth: "100%", objectFit: "contain" }} />

@@ -278,13 +278,13 @@ export function AuthHero() {
           // Brightens the photo itself (not just an overlay), since the
           // currently-uploaded photo already has its own dark grading baked
           // in — this compensates regardless of which photo is active.
-          filter: "brightness(1.8) contrast(0.96)",
+          filter: "brightness(2.3) contrast(0.94) saturate(1.05)",
         }}
       />
       {/* Dark scrim so white heading text and the glass logo band at the
           bottom both stay legible over whatever photo is uploaded, heavier
           toward the bottom where the marquee band sits. */}
-      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(10,9,7,0) 0%, rgba(10,9,7,0.04) 55%, rgba(10,9,7,0.18) 100%)" }} />
+      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(10,9,7,0) 0%, rgba(10,9,7,0.02) 55%, rgba(10,9,7,0.1) 100%)" }} />
 
       {brandLogos.map((b) => (
         <img
@@ -384,7 +384,7 @@ export function AuthHero() {
           style={{
             position: "absolute", left: 0, right: 0, bottom: 0,
             padding: "18px 0 22px",
-            background: "rgba(10,9,7,0.22)",
+            background: "rgba(10,9,7,0.1)",
             backdropFilter: "blur(10px)",
             WebkitBackdropFilter: "blur(10px)",
             borderTop: "1px solid rgba(255,255,255,0.14)",
