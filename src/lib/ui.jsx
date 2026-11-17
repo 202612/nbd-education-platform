@@ -237,7 +237,7 @@ export function AuthHero() {
       {/* Dark scrim so white heading text and the glass logo band at the
           bottom both stay legible over whatever photo is uploaded, heavier
           toward the bottom where the marquee band sits. */}
-      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(10,9,7,0.28) 0%, rgba(10,9,7,0.4) 55%, rgba(10,9,7,0.72) 100%)" }} />
+      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(10,9,7,0.12) 0%, rgba(10,9,7,0.22) 55%, rgba(10,9,7,0.5) 100%)" }} />
 
       {brandLogos.map((b) => (
         <img
@@ -269,7 +269,7 @@ export function AuthHero() {
       >
         <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
           {settings.logo_url ? (
-            <div style={{ background: "#fff", borderRadius: 16, padding: "clamp(16px, 2.4vw, 26px) clamp(28px, 5vw, 48px)", display: "inline-flex", overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+            <div style={{ background: "rgba(255,255,255,0.16)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", border: "1px solid rgba(255,255,255,0.3)", borderRadius: 16, padding: "clamp(16px, 2.4vw, 26px) clamp(28px, 5vw, 48px)", display: "inline-flex", overflow: "hidden" }}>
               <div style={{ height: "clamp(68px, 11vw, 130px)", width: "clamp(170px, 26vw, 300px)", overflow: "hidden", position: "relative" }}>
                 <img
                   src={settings.logo_url}
@@ -287,7 +287,7 @@ export function AuthHero() {
               </div>
             </div>
           ) : (
-            <div style={{ background: "#fff", borderRadius: 16, padding: "clamp(14px, 2vw, 22px) clamp(24px, 4vw, 40px)", display: "inline-flex", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
+            <div style={{ background: "rgba(255,255,255,0.16)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", border: "1px solid rgba(255,255,255,0.3)", borderRadius: 16, padding: "clamp(14px, 2vw, 22px) clamp(24px, 4vw, 40px)", display: "inline-flex" }}>
               <img src={WORDMARK_SRC} alt="National Beauty Distribution" style={{ height: "clamp(50px, 8vw, 90px)", display: "block" }} />
             </div>
           )}
