@@ -240,6 +240,10 @@ export function AuthHero() {
           backgroundRepeat: "no-repeat",
           opacity: bgReady ? 1 : 0,
           transition: "opacity 400ms ease",
+          // Brightens the photo itself (not just an overlay), since the
+          // currently-uploaded photo already has its own dark grading baked
+          // in — this compensates regardless of which photo is active.
+          filter: "brightness(1.45)",
         }}
       />
       {/* Dark scrim so white heading text and the glass logo band at the
@@ -273,7 +277,7 @@ export function AuthHero() {
           // marquee band at the bottom of the hero, no matter what's saved
           // from the drag handle — that gap is what was swallowing the
           // headline before.
-          top: `${allBrands.length > 0 ? Math.min(settings.content_y ?? 50, 46) : settings.content_y ?? 50}%`,
+          top: `${allBrands.length > 0 ? Math.min(settings.content_y ?? 50, 40) : settings.content_y ?? 50}%`,
           transform: "translate(-50%, -50%)",
           width: "clamp(300px, 68vw, 620px)",
           textAlign: "center",
@@ -282,7 +286,7 @@ export function AuthHero() {
       >
         <div style={{ display: "flex", justifyContent: "center", marginBottom: 14 }}>
           {settings.logo_url ? (
-            <div style={{ background: "#fff", borderRadius: 16, padding: "clamp(16px, 2.2vw, 24px) clamp(28px, 4.5vw, 44px)", display: "inline-flex", overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.25)" }}>
+            <div style={{ background: "#faf8f5", borderRadius: 16, padding: "clamp(16px, 2.2vw, 24px) clamp(28px, 4.5vw, 44px)", display: "inline-flex", overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.2)" }}>
               <div style={{ height: "clamp(78px, 10.5vw, 140px)", width: "clamp(190px, 26vw, 320px)", overflow: "hidden", position: "relative" }}>
                 <img
                   src={settings.logo_url}
@@ -300,7 +304,7 @@ export function AuthHero() {
               </div>
             </div>
           ) : (
-            <div style={{ background: "#fff", borderRadius: 16, padding: "clamp(16px, 2.2vw, 24px) clamp(26px, 4.2vw, 42px)", display: "inline-flex", boxShadow: "0 4px 20px rgba(0,0,0,0.25)" }}>
+            <div style={{ background: "#faf8f5", borderRadius: 16, padding: "clamp(16px, 2.2vw, 24px) clamp(26px, 4.2vw, 42px)", display: "inline-flex", boxShadow: "0 4px 20px rgba(0,0,0,0.2)" }}>
               <img src={WORDMARK_SRC} alt="National Beauty Distribution" style={{ height: "clamp(76px, 10vw, 140px)", display: "block" }} />
             </div>
           )}
