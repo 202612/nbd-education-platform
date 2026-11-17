@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
-  PlayCircle, CheckCircle2, Lock, Award, Users, Trash2, Loader2, ChevronLeft, Clock, Mail, Download, Settings, GripVertical, BookOpen, Maximize2, BarChart3, XCircle, Radio, Home,
+  PlayCircle, CheckCircle2, Lock, Award, Users, Trash2, Loader2, ChevronLeft, ChevronRight, Check, Clock, Mail, Download, Settings, GripVertical, BookOpen, Maximize2, BarChart3, XCircle, Radio, Home,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
@@ -1446,6 +1446,7 @@ function ContinueCard({ pick, onOpenBrand }) {
   const pct = total ? Math.round((done / total) * 100) : 0;
   return (
     <button
+      className="nbd-continue-card"
       onClick={() => onOpenBrand(brand.id)}
       style={{
         display: "flex", alignItems: "center", gap: 20, width: "100%", textAlign: "left",
@@ -1453,6 +1454,14 @@ function ContinueCard({ pick, onOpenBrand }) {
         marginBottom: 20, cursor: "pointer",
       }}
     >
+      <style>{`
+        .nbd-continue-card { transition: transform .15s ease, box-shadow .15s ease; }
+        .nbd-continue-card:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(32,27,21,0.1); }
+        .nbd-continue-fill { animation: nbd-continue-fill-anim 1s cubic-bezier(.2,.8,.2,1) 0.15s backwards; }
+        @keyframes nbd-continue-fill-anim { from { width: 0%; } }
+        .nbd-continue-btn svg { transition: transform .15s ease; }
+        .nbd-continue-card:hover .nbd-continue-btn svg { transform: translateX(2px); }
+      `}</style>
       <div style={{ width: 64, height: 64, borderRadius: 12, border: "1px solid #e4dfd6", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, padding: 10 }}>
         {brand.logo_url ? (
           <img src={brand.logo_url} alt={brand.name} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
@@ -1461,26 +1470,71 @@ function ContinueCard({ pick, onOpenBrand }) {
         )}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", color: "#a39a8d", marginBottom: 4 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", color: "#4d6b2c", marginBottom: 4 }}>
           {started ? "Continue where you left off" : "Pick up next"}
         </div>
         <div style={{ fontWeight: 700, fontSize: 18, color: navy[900], marginBottom: 8 }}>{brand.name}</div>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ flex: 1, maxWidth: 240, height: 6, background: "#e4dfd6", borderRadius: 999, overflow: "hidden" }}>
-            <div style={{ height: "100%", width: `${pct}%`, background: navy[700] }} />
+            <div className="nbd-continue-fill" style={{ height: "100%", width: `${pct}%`, background: "linear-gradient(90deg, #4d6b2c, #98cb63)" }} />
           </div>
           <div style={{ fontSize: 13, color: "#8a8074", whiteSpace: "nowrap" }}>{done} of {total} steps complete</div>
         </div>
       </div>
       <div
+        className="nbd-continue-btn"
         style={{
-          flexShrink: 0, background: navy[900], color: "#fff", fontSize: 14, fontWeight: 700,
+          flexShrink: 0, display: "flex", alignItems: "center", gap: 6, background: navy[900], color: "#fff", fontSize: 14, fontWeight: 700,
           padding: "10px 22px", borderRadius: 8, whiteSpace: "nowrap",
         }}
       >
         {started ? "Continue" : "Start"}
+        <ChevronRight size={14} />
       </div>
     </button>
+  );
+}
+
+function BrandTileGrid({ brands, completedStepIds, onOpenBrand }) {
+  if (brands.length === 0) return null;
+  return (
+    <div>
+      <style>{`
+        .nbd-tile { position: relative; background: #fff; border: 1px solid #e4dfd6; border-radius: 16px; padding: 18px 16px; overflow: hidden; transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; cursor: pointer; text-align: left; }
+        .nbd-tile:hover { transform: translateY(-4px); box-shadow: 0 14px 30px rgba(32,27,21,0.12); border-color: #d8d0c2; }
+        .nbd-tile-ring { stroke-linecap: round; transition: stroke-dashoffset 1s cubic-bezier(.2,.8,.2,1); }
+        .nbd-tile-badge { position: absolute; top: 12px; right: 12px; width: 22px; height: 22px; border-radius: 50%; background: #98cb63; color: #201b15; display: flex; align-items: center; justify-content: center; }
+        .nbd-tile-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+        @media (max-width: 900px) { .nbd-tile-grid { grid-template-columns: repeat(2, 1fr); } }
+      `}</style>
+      <div style={{ fontSize: 18, fontWeight: 700, color: navy[900], margin: "0 0 14px" }}>Your brands</div>
+      <div className="nbd-tile-grid">
+        {brands.map((b) => {
+          const total = b.steps.length;
+          const done = b.steps.filter((s) => completedStepIds.has(s.id)).length;
+          const pct = total ? Math.round((done / total) * 100) : 0;
+          const status = total === 0 ? "No training yet" : done === 0 ? "Not started" : done === total ? "Completed" : "In progress";
+          const r = 22, circ = 2 * Math.PI * r;
+          const offset = circ - (circ * pct) / 100;
+          return (
+            <button key={b.id} className="nbd-tile" onClick={() => onOpenBrand(b.id)}>
+              {pct === 100 && total > 0 && (
+                <div className="nbd-tile-badge"><Check size={13} /></div>
+              )}
+              <div style={{ position: "relative", width: 52, height: 52, marginBottom: 12 }}>
+                <svg width="52" height="52" viewBox="0 0 52 52" style={{ transform: "rotate(-90deg)" }}>
+                  <circle cx="26" cy="26" r={r} fill="none" stroke="#ece6da" strokeWidth="5" />
+                  <circle className="nbd-tile-ring" cx="26" cy="26" r={r} fill="none" stroke="#4d6b2c" strokeWidth="5" strokeDasharray={circ} strokeDashoffset={offset} />
+                </svg>
+                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: navy[900] }}>{pct}%</div>
+              </div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: navy[900], marginBottom: 2 }}>{b.name}</div>
+              <div style={{ fontSize: 12.5, color: "#8a8074" }}>{status}</div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -1496,7 +1550,7 @@ function CustomerHome({ brands, completedStepIds, participantName, onOpenBrand }
       <div
         style={{
           position: "relative", overflow: "hidden",
-          background: `linear-gradient(120deg, ${navy[700]} 0%, ${navy[500]} 100%)`,
+          background: "linear-gradient(125deg, #5e8f1e 0%, #98cb63 100%)",
           borderRadius: 18,
           padding: "36px 40px",
           marginBottom: 28,
@@ -1508,8 +1562,14 @@ function CustomerHome({ brands, completedStepIds, participantName, onOpenBrand }
           gap: 24,
         }}
       >
-        <div style={{ position: "absolute", right: -40, top: -40, width: 180, height: 180, borderRadius: "50%", background: "rgba(255,255,255,0.1)" }} />
-        <div style={{ position: "absolute", right: 60, bottom: -70, width: 120, height: 120, borderRadius: "50%", background: "rgba(255,255,255,0.08)" }} />
+        {/* Quiet linework texture, same idea as the brochure's illustration —
+            restrained, on-brand green, not a flat gradient. */}
+        <svg viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ position: "absolute", top: -40, right: -60, width: 420, height: 420, opacity: 0.16, pointerEvents: "none" }}>
+          <path d="M200 40 C 260 40 300 90 300 150 C 300 210 260 240 230 260 L230 300" stroke="white" strokeWidth="3" strokeLinecap="round" />
+          <circle cx="200" cy="150" r="90" stroke="white" strokeWidth="2" opacity="0.6" />
+          <path d="M210 300 L190 300 L190 320 L210 320 Z" stroke="white" strokeWidth="2.5" />
+          <path d="M150 90 Q 90 150 150 220" stroke="white" strokeWidth="2" opacity="0.5" />
+        </svg>
         <div style={{ position: "relative" }}>
           <h2 style={{ fontSize: 28, fontWeight: 700, margin: 0 }}>Welcome back{participantName ? `, ${participantName.split(" ")[0]}` : ""}</h2>
         </div>
@@ -1530,6 +1590,8 @@ function CustomerHome({ brands, completedStepIds, participantName, onOpenBrand }
       </div>
 
       <ContinueCard pick={continuePick} onOpenBrand={onOpenBrand} />
+
+      <BrandTileGrid brands={brands} completedStepIds={completedStepIds} onOpenBrand={onOpenBrand} />
     </div>
   );
 }
