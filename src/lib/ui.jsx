@@ -397,21 +397,31 @@ export function PublicBrandStrip() {
 // styled with a bit more presence and some hover interactivity.
 export function PublicFooter() {
   return (
-    <div style={{ background: "#201b15" }}>
+    <div style={{ background: "#f1f7e9", position: "relative", overflow: "hidden" }}>
+      {/* Faint green scribble texture, same doodle language as the Home
+          welcome banner and the sidebar icons — restrained, not a block
+          of color, just a bit of life behind the footer content. */}
+      <svg viewBox="0 0 800 220" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", opacity: 0.35, pointerEvents: "none" }} preserveAspectRatio="xMidYMid slice">
+        <path d="M-20 180 C 60 120 100 190 160 140 C 220 90 260 160 320 130 C 380 100 420 170 480 140 C 540 110 580 60 640 90 C 700 120 740 70 820 100" stroke="#98cb63" strokeWidth="2.5" strokeLinecap="round" />
+        <path d="M60 40 C 100 10 140 40 170 20" stroke="#98cb63" strokeWidth="2" strokeLinecap="round" opacity="0.7" />
+        <circle cx="700" cy="40" r="26" stroke="#98cb63" strokeWidth="2" opacity="0.6" />
+        <path d="M400 200 C 430 220 470 220 500 200" stroke="#98cb63" strokeWidth="2" strokeLinecap="round" opacity="0.6" />
+      </svg>
       <style>{`
-        .nbd-footer-social { transition: transform .2s cubic-bezier(.34,1.56,.64,1), background .15s ease; }
-        .nbd-footer-social:hover { transform: translateY(-3px) scale(1.08); background: #98cb63 !important; }
+        .nbd-footer-social { transition: transform .2s cubic-bezier(.34,1.56,.64,1), background .15s ease, color .15s ease; }
+        .nbd-footer-social:hover { transform: translateY(-3px) scale(1.08); background: #4d6b2c !important; color: #fff !important; }
         .nbd-footer-link { transition: color .15s ease; }
-        .nbd-footer-link:hover { color: #98cb63 !important; }
+        .nbd-footer-link:hover { color: #4d6b2c !important; }
       `}</style>
       <div
         style={{
+          position: "relative",
           maxWidth: 1080, margin: "0 auto", padding: "36px 24px",
           display: "flex", justifyContent: "space-between", alignItems: "flex-start",
           flexWrap: "wrap", gap: 20,
         }}
       >
-        <div style={{ fontSize: 15, color: "rgba(255,255,255,0.8)", lineHeight: 1.9 }}>
+        <div style={{ fontSize: 15, color: "#2b2b2b", lineHeight: 1.9 }}>
           <a
             className="nbd-footer-link"
             href="https://www.google.com/maps/search/?api=1&query=Unit+5%2F6+Blarney+Business+Park%2C+Blarney%2C+Cork+T23+CD71"
@@ -428,14 +438,14 @@ export function PublicFooter() {
           <a
             className="nbd-footer-social"
             href="https://www.facebook.com/nationalbeautydistribution/" target="_blank" rel="noreferrer" aria-label="Facebook"
-            style={{ width: 38, height: 38, borderRadius: "50%", background: "rgba(255,255,255,0.1)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}
+            style={{ width: 38, height: 38, borderRadius: "50%", background: "#fff", border: "1px solid #e4dfd6", color: "#2b2b2b", display: "flex", alignItems: "center", justifyContent: "center" }}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M22 12a10 10 0 10-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.4h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.8l-.4 2.9h-2.4v7A10 10 0 0022 12z"/></svg>
           </a>
           <a
             className="nbd-footer-social"
             href="http://instagram.com/national_b" target="_blank" rel="noreferrer" aria-label="Instagram"
-            style={{ width: 38, height: 38, borderRadius: "50%", background: "rgba(255,255,255,0.1)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}
+            style={{ width: 38, height: 38, borderRadius: "50%", background: "#fff", border: "1px solid #e4dfd6", color: "#2b2b2b", display: "flex", alignItems: "center", justifyContent: "center" }}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none"/></svg>
           </a>
