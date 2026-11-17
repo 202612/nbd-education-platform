@@ -245,7 +245,7 @@ export function AuthHero() {
       {/* Dark scrim so white heading text and the glass logo band at the
           bottom both stay legible over whatever photo is uploaded, heavier
           toward the bottom where the marquee band sits. */}
-      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(10,9,7,0.05) 0%, rgba(10,9,7,0.12) 55%, rgba(10,9,7,0.32) 100%)" }} />
+      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(10,9,7,0) 0%, rgba(10,9,7,0.04) 55%, rgba(10,9,7,0.18) 100%)" }} />
 
       {brandLogos.map((b) => (
         <img
@@ -269,7 +269,11 @@ export function AuthHero() {
         style={{
           position: "absolute",
           left: `${settings.content_x ?? 50}%`,
-          top: `${settings.content_y ?? 50}%`,
+          // Capped so the text block can never sit low enough to reach the
+          // marquee band at the bottom of the hero, no matter what's saved
+          // from the drag handle — that gap is what was swallowing the
+          // headline before.
+          top: `${allBrands.length > 0 ? Math.min(settings.content_y ?? 50, 46) : settings.content_y ?? 50}%`,
           transform: "translate(-50%, -50%)",
           width: "clamp(300px, 68vw, 620px)",
           textAlign: "center",
