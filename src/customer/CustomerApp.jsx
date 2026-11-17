@@ -1323,15 +1323,20 @@ function WebinarDetail({ webinar, onBack, onRefetch }) {
 
 // ================= CALENDAR / SCHEDULED TRAINING =================
 
+const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const MONTH_LABELS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
 function CustomerCalendar({ account, currentUser, team, brands, teamProgress, completedStepIds, isHolder }) {
   const [rows, setRows] = useState(null);
   const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
+  const [busy, setBusy] = useState(false);
+  const today = new Date();
+  const [viewYear, setViewYear] = useState(today.getFullYear());
+  const [viewMonth, setViewMonth] = useState(today.getMonth());
+  const [modalDate, setModalDate] = useState(null); // "yyyy-mm-dd" or null when closed
   const [assignedTo, setAssignedTo] = useState(currentUser.id);
   const [brandId, setBrandId] = useState("");
-  const [date, setDate] = useState("");
   const [note, setNote] = useState("");
-  const [busy, setBusy] = useState(false);
 
   async function load() {
     const { data, error: err } = await supabase
@@ -1349,24 +1354,46 @@ function CustomerCalendar({ account, currentUser, team, brands, teamProgress, co
     return teamProgress[userId] || new Map();
   }
 
-  async function schedule(e) {
+  const todayStr = today.toISOString().slice(0, 10);
+  const withStatus = (rows || []).map((r) => {
+    const stepIds = (r.brands?.steps || []).map((s) => s.id);
+    const done = doneSetFor(r.assigned_to);
+    const doneCount = stepIds.filter((id) => done.has(id)).length;
+    const completed = stepIds.length > 0 && doneCount === stepIds.length;
+    const overdue = !completed && r.scheduled_date < todayStr;
+    const status = completed ? "Completed" : overdue ? "Overdue" : "Upcoming";
+    return { ...r, doneCount, totalSteps: stepIds.length, status };
+  });
+
+  const byDate = {};
+  for (const r of withStatus) {
+    (byDate[r.scheduled_date] ||= []).push(r);
+  }
+
+  function openModal(dateStr) {
+    setModalDate(dateStr);
+    setAssignedTo(currentUser.id);
+    setBrandId("");
+    setNote("");
+    setError("");
+  }
+
+  async function submitSchedule(e) {
     e.preventDefault();
-    if (!brandId || !date) { setError("Pick a brand and a date first."); return; }
+    if (!brandId || !modalDate) { setError("Pick a brand first."); return; }
     setBusy(true);
     setError("");
-    setNotice("");
     const { error: err } = await supabase.from("training_schedule").insert({
       account_id: account.id,
       assigned_to: assignedTo,
       created_by: currentUser.id,
       brand_id: brandId,
-      scheduled_date: date,
+      scheduled_date: modalDate,
       note: note.trim() || null,
     });
     setBusy(false);
     if (err) { setError(err.message); return; }
-    setNotice("Scheduled.");
-    setBrandId(""); setDate(""); setNote("");
+    setModalDate(null);
     load();
   }
 
@@ -1375,16 +1402,24 @@ function CustomerCalendar({ account, currentUser, team, brands, teamProgress, co
     load();
   }
 
-  const today = new Date().toISOString().slice(0, 10);
-  const withStatus = (rows || []).map((r) => {
-    const stepIds = (r.brands?.steps || []).map((s) => s.id);
-    const done = doneSetFor(r.assigned_to);
-    const doneCount = stepIds.filter((id) => done.has(id)).length;
-    const completed = stepIds.length > 0 && doneCount === stepIds.length;
-    const overdue = !completed && r.scheduled_date < today;
-    const status = completed ? "Completed" : overdue ? "Overdue" : "Upcoming";
-    return { ...r, doneCount, totalSteps: stepIds.length, status };
-  });
+  function changeMonth(delta) {
+    let m = viewMonth + delta, y = viewYear;
+    if (m < 0) { m = 11; y -= 1; }
+    if (m > 11) { m = 0; y += 1; }
+    setViewMonth(m); setViewYear(y);
+  }
+
+  // Build a Sun-first grid: leading blanks for the first day's weekday
+  // offset, then one cell per day of the month.
+  const firstWeekday = new Date(viewYear, viewMonth, 1).getDay();
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const cells = [];
+  for (let i = 0; i < firstWeekday; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+
+  function dateStrFor(day) {
+    return `${viewYear}-${String(viewMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  }
 
   return (
     <div>
@@ -1394,7 +1429,7 @@ function CustomerCalendar({ account, currentUser, team, brands, teamProgress, co
       </div>
       <h2 style={{ fontSize: 26, fontWeight: 300, color: navy[900], margin: "0 0 6px" }}>Calendar</h2>
       <p style={{ color: "#8a8074", fontSize: 16, margin: "0 0 24px" }}>
-        Put a date on finishing a brand's training{isHolder ? " — for yourself or anyone on your team" : ""}. You'll get an email reminder the day before.
+        Click any date to schedule a brand's training{isHolder ? " — for yourself or anyone on your team" : ""}. You'll get an email reminder the day before.
       </p>
 
       <style>{`
@@ -1406,29 +1441,107 @@ function CustomerCalendar({ account, currentUser, team, brands, teamProgress, co
         .nbd-cal-row:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(32,27,21,0.08); }
         .nbd-cal-cancel { transition: color .15s ease, transform .15s ease; }
         .nbd-cal-cancel:hover { color: #a3372f !important; transform: scale(1.1); }
+        .nbd-cal-nav { transition: background .15s ease; }
+        .nbd-cal-nav:hover { background: #f1ede4 !important; }
+        .nbd-cal-day { transition: background .15s ease, box-shadow .15s ease; }
+        .nbd-cal-day:not(.nbd-cal-day--blank):hover { background: #faf8f4; box-shadow: inset 0 0 0 1px #98cb63; }
       `}</style>
 
-      <form onSubmit={schedule} style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 14, padding: 20, marginBottom: 24 }}>
-        <div style={{ fontSize: 15, fontWeight: 700, color: navy[900], marginBottom: 14 }}>Schedule training</div>
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 12 }}>
-          {isHolder && (
-            <select className="nbd-cal-input" value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)} style={{ flex: "1 1 160px", padding: "9px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 15 }}>
-              {team.map((u) => <option key={u.id} value={u.id}>{u.id === currentUser.id ? `${u.name} (you)` : u.name}</option>)}
-            </select>
-          )}
-          <select className="nbd-cal-input" value={brandId} onChange={(e) => setBrandId(e.target.value)} style={{ flex: "1 1 160px", padding: "9px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 15 }}>
-            <option value="">Which brand?</option>
-            {brands.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-          </select>
-          <input className="nbd-cal-input" type="date" min={today} value={date} onChange={(e) => setDate(e.target.value)} style={{ flex: "1 1 160px", padding: "9px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 15 }} />
+      {/* Month grid */}
+      <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 14, padding: 20, marginBottom: 24 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+          <button className="nbd-cal-nav" onClick={() => changeMonth(-1)} style={{ background: "none", border: "1px solid #e4dfd6", borderRadius: 8, width: 32, height: 32, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <ChevronLeft size={16} />
+          </button>
+          <div style={{ fontSize: 17, fontWeight: 700, color: navy[900] }}>{MONTH_LABELS[viewMonth]} {viewYear}</div>
+          <button className="nbd-cal-nav" onClick={() => changeMonth(1)} style={{ background: "none", border: "1px solid #e4dfd6", borderRadius: 8, width: 32, height: 32, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <ChevronLeft size={16} style={{ transform: "rotate(180deg)" }} />
+          </button>
         </div>
-        <input className="nbd-cal-input" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Note (optional)" style={{ width: "100%", padding: "9px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 15, marginBottom: 14, boxSizing: "border-box" }} />
-        {error && <div style={{ color: "#a3372f", fontSize: 14, marginBottom: 10 }}>{error}</div>}
-        {notice && <div style={{ color: "#4d6b2c", fontSize: 14, marginBottom: 10 }}>{notice}</div>}
-        <button className="nbd-cal-submit" type="submit" disabled={busy} style={{ background: navy[900], color: "#fff", border: "none", borderRadius: 8, padding: "10px 20px", fontSize: 15, fontWeight: 600, cursor: "pointer", opacity: busy ? 0.7 : 1 }}>
-          {busy ? "Scheduling…" : "Schedule it"}
-        </button>
-      </form>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6, marginBottom: 6 }}>
+          {WEEKDAY_LABELS.map((w) => (
+            <div key={w} style={{ textAlign: "center", fontSize: 12, fontWeight: 700, color: "#a39a8d", textTransform: "uppercase" }}>{w}</div>
+          ))}
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6 }}>
+          {cells.map((day, i) => {
+            if (day === null) return <div key={i} className="nbd-cal-day nbd-cal-day--blank" />;
+            const dateStr = dateStrFor(day);
+            const entries = byDate[dateStr] || [];
+            const isToday = dateStr === todayStr;
+            return (
+              <button
+                key={i}
+                className="nbd-cal-day"
+                onClick={() => openModal(dateStr)}
+                style={{
+                  minHeight: 72, border: isToday ? "1.5px solid #98cb63" : "1px solid #f0ece3", borderRadius: 10,
+                  background: "none", cursor: "pointer", padding: "6px 6px", display: "flex", flexDirection: "column", alignItems: "flex-start", textAlign: "left",
+                }}
+              >
+                <div style={{ fontSize: 13, fontWeight: isToday ? 800 : 600, color: isToday ? "#4d6b2c" : navy[900], marginBottom: 4 }}>{day}</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 3 }}>
+                  {entries.slice(0, 3).map((e) => (
+                    <div key={e.id} title={`${e.brands?.name} — ${e.app_users?.name}`} style={{ width: 20, height: 20, borderRadius: 5, background: "#fff", border: "1px solid #e4dfd6", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0 }}>
+                      {e.brands?.logo_url ? (
+                        <img src={e.brands.logo_url} alt={e.brands.name} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
+                      ) : (
+                        <div style={{ width: 6, height: 6, borderRadius: "50%", background: e.status === "Overdue" ? "#a3372f" : e.status === "Completed" ? "#4a6b3d" : "#98cb63" }} />
+                      )}
+                    </div>
+                  ))}
+                  {entries.length > 3 && <div style={{ fontSize: 10, color: "#a39a8d", alignSelf: "center" }}>+{entries.length - 3}</div>}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Click-a-date prompt */}
+      {modalDate && (
+        <div
+          onClick={() => setModalDate(null)}
+          style={{ position: "fixed", inset: 0, background: "rgba(32,27,21,0.4)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, padding: 20 }}
+        >
+          <form
+            onClick={(e) => e.stopPropagation()}
+            onSubmit={submitSchedule}
+            style={{ background: "#fff", borderRadius: 16, padding: 26, width: "100%", maxWidth: 380, boxShadow: "0 20px 50px rgba(0,0,0,0.25)" }}
+          >
+            <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: "#a39a8d", marginBottom: 4 }}>Schedule training</div>
+            <div style={{ fontSize: 19, fontWeight: 700, color: navy[900], marginBottom: 18 }}>{formatDate(modalDate)}</div>
+
+            {isHolder && (
+              <>
+                <label style={{ fontSize: 13, fontWeight: 700, color: "#6b6155", display: "block", marginBottom: 4 }}>Who's this for?</label>
+                <select className="nbd-cal-input" value={assignedTo} onChange={(e) => setAssignedTo(e.target.value)} style={{ width: "100%", padding: "9px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 15, marginBottom: 14, boxSizing: "border-box" }}>
+                  {team.map((u) => <option key={u.id} value={u.id}>{u.id === currentUser.id ? `${u.name} (you)` : u.name}</option>)}
+                </select>
+              </>
+            )}
+
+            <label style={{ fontSize: 13, fontWeight: 700, color: "#6b6155", display: "block", marginBottom: 4 }}>Which brand?</label>
+            <select className="nbd-cal-input" autoFocus value={brandId} onChange={(e) => setBrandId(e.target.value)} style={{ width: "100%", padding: "9px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 15, marginBottom: 14, boxSizing: "border-box" }}>
+              <option value="">Pick a brand…</option>
+              {brands.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+            </select>
+
+            <label style={{ fontSize: 13, fontWeight: 700, color: "#6b6155", display: "block", marginBottom: 4 }}>Note (optional)</label>
+            <input className="nbd-cal-input" value={note} onChange={(e) => setNote(e.target.value)} style={{ width: "100%", padding: "9px 10px", border: "1px solid #ddd5cb", borderRadius: 6, fontSize: 15, marginBottom: 14, boxSizing: "border-box" }} />
+
+            {error && <div style={{ color: "#a3372f", fontSize: 14, marginBottom: 10 }}>{error}</div>}
+
+            <div style={{ display: "flex", gap: 10 }}>
+              <button type="button" onClick={() => setModalDate(null)} style={{ flex: 1, background: "#fff", border: "1px solid #e4dfd6", color: navy[900], borderRadius: 8, padding: "10px 16px", fontSize: 15, fontWeight: 600, cursor: "pointer" }}>Cancel</button>
+              <button className="nbd-cal-submit" type="submit" disabled={busy} style={{ flex: 1, background: navy[900], color: "#fff", border: "none", borderRadius: 8, padding: "10px 16px", fontSize: 15, fontWeight: 600, cursor: "pointer", opacity: busy ? 0.7 : 1 }}>
+                {busy ? "Saving…" : "Schedule it"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {!rows && <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#8a8074", fontSize: 16 }}><Loader2 size={16} className="spin" /> Loading…</div>}
 
@@ -1438,41 +1551,43 @@ function CustomerCalendar({ account, currentUser, team, brands, teamProgress, co
             <DoodleCalendar size={32} />
           </div>
           <div style={{ fontSize: 17, fontWeight: 700, color: navy[900] }}>Nothing scheduled yet</div>
-          <div style={{ fontSize: 14, color: "#8a8074", maxWidth: 320, lineHeight: 1.5 }}>Use the form above to put a date on your next brand training.</div>
+          <div style={{ fontSize: 14, color: "#8a8074", maxWidth: 320, lineHeight: 1.5 }}>Click a date above to schedule your next brand training.</div>
         </div>
       )}
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {withStatus.map((r) => (
-          <div key={r.id} className="nbd-cal-row" style={{ display: "flex", alignItems: "center", gap: 16, background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: "14px 16px" }}>
-            <div style={{ width: 48, height: 48, flexShrink: 0, borderRadius: 10, background: "#fff", border: "1px solid #e4dfd6", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              {r.brands?.logo_url ? <img src={r.brands.logo_url} alt={r.brands.name} style={{ maxHeight: "70%", maxWidth: "70%", objectFit: "contain" }} /> : <DoodleCalendar size={20} />}
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontWeight: 600, fontSize: 16, color: navy[900] }}>{r.brands?.name || "—"}</div>
-              <div style={{ fontSize: 14, color: "#8a8074" }}>
-                {r.app_users?.name}{r.assigned_to === currentUser.id ? " (you)" : ""} &middot; {formatDate(r.scheduled_date)}
-                {r.totalSteps > 0 && ` · ${r.doneCount} of ${r.totalSteps} steps complete`}
+      {withStatus.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {withStatus.map((r) => (
+            <div key={r.id} className="nbd-cal-row" style={{ display: "flex", alignItems: "center", gap: 16, background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: "14px 16px" }}>
+              <div style={{ width: 48, height: 48, flexShrink: 0, borderRadius: 10, background: "#fff", border: "1px solid #e4dfd6", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                {r.brands?.logo_url ? <img src={r.brands.logo_url} alt={r.brands.name} style={{ maxHeight: "70%", maxWidth: "70%", objectFit: "contain" }} /> : <DoodleCalendar size={20} />}
               </div>
-              {r.note && <div style={{ fontSize: 13, color: "#a39a8d", marginTop: 2 }}>{r.note}</div>}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontWeight: 600, fontSize: 16, color: navy[900] }}>{r.brands?.name || "—"}</div>
+                <div style={{ fontSize: 14, color: "#8a8074" }}>
+                  {r.app_users?.name}{r.assigned_to === currentUser.id ? " (you)" : ""} &middot; {formatDate(r.scheduled_date)}
+                  {r.totalSteps > 0 && ` · ${r.doneCount} of ${r.totalSteps} steps complete`}
+                </div>
+                {r.note && <div style={{ fontSize: 13, color: "#a39a8d", marginTop: 2 }}>{r.note}</div>}
+              </div>
+              <div
+                style={{
+                  flexShrink: 0, fontSize: 13, fontWeight: 700, padding: "6px 14px", borderRadius: 999, whiteSpace: "nowrap",
+                  background: r.status === "Overdue" ? "#fbe9e7" : r.status === "Completed" ? "#eef5e2" : "#f1efe9",
+                  color: r.status === "Overdue" ? "#a3372f" : r.status === "Completed" ? "#4a6b3d" : "#6b6155",
+                }}
+              >
+                {r.status}
+              </div>
+              {(r.assigned_to === currentUser.id || r.created_by === currentUser.id || isHolder) && (
+                <button className="nbd-cal-cancel" onClick={() => cancel(r.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#a39a8d" }} title="Cancel">
+                  <Trash2 size={15} color="currentColor" />
+                </button>
+              )}
             </div>
-            <div
-              style={{
-                flexShrink: 0, fontSize: 13, fontWeight: 700, padding: "6px 14px", borderRadius: 999, whiteSpace: "nowrap",
-                background: r.status === "Overdue" ? "#fbe9e7" : r.status === "Completed" ? "#eef5e2" : "#f1efe9",
-                color: r.status === "Overdue" ? "#a3372f" : r.status === "Completed" ? "#4a6b3d" : "#6b6155",
-              }}
-            >
-              {r.status}
-            </div>
-            {(r.assigned_to === currentUser.id || r.created_by === currentUser.id || isHolder) && (
-              <button className="nbd-cal-cancel" onClick={() => cancel(r.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#a39a8d" }} title="Cancel">
-                <Trash2 size={15} color="currentColor" />
-              </button>
-            )}
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
