@@ -103,7 +103,7 @@ export function BrandMarquee({ brands, onLogoClick, height = 48, chip = false })
                 margin: chip ? "0 10px" : 0,
                 width: chip ? 170 : undefined,
                 height: chip ? 96 : undefined,
-                background: chip ? "rgba(255,255,255,0.92)" : "none",
+                background: chip ? "rgba(250,248,245,0.82)" : "none",
                 borderRadius: chip ? 12 : 0,
                 boxShadow: chip ? "0 4px 18px rgba(0,0,0,0.18)" : "none",
                 border: "none", cursor: onLogoClick ? "pointer" : "default",
