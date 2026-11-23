@@ -150,6 +150,18 @@ function PreviewCertificateStep({ step, brand, participantName }) {
           >
             {participantName}
           </div>
+          {step.cert_date_x != null && (
+            <div
+              style={{
+                position: "absolute", left: `${step.cert_date_x}%`, top: `${step.cert_date_y ?? 90}%`,
+                transform: "translate(-50%, -50%)", whiteSpace: "nowrap",
+                fontSize: step.cert_date_font_size ?? 20, color: step.cert_date_color || "#1a2b3d",
+                fontFamily: "'Lato', -apple-system, sans-serif",
+              }}
+            >
+              {new Date().toLocaleDateString("en-IE", { day: "numeric", month: "long", year: "numeric" })}
+            </div>
+          )}
         </div>
       ) : (
         <div
@@ -193,7 +205,7 @@ export default function PreviewAsCustomer({ brand, onBack }) {
     let cancelled = false;
     supabase
       .from("brand_steps")
-      .select("id,type,title,video_url,video_storage_path,duration,order_index,cert_template_url,cert_name_x,cert_name_y,cert_name_font_size,cert_name_color")
+      .select("id,type,title,video_url,video_storage_path,duration,order_index,cert_template_url,cert_name_x,cert_name_y,cert_name_font_size,cert_name_color,cert_date_x,cert_date_y,cert_date_font_size,cert_date_color")
       .eq("brand_id", brand.id)
       .order("order_index")
       .then(({ data }) => { if (!cancelled) setSteps(data || []); });

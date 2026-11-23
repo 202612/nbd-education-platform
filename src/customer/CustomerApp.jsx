@@ -1064,6 +1064,19 @@ function CertificateStep({ step, brand, participantName, onComplete, onBack }) {
               >
                 {participantName}
               </div>
+              {step.cert_date_x != null && (
+                <div
+                  style={{
+                    position: "absolute", left: `${step.cert_date_x}%`, top: `${step.cert_date_y ?? 90}%`,
+                    transform: "translate(-50%, -50%)", whiteSpace: "nowrap",
+                    fontSize: `calc(${step.cert_date_font_size ?? 20} / 900 * 100cqw)`,
+                    color: step.cert_date_color || "#1a2b3d",
+                    fontFamily: "'Lato', -apple-system, sans-serif",
+                  }}
+                >
+                  {formatDate(issuedAt)}
+                </div>
+              )}
             </div>
           ) : (
             <div
@@ -2671,7 +2684,7 @@ export default function CustomerApp({ user, account }) {
       if (account.status !== "approved") return;
       const { data, error } = await supabase
         .from("brands")
-        .select("id,name,tagline,logo_url,steps:brand_steps(id,type,title,video_url,video_storage_path,duration,order_index,cert_template_url,cert_name_x,cert_name_y,cert_name_font_size,cert_name_color)");
+        .select("id,name,tagline,logo_url,steps:brand_steps(id,type,title,video_url,video_storage_path,duration,order_index,cert_template_url,cert_name_x,cert_name_y,cert_name_font_size,cert_name_color,cert_date_x,cert_date_y,cert_date_font_size,cert_date_color)");
       if (cancelled) return;
       if (error) { setLoadError(error.message); return; }
       setBrands(data || []);

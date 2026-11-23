@@ -471,6 +471,12 @@ function AddCertificateForm({ brandId, initial, submitLabel, onCancel, onSave })
   const [nameY, setNameY] = useState(initial?.cert_name_y ?? 55);
   const [fontSize, setFontSize] = useState(initial?.cert_name_font_size ?? 34);
   const [color, setColor] = useState(initial?.cert_name_color || "#1a2b3d");
+  const [dateEnabled, setDateEnabled] = useState(initial?.cert_date_x != null);
+  const [dateX, setDateX] = useState(initial?.cert_date_x ?? 50);
+  const [dateY, setDateY] = useState(initial?.cert_date_y ?? 90);
+  const [dateFontSize, setDateFontSize] = useState(initial?.cert_date_font_size ?? 20);
+  const [dateColor, setDateColor] = useState(initial?.cert_date_color || "#1a2b3d");
+  const [placing, setPlacing] = useState("name"); // "name" | "date" — which marker the next click on the artwork moves
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -504,6 +510,10 @@ function AddCertificateForm({ brandId, initial, submitLabel, onCancel, onSave })
       cert_name_y: nameY,
       cert_name_font_size: fontSize,
       cert_name_color: color,
+      cert_date_x: dateEnabled ? dateX : null,
+      cert_date_y: dateEnabled ? dateY : null,
+      cert_date_font_size: dateEnabled ? dateFontSize : null,
+      cert_date_color: dateEnabled ? dateColor : null,
     });
     setSaving(false);
     if (err) setError(err);
@@ -547,9 +557,29 @@ function AddCertificateForm({ brandId, initial, submitLabel, onCancel, onSave })
         {templateUrl ? (
           <>
             <p style={{ fontSize: 13, color: "#a39a8d", margin: "0 0 12px" }}>
-              Drag the marker onto the blank line where the learner's name should print. Everything else on your
-              design stays exactly as uploaded.
+              {dateEnabled
+                ? <>Click the artwork to move whichever marker is selected below — <strong>{placing === "name" ? "Name" : "Date"}</strong> right now.</>
+                : "Click the artwork to move the marker onto the blank line where the learner's name should print."}
+              {" "}Everything else on your design stays exactly as uploaded.
             </p>
+            {dateEnabled && (
+              <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+                <button
+                  type="button"
+                  className={placing === "name" ? "nbd-btn nbd-btn--primary nbd-btn--sm" : "nbd-btn nbd-btn--outline nbd-btn--sm"}
+                  onClick={() => setPlacing("name")}
+                >
+                  Place: Name
+                </button>
+                <button
+                  type="button"
+                  className={placing === "date" ? "nbd-btn nbd-btn--primary nbd-btn--sm" : "nbd-btn nbd-btn--outline nbd-btn--sm"}
+                  onClick={() => setPlacing("date")}
+                >
+                  Place: Date
+                </button>
+              </div>
+            )}
             <div
               style={{
                 position: "relative", width: "100%", maxWidth: CERT_PREVIEW_WIDTH, margin: "0 auto 14px",
@@ -557,8 +587,10 @@ function AddCertificateForm({ brandId, initial, submitLabel, onCancel, onSave })
               }}
               onClick={(e) => {
                 const rect = e.currentTarget.getBoundingClientRect();
-                setNameX(Math.round(((e.clientX - rect.left) / rect.width) * 1000) / 10);
-                setNameY(Math.round(((e.clientY - rect.top) / rect.height) * 1000) / 10);
+                const x = Math.round(((e.clientX - rect.left) / rect.width) * 1000) / 10;
+                const y = Math.round(((e.clientY - rect.top) / rect.height) * 1000) / 10;
+                if (dateEnabled && placing === "date") { setDateX(x); setDateY(y); }
+                else { setNameX(x); setNameY(y); }
               }}
             >
               <img src={templateUrl} alt="Certificate template" style={{ display: "block", width: "100%" }} />
@@ -571,8 +603,19 @@ function AddCertificateForm({ brandId, initial, submitLabel, onCancel, onSave })
               >
                 Jane Doe
               </div>
+              {dateEnabled && (
+                <div
+                  style={{
+                    position: "absolute", left: `${dateX}%`, top: `${dateY}%`, transform: "translate(-50%, -50%)",
+                    fontSize: dateFontSize, color: dateColor, fontFamily: "'Lato', -apple-system, sans-serif",
+                    whiteSpace: "nowrap", pointerEvents: "none", textShadow: "0 0 1px rgba(255,255,255,0.6)",
+                  }}
+                >
+                  {new Date().toLocaleDateString("en-IE", { day: "numeric", month: "long", year: "numeric" })}
+                </div>
+              )}
             </div>
-            <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+            <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 14 }}>
               <label style={{ fontSize: 13, color: "#6b6155" }}>
                 Name size
                 <input type="range" min={16} max={64} value={fontSize} onChange={(e) => setFontSize(Number(e.target.value))} style={{ display: "block", width: 140 }} />
@@ -585,6 +628,23 @@ function AddCertificateForm({ brandId, initial, submitLabel, onCancel, onSave })
                 Remove artwork — use built-in design
               </button>
             </div>
+
+            <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, color: "#6b6155", marginBottom: dateEnabled ? 12 : 0, cursor: "pointer" }}>
+              <input type="checkbox" checked={dateEnabled} onChange={(e) => { setDateEnabled(e.target.checked); if (e.target.checked) setPlacing("date"); }} />
+              Also print the completion date automatically
+            </label>
+            {dateEnabled && (
+              <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+                <label style={{ fontSize: 13, color: "#6b6155" }}>
+                  Date size
+                  <input type="range" min={10} max={40} value={dateFontSize} onChange={(e) => setDateFontSize(Number(e.target.value))} style={{ display: "block", width: 140 }} />
+                </label>
+                <label style={{ fontSize: 13, color: "#6b6155" }}>
+                  Date colour
+                  <input type="color" value={dateColor} onChange={(e) => setDateColor(e.target.value)} style={{ display: "block", marginTop: 4 }} />
+                </label>
+              </div>
+            )}
           </>
         ) : (
           <p style={{ fontSize: 13, color: "#a39a8d", margin: 0 }}>No custom artwork uploaded — this brand uses the built-in certificate design.</p>
@@ -725,7 +785,7 @@ function BrandStepsEditor({ brandId, onBack }) {
     setBrand(b);
     const { data: s } = await supabase
       .from("brand_steps")
-      .select("id,type,title,video_url,video_storage_path,duration,order_index,cert_template_url,cert_name_x,cert_name_y,cert_name_font_size,cert_name_color,quiz_questions(id)")
+      .select("id,type,title,video_url,video_storage_path,duration,order_index,cert_template_url,cert_name_x,cert_name_y,cert_name_font_size,cert_name_color,cert_date_x,cert_date_y,cert_date_font_size,cert_date_color,quiz_questions(id)")
       .eq("brand_id", brandId)
       .order("order_index");
     setSteps(s || []);
@@ -757,11 +817,12 @@ function BrandStepsEditor({ brandId, onBack }) {
     return null;
   }
 
-  async function saveCertificate({ title, cert_template_url, cert_name_x, cert_name_y, cert_name_font_size, cert_name_color }) {
+  async function saveCertificate({ title, cert_template_url, cert_name_x, cert_name_y, cert_name_font_size, cert_name_color, cert_date_x, cert_date_y, cert_date_font_size, cert_date_color }) {
     const order_index = await nextOrderIndex();
     const { error: err } = await supabase.from("brand_steps").insert({
       brand_id: brandId, type: "certificate", title, order_index,
       cert_template_url, cert_name_x, cert_name_y, cert_name_font_size, cert_name_color,
+      cert_date_x, cert_date_y, cert_date_font_size, cert_date_color,
     });
     if (err) return err.message;
     setAddingType(null);
@@ -811,9 +872,10 @@ function BrandStepsEditor({ brandId, onBack }) {
     return null;
   }
 
-  async function updateCertificate({ title, cert_template_url, cert_name_x, cert_name_y, cert_name_font_size, cert_name_color }) {
+  async function updateCertificate({ title, cert_template_url, cert_name_x, cert_name_y, cert_name_font_size, cert_name_color, cert_date_x, cert_date_y, cert_date_font_size, cert_date_color }) {
     const { error: err } = await supabase.from("brand_steps").update({
       title, cert_template_url, cert_name_x, cert_name_y, cert_name_font_size, cert_name_color,
+      cert_date_x, cert_date_y, cert_date_font_size, cert_date_color,
     }).eq("id", editingStep.id);
     if (err) return err.message;
     cancelEdit();
