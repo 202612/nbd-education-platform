@@ -61,13 +61,39 @@ export function Badge({ children, tone = "navy" }) {
   return <span style={{ ...tones[tone], fontSize: 14, fontWeight: 500, padding: "3px 10px", borderRadius: 999 }}>{children}</span>;
 }
 
-export function StatCard({ label, value, icon: Icon }) {
+// A small, named type scale — reuse these instead of picking a fresh
+// font-size per component, so new screens stay visually consistent with
+// existing ones without having to eyeball a match.
+export const type = { display: 32, title: 26, heading: 19, body: 15, label: 12 };
+
+// Shimmering placeholder for anything still loading — reads as "this is
+// coming" rather than a blank space or a spinner floating in empty space.
+export function Skeleton({ width = "100%", height = 14, radius = 6, style }) {
   return (
-    <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 12, padding: "16px 18px", flex: 1, minWidth: 140 }}>
+    <div
+      style={{
+        width, height, borderRadius: radius,
+        background: "linear-gradient(90deg, #ece6da 25%, #f5f1e9 37%, #ece6da 63%)",
+        backgroundSize: "400% 100%",
+        animation: "nbd-skeleton-shimmer 1.4s ease infinite",
+        ...style,
+      }}
+    >
+      <style>{`@keyframes nbd-skeleton-shimmer { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }`}</style>
+    </div>
+  );
+}
+
+export function StatCard({ label, value, icon: Icon, loading }) {
+  return (
+    <div className="nbd-stat-card" style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 12, padding: "16px 18px", flex: 1, minWidth: 140, transition: "transform .15s ease, box-shadow .15s ease" }}>
+      <style>{`
+        .nbd-stat-card:hover { transform: translateY(-3px); box-shadow: 0 10px 22px rgba(32,27,21,0.08); }
+      `}</style>
       <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#8a8074", fontSize: 15, marginBottom: 8 }}>
         <Icon size={15} /> {label}
       </div>
-      <div style={{ fontSize: 28, fontWeight: 600, color: navy[900] }}>{value}</div>
+      {loading ? <Skeleton width={60} height={28} /> : <div style={{ fontSize: 28, fontWeight: 600, color: navy[900] }}>{value}</div>}
     </div>
   );
 }
@@ -487,4 +513,20 @@ export function DoodleCalendar({ size = 19, active }) {
       <path d="M8 13 H10 M8 16 H10 M13 13 H15 M13 16 H15" />
     </svg>
   );
+}
+
+export function DoodleShield({ size = 19, active }) {
+  return <svg {...doodleProps(size, active)}><path d="M12 3.5 L19 6.5 V12 C 19 16.5 16 19.5 12 20.8 C 8 19.5 5 16.5 5 12 V6.5 Z" /><path d="M8.7 11.8 L10.8 14 L15.3 9.3" /></svg>;
+}
+export function DoodleBuilding({ size = 19, active }) {
+  return <svg {...doodleProps(size, active)}><path d="M5 20.5 V5.5 L13 3.5 V20.5" /><path d="M13 9.5 L19.5 11 V20.5" /><path d="M3.5 20.5 H20.5" /><path d="M7.5 7.5 H8.7 M9.8 7.5 H11 M7.5 10.8 H8.7 M9.8 10.8 H11 M7.5 14 H8.7 M9.8 14 H11" /></svg>;
+}
+export function DoodleSparkle({ size = 19, active }) {
+  return <svg {...doodleProps(size, active)}><path d="M12 3.5 C 12.5 7.5 13.8 9 18 9.5 C 13.8 10 12.5 11.5 12 15.5 C 11.5 11.5 10.2 10 6 9.5 C 10.2 9 11.5 7.5 12 3.5 Z" /><path d="M18.3 16 C 18.5 17.3 18.9 17.8 20 18 C 18.9 18.2 18.5 18.7 18.3 20 C 18.1 18.7 17.7 18.2 16.5 18 C 17.7 17.8 18.1 17.3 18.3 16 Z" /></svg>;
+}
+export function DoodleClock({ size = 19, active }) {
+  return <svg {...doodleProps(size, active)}><circle cx="12" cy="12.5" r="8" /><path d="M12 8 V12.8 L15.2 15" /><path d="M9.5 3 H14.5" /></svg>;
+}
+export function DoodlePalette({ size = 19, active }) {
+  return <svg {...doodleProps(size, active)}><path d="M12 4 C 6.5 4 3.5 8 3.5 12.5 C 3.5 16.5 6 18.5 8.5 18 C 9.6 17.8 9.6 16.5 8.8 15.8 C 7.8 14.9 8.3 13.3 9.8 13.2 C 15 13 20.5 12.5 20.5 8.5 C 20.5 5.8 17 4 12 4 Z" /><circle cx="7.3" cy="10" r="1" fill="currentColor" stroke="none" /><circle cx="11" cy="7.3" r="1" fill="currentColor" stroke="none" /><circle cx="15.5" cy="7.8" r="1" fill="currentColor" stroke="none" /></svg>;
 }

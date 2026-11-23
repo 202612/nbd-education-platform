@@ -5,7 +5,7 @@ import {
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { supabase } from "../lib/supabaseClient.js";
-import { navy, gold, grey, Badge, WORDMARK_SRC, DoodleHome, DoodlePlay, DoodleRadio, DoodleAward, DoodleUsers, DoodleChart, DoodleSettings, DoodleBook, DoodleCalendar } from "../lib/ui.jsx";
+import { navy, gold, grey, Badge, WORDMARK_SRC, DoodleHome, DoodlePlay, DoodleRadio, DoodleAward, DoodleUsers, DoodleChart, DoodleSettings, DoodleBook, DoodleCalendar, Skeleton } from "../lib/ui.jsx";
 
 // NBD-brand accent colours cycled per connection line, so each matched pair
 // gets its own recognisable colour across both columns and the line itself.
@@ -1460,6 +1460,11 @@ function CustomerCalendar({ account, currentUser, team, brands, teamProgress, co
         .nbd-cal-nav:hover { background: #f1ede4 !important; }
         .nbd-cal-day { transition: background .15s ease, box-shadow .15s ease; }
         .nbd-cal-day:not(.nbd-cal-day--blank):hover { background: #faf8f4; box-shadow: inset 0 0 0 1px #98cb63; }
+        @media (max-width: 480px) {
+          .nbd-cal-day { min-height: 52px !important; padding: 4px 3px !important; }
+          .nbd-cal-chip { width: 16px !important; height: 16px !important; border-radius: 4px !important; padding: 1px !important; }
+          .nbd-cal-chips { gap: 2px !important; }
+        }
       `}</style>
 
       {/* Month grid */}
@@ -1496,11 +1501,11 @@ function CustomerCalendar({ account, currentUser, team, brands, teamProgress, co
                 }}
               >
                 <div style={{ fontSize: 13, fontWeight: isToday ? 800 : 600, color: isToday ? "#4d6b2c" : navy[900], marginBottom: 4 }}>{day}</div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                <div className="nbd-cal-chips" style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
                   {entries.slice(0, 2).map((e) => (
-                    <div key={e.id} title={`${e.brands?.name} — ${e.app_users?.name}`} style={{ width: 32, height: 32, borderRadius: 7, background: "#fff", border: "1px solid #e4dfd6", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0, padding: 3 }}>
+                    <div key={e.id} className="nbd-cal-chip" title={`${e.brands?.name} — ${e.app_users?.name}`} style={{ width: 32, height: 32, borderRadius: 7, background: "#fff", border: "1px solid #e4dfd6", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", flexShrink: 0, padding: 3 }}>
                       {e.brands?.logo_url ? (
-                        <img src={e.brands.logo_url} alt={e.brands.name} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
+                        <img src={e.brands.logo_url} alt={e.brands.name} className="nbd-cal-chip-img" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
                       ) : (
                         <div style={{ width: 8, height: 8, borderRadius: "50%", background: e.status === "Overdue" ? "#a3372f" : e.status === "Completed" ? "#4a6b3d" : "#98cb63" }} />
                       )}
@@ -2542,6 +2547,51 @@ function AccountSettings({ user, account, onNameSaved }) {
 
 // ================= ROOT =================
 
+// Shown exactly once, the very first time a newly-approved customer opens
+// the app — then mark_welcome_seen() means it never shows again.
+function WelcomeScreen({ participantName, onContinue }) {
+  const steps = [
+    "Browse training for the brands you stock",
+    "Complete steps at your own pace",
+    "Earn certificates as you go",
+  ];
+  return (
+    <div
+      style={{
+        position: "relative", overflow: "hidden", borderRadius: 18,
+        background: "linear-gradient(125deg, #5e8f1e 0%, #98cb63 100%)",
+        padding: "48px 40px", color: "#fff",
+      }}
+    >
+      <svg viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ position: "absolute", top: -30, right: -50, width: 360, height: 360, opacity: 0.16, pointerEvents: "none" }}>
+        <path d="M200 40 C 260 40 300 90 300 150 C 300 210 260 240 230 260 L230 300" stroke="white" strokeWidth="3" strokeLinecap="round" />
+        <circle cx="200" cy="150" r="90" stroke="white" strokeWidth="2" opacity="0.6" />
+      </svg>
+      <div style={{ position: "relative", fontSize: 13, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", opacity: 0.85, marginBottom: 8 }}>You're approved</div>
+      <div style={{ position: "relative", fontSize: 30, fontWeight: 300, marginBottom: 10 }}>Welcome to NBD Education{participantName ? `, ${participantName.split(" ")[0]}` : ""}</div>
+      <div style={{ position: "relative", fontSize: 15, opacity: 0.9, maxWidth: 460, lineHeight: 1.6, marginBottom: 24 }}>
+        Here's a quick look at how this works before you dive in.
+      </div>
+      <div style={{ position: "relative", display: "flex", gap: 14, flexWrap: "wrap", marginBottom: 28 }}>
+        {steps.map((s, i) => (
+          <div key={s} style={{ background: "rgba(255,255,255,0.14)", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 12, padding: "14px 16px", flex: "1 1 150px" }}>
+            <div style={{ fontSize: 12, fontWeight: 800, opacity: 0.85, marginBottom: 6 }}>0{i + 1}</div>
+            {s}
+          </div>
+        ))}
+      </div>
+      <button
+        onClick={onContinue}
+        style={{ position: "relative", background: "#fff", color: "#201b15", border: "none", borderRadius: 10, padding: "12px 24px", fontSize: 15, fontWeight: 700, cursor: "pointer", transition: "transform .15s ease" }}
+        onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; }}
+      >
+        Let's go
+      </button>
+    </div>
+  );
+}
+
 export default function CustomerApp({ user, account }) {
   const [tab, setTab] = useState("home");
   const [displayName, setDisplayName] = useState(user.name);
@@ -2551,7 +2601,21 @@ export default function CustomerApp({ user, account }) {
   const [teamProgress, setTeamProgress] = useState({});
   const [loadError, setLoadError] = useState("");
   const [openBrandId, setOpenBrandId] = useState(null);
+  const [showWelcome, setShowWelcome] = useState(false);
   const isHolder = user.role === "holder";
+
+  useEffect(() => {
+    let cancelled = false;
+    supabase.from("app_users").select("has_seen_welcome").eq("id", user.id).single().then(({ data }) => {
+      if (!cancelled && data && !data.has_seen_welcome) setShowWelcome(true);
+    });
+    return () => { cancelled = true; };
+  }, [user.id]);
+
+  async function dismissWelcome() {
+    setShowWelcome(false);
+    await supabase.rpc("mark_welcome_seen");
+  }
   // Once a brand's open, the drill-down (step list, video, quiz, certificate)
   // takes the full page — the sidebar nav would only squeeze it and make
   // drag-based quiz questions cramped on a phone screen.
@@ -2603,7 +2667,15 @@ export default function CustomerApp({ user, account }) {
 
   if (loadError) return <div style={{ color: "#a3372f", fontSize: 16 }}>{loadError}</div>;
   if (!brands) {
-    return <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#8a8074", fontSize: 16 }}><Loader2 size={16} className="spin" /> Loading your training…</div>;
+    return (
+      <div>
+        <Skeleton height={140} radius={18} style={{ marginBottom: 28 }} />
+        <Skeleton height={100} radius={16} style={{ marginBottom: 20 }} />
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+          {[0, 1, 2, 3].map((i) => <Skeleton key={i} height={130} radius={16} />)}
+        </div>
+      </div>
+    );
   }
 
   // The brands table itself is intentionally readable by everyone (the
@@ -2613,6 +2685,8 @@ export default function CustomerApp({ user, account }) {
   // The admin's full-access demo account always sees every brand, regardless
   // of approved_brand_ids — robust even as new brands get added later.
   const approvedBrands = account.is_demo ? brands : brands.filter((b) => account.approved_brand_ids.includes(b.id));
+
+  if (showWelcome) return <WelcomeScreen participantName={displayName} onContinue={dismissWelcome} />;
 
   async function handleStepCompleted() {
     await loadProgress();

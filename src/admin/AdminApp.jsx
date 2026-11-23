@@ -4,7 +4,7 @@ import {
   ChevronRight, ChevronLeft, ArrowUp, ArrowDown, Search, Loader2, Sparkles, Users, Image as ImageIcon, Pencil, Palette, Eye, Radio,
 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
-import { navy, Badge, StatCard } from "../lib/ui.jsx";
+import { navy, Badge, StatCard, DoodleShield, DoodleBuilding, DoodleSparkle, DoodlePlay, DoodleRadio, DoodleClock, DoodleAward, DoodlePalette } from "../lib/ui.jsx";
 import { AdminAssistant } from "./AdminMock.jsx";
 import DesignTab from "./DesignTab.jsx";
 import CertificatesTab from "./CertificatesTab.jsx";
@@ -1924,12 +1924,16 @@ function AdminOverview() {
 
   return (
     <div>
-      <h2 style={{ fontSize: 22, fontWeight: 600, color: navy[900], margin: "0 0 16px" }}>Overview</h2>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
+        <div style={{ width: 24, height: 1, background: "#e4dfd6" }} />
+        <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 2, textTransform: "uppercase", color: "#a39a8d" }}>At a glance</div>
+      </div>
+      <h2 style={{ fontSize: 26, fontWeight: 300, color: navy[900], margin: "0 0 16px" }}>Overview</h2>
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 24 }}>
-        <StatCard label="Brands" value={stats?.brands ?? "…"} icon={ShieldCheck} />
-        <StatCard label="Hours of weekly activity" value={stats ? `${stats.weeklyHours} hrs` : "…"} icon={Clock} />
-        <StatCard label="Customers" value={stats?.customers ?? "…"} icon={Building2} />
-        <StatCard label="Pending approvals" value={stats?.pending ?? "…"} icon={Clock} />
+        <StatCard label="Brands" value={stats?.brands} loading={!stats} icon={ShieldCheck} />
+        <StatCard label="Hours of weekly activity" value={stats ? `${stats.weeklyHours} hrs` : null} loading={!stats} icon={Clock} />
+        <StatCard label="Customers" value={stats?.customers} loading={!stats} icon={Building2} />
+        <StatCard label="Pending approvals" value={stats?.pending} loading={!stats} icon={Clock} />
       </div>
 
       <h3 style={{ fontSize: 18, fontWeight: 600, color: navy[900], margin: "0 0 14px" }}>Reporting</h3>
@@ -1989,23 +1993,27 @@ export default function AdminApp() {
   }, [tab]);
 
   const tabs = [
-    { id: "dashboard", label: "Overview", icon: ShieldCheck },
-    { id: "customers", label: "Customers", icon: Building2 },
-    { id: "assistant", label: "AI assistant", icon: Sparkles },
-    { id: "brands", label: "Brands & modules", icon: PlayCircle },
-    { id: "webinars", label: "Live Webinars", icon: Radio },
-    { id: "approvals", label: "Approvals", icon: Clock, badge: pendingCount },
-    { id: "certificates", label: "Certificates", icon: Award },
-    { id: "design", label: "Design", icon: Palette },
-    { id: "security", label: "Security", icon: ShieldCheck },
+    { id: "dashboard", label: "Overview", icon: DoodleShield },
+    { id: "customers", label: "Customers", icon: DoodleBuilding },
+    { id: "assistant", label: "AI assistant", icon: DoodleSparkle },
+    { id: "brands", label: "Brands & modules", icon: DoodlePlay },
+    { id: "webinars", label: "Live Webinars", icon: DoodleRadio },
+    { id: "approvals", label: "Approvals", icon: DoodleClock, badge: pendingCount },
+    { id: "certificates", label: "Certificates", icon: DoodleAward },
+    { id: "design", label: "Design", icon: DoodlePalette },
+    { id: "security", label: "Security", icon: DoodleShield },
   ];
   return (
     <div className="nbd-shell-layout">
       <style>{ADMIN_BTN_CSS}</style>
+      <style>{`
+        .nbd-admin-nav-item svg { transition: transform .25s cubic-bezier(.34,1.56,.64,1); }
+        .nbd-admin-nav-item:hover svg { transform: scale(1.15) rotate(-6deg); }
+      `}</style>
       <div className="nbd-shell-nav">
         {tabs.map((t) => (
-          <button key={t.id} onClick={() => setTab(t.id)} style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", textAlign: "left", padding: "9px 12px", borderRadius: 8, fontSize: 16, marginBottom: 4, background: tab === t.id ? navy[900] : "transparent", color: tab === t.id ? "#fff" : "#6b6155", fontWeight: tab === t.id ? 500 : 400, border: "none" }}>
-            <t.icon size={16} /> {t.label}
+          <button key={t.id} className="nbd-admin-nav-item" onClick={() => setTab(t.id)} style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", textAlign: "left", padding: "9px 12px", borderRadius: 8, fontSize: 16, marginBottom: 4, background: tab === t.id ? "#58514a" : "transparent", color: tab === t.id ? "#fff" : "#6b6155", fontWeight: tab === t.id ? 500 : 400, border: "none" }}>
+            <t.icon size={17} active={tab === t.id} /> {t.label}
             {!!t.badge && (
               <span style={{ marginLeft: "auto", background: "#a3372f", color: "#fff", fontSize: 12, fontWeight: 700, borderRadius: 999, minWidth: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 5px" }}>
                 {t.badge}
