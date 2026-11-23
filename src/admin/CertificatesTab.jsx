@@ -12,10 +12,17 @@ function fmtDate(iso) {
   return new Date(iso).toLocaleDateString("en-IE", { day: "2-digit", month: "short", year: "numeric" });
 }
 
+// Same derivation as the certificate itself (CustomerApp.jsx) — a short
+// code from the certificate row's own id, not a separate counter, so it's
+// guaranteed to match whatever's actually printed on the learner's copy.
+function certId(id) {
+  return `NBD-${id.replace(/-/g, "").slice(0, 8).toUpperCase()}`;
+}
+
 function toCsv(rows) {
-  const head = ["Learner", "Email", "Salon", "Customer number", "Brand", "Date issued"];
+  const head = ["Certificate ID", "Learner", "Email", "Salon", "Customer number", "Brand", "Date issued"];
   const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
-  const lines = rows.map((r) => [r.learner, r.email, r.salon, r.customerNumber, r.brand, fmtDate(r.issuedAt)].map(esc).join(","));
+  const lines = rows.map((r) => [certId(r.id), r.learner, r.email, r.salon, r.customerNumber, r.brand, fmtDate(r.issuedAt)].map(esc).join(","));
   return [head.map(esc).join(","), ...lines].join("\r\n");
 }
 
@@ -54,7 +61,7 @@ export default function CertificatesTab() {
     const q = query.trim().toLowerCase();
     if (!q) return rows;
     return rows.filter((r) =>
-      [r.learner, r.email, r.salon, r.customerNumber, r.brand].some((v) => v.toLowerCase().includes(q))
+      [r.learner, r.email, r.salon, r.customerNumber, r.brand, certId(r.id)].some((v) => v.toLowerCase().includes(q))
     );
   }, [rows, query]);
 
@@ -122,7 +129,7 @@ export default function CertificatesTab() {
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search learner, salon, brand…"
+                placeholder="Search learner, salon, brand, certificate ID…"
                 style={{ width: "100%", padding: "8px 10px 8px 32px", border: "1px solid #ddd5cb", borderRadius: 8, fontSize: 14, boxSizing: "border-box" }}
               />
             </div>
@@ -144,6 +151,7 @@ export default function CertificatesTab() {
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
                   <tr>
+                    <th style={th}>Certificate ID</th>
                     <th style={th}>Learner</th>
                     <th style={th}>Salon</th>
                     <th style={th}>Brand</th>
@@ -164,6 +172,7 @@ export default function CertificatesTab() {
                       }}
                       style={dragOverId === r.id ? { background: "#f2f7e9", outline: "2px dashed #a8cb63", outlineOffset: -2 } : undefined}
                     >
+                      <td style={{ ...td, fontFamily: "monospace", fontSize: 13, color: "#8a8074", whiteSpace: "nowrap" }}>{certId(r.id)}</td>
                       <td style={td}>
                         <div style={{ fontWeight: 500 }}>{r.learner}</div>
                         {r.email && <div style={{ fontSize: 12.5, color: "#a39a8d" }}>{r.email}</div>}
