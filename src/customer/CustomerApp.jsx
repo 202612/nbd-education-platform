@@ -5,7 +5,7 @@ import {
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { supabase } from "../lib/supabaseClient.js";
-import { navy, gold, grey, Badge, WORDMARK_SRC, DoodleHome, DoodlePlay, DoodleRadio, DoodleAward, DoodleUsers, DoodleChart, DoodleSettings, DoodleBook, DoodleCalendar, Skeleton } from "../lib/ui.jsx";
+import { navy, gold, grey, Badge, WORDMARK_SRC, DoodleHome, DoodlePlay, DoodleRadio, DoodleAward, DoodleUsers, DoodleChart, DoodleSettings, DoodleBook, DoodleCalendar, Skeleton, DEFAULT_HERO_BG_SRC } from "../lib/ui.jsx";
 
 // NBD-brand accent colours cycled per connection line, so each matched pair
 // gets its own recognisable colour across both columns and the line itself.
@@ -1126,7 +1126,24 @@ function StepRow({ step, done, locked, onOpen }) {
   );
 }
 
+// Real campaign photography per brand (pulled from the printed education
+// brochure, which already uses these images for the exact same purpose —
+// training materials for these brands' NBD-approved stockists). Falls back
+// to the plain gradient for any brand without a matching photo yet.
+function brandHeaderPhoto(name) {
+  const n = (name || "").toLowerCase();
+  if (n.includes("kevin")) return { src: "/brand-headers/kevinmurphy.jpg", position: "center 18%" };
+  if (n.includes("eleven")) return { src: "/brand-headers/eleven.jpg", position: "center 15%" };
+  if (n.includes("davines")) return { src: "/brand-headers/davines.jpg", position: "center" };
+  if (n.includes("aveda")) return { src: "/brand-headers/aveda.jpg", position: "center" };
+  if (n.includes("k18")) return { src: "/brand-headers/k18.jpg", position: "center" };
+  if (n.includes("color wow")) return { src: "/brand-headers/colorwow.jpg", position: "center" };
+  if (n.includes("living proof")) return { src: "/brand-headers/livingproof.jpg", position: "center 10%" };
+  return null;
+}
+
 function CustomerBrandDetail({ brand, completedStepIds, onStepCompleted, participantName, onBack }) {
+  const headerPhoto = brandHeaderPhoto(brand.name);
   const [openStepId, setOpenStepId] = useState(null);
   const steps = [...brand.steps].sort((a, b) => a.order_index - b.order_index);
   const active = steps.find((s) => s.id === openStepId);
@@ -1168,7 +1185,11 @@ function CustomerBrandDetail({ brand, completedStepIds, onStepCompleted, partici
       </button>
       <div
         style={{
-          background: `linear-gradient(120deg, ${navy[700]} 0%, ${navy[500]} 100%)`,
+          background: headerPhoto
+            ? `linear-gradient(90deg, rgba(32,27,21,0.78) 0%, rgba(32,27,21,0.35) 60%, rgba(32,27,21,0.15) 100%), url(${headerPhoto.src})`
+            : `linear-gradient(120deg, ${navy[700]} 0%, ${navy[500]} 100%)`,
+          backgroundSize: "cover",
+          backgroundPosition: headerPhoto ? headerPhoto.position : undefined,
           borderRadius: 18,
           padding: "32px 36px",
           marginBottom: 28,
@@ -2309,7 +2330,7 @@ function MyCertificates({ userId }) {
     let cancelled = false;
     supabase
       .from("certificates")
-      .select("id,brand_id,issued_at,pdf_path,brands(name,logo_url)")
+      .select("id,brand_id,issued_at,pdf_path,brands(name,logo_url,steps:brand_steps(type,cert_template_url))")
       .eq("user_id", userId)
       .order("issued_at", { ascending: false })
       .then(({ data, error: err }) => {
@@ -2361,12 +2382,13 @@ function MyCertificates({ userId }) {
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {(rows || []).map((r) => (
           <div key={r.id} className="nbd-cert-row" style={{ display: "flex", alignItems: "center", gap: 16, background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: "14px 16px" }}>
-            <div style={{ width: 48, height: 48, flexShrink: 0, borderRadius: 10, background: "#fff", border: "1px solid #e4dfd6", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              {r.brands?.logo_url ? (
-                <img src={r.brands.logo_url} alt={r.brands.name} style={{ maxHeight: "70%", maxWidth: "70%", objectFit: "contain" }} />
-              ) : (
-                <Award size={22} color="#4d6b2c" />
-              )}
+            <div style={{ width: 54, height: 42, flexShrink: 0, borderRadius: 8, background: "#fff", border: "1px solid #e4dfd6", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {(() => {
+                const certTemplate = r.brands?.steps?.find((s) => s.type === "certificate")?.cert_template_url;
+                if (certTemplate) return <img src={certTemplate} alt={`${r.brands?.name} certificate`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />;
+                if (r.brands?.logo_url) return <img src={r.brands.logo_url} alt={r.brands.name} style={{ maxHeight: "70%", maxWidth: "70%", objectFit: "contain" }} />;
+                return <Award size={22} color="#4d6b2c" />;
+              })()}
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ fontWeight: 600, fontSize: 16, color: navy[900] }}>{r.brands?.name || "—"}</div>
@@ -2559,7 +2581,8 @@ function WelcomeScreen({ participantName, onContinue }) {
     <div
       style={{
         position: "relative", overflow: "hidden", borderRadius: 18,
-        background: "linear-gradient(125deg, #5e8f1e 0%, #98cb63 100%)",
+        background: `linear-gradient(100deg, rgba(94,143,30,0.92) 0%, rgba(152,203,99,0.85) 70%), url(${DEFAULT_HERO_BG_SRC})`,
+        backgroundSize: "cover", backgroundPosition: "center",
         padding: "48px 40px", color: "#fff",
       }}
     >
