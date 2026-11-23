@@ -1077,6 +1077,19 @@ function CertificateStep({ step, brand, participantName, onComplete, onBack }) {
                   {formatDate(issuedAt)}
                 </div>
               )}
+              {step.cert_id_x != null && claimRef.current?.id && (
+                <div
+                  style={{
+                    position: "absolute", left: `${step.cert_id_x}%`, top: `${step.cert_id_y ?? 95}%`,
+                    transform: "translate(-50%, -50%)", whiteSpace: "nowrap",
+                    fontSize: `calc(${step.cert_id_font_size ?? 16} / 900 * 100cqw)`,
+                    color: step.cert_id_color || "#8a8074",
+                    fontFamily: "'Lato', -apple-system, sans-serif", letterSpacing: 1,
+                  }}
+                >
+                  NBD-{claimRef.current.id.replace(/-/g, "").slice(0, 8).toUpperCase()}
+                </div>
+              )}
             </div>
           ) : (
             <div
@@ -2684,7 +2697,7 @@ export default function CustomerApp({ user, account }) {
       if (account.status !== "approved") return;
       const { data, error } = await supabase
         .from("brands")
-        .select("id,name,tagline,logo_url,steps:brand_steps(id,type,title,video_url,video_storage_path,duration,order_index,cert_template_url,cert_name_x,cert_name_y,cert_name_font_size,cert_name_color,cert_date_x,cert_date_y,cert_date_font_size,cert_date_color)");
+        .select("id,name,tagline,logo_url,steps:brand_steps(id,type,title,video_url,video_storage_path,duration,order_index,cert_template_url,cert_name_x,cert_name_y,cert_name_font_size,cert_name_color,cert_date_x,cert_date_y,cert_date_font_size,cert_date_color,cert_id_x,cert_id_y,cert_id_font_size,cert_id_color)");
       if (cancelled) return;
       if (error) { setLoadError(error.message); return; }
       setBrands(data || []);

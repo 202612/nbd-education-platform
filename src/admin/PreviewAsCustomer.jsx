@@ -162,6 +162,18 @@ function PreviewCertificateStep({ step, brand, participantName }) {
               {new Date().toLocaleDateString("en-IE", { day: "numeric", month: "long", year: "numeric" })}
             </div>
           )}
+          {step.cert_id_x != null && (
+            <div
+              style={{
+                position: "absolute", left: `${step.cert_id_x}%`, top: `${step.cert_id_y ?? 95}%`,
+                transform: "translate(-50%, -50%)", whiteSpace: "nowrap",
+                fontSize: step.cert_id_font_size ?? 16, color: step.cert_id_color || "#8a8074",
+                fontFamily: "'Lato', -apple-system, sans-serif", letterSpacing: 1,
+              }}
+            >
+              NBD-PREVIEW1
+            </div>
+          )}
         </div>
       ) : (
         <div
@@ -205,7 +217,7 @@ export default function PreviewAsCustomer({ brand, onBack }) {
     let cancelled = false;
     supabase
       .from("brand_steps")
-      .select("id,type,title,video_url,video_storage_path,duration,order_index,cert_template_url,cert_name_x,cert_name_y,cert_name_font_size,cert_name_color,cert_date_x,cert_date_y,cert_date_font_size,cert_date_color")
+      .select("id,type,title,video_url,video_storage_path,duration,order_index,cert_template_url,cert_name_x,cert_name_y,cert_name_font_size,cert_name_color,cert_date_x,cert_date_y,cert_date_font_size,cert_date_color,cert_id_x,cert_id_y,cert_id_font_size,cert_id_color")
       .eq("brand_id", brand.id)
       .order("order_index")
       .then(({ data }) => { if (!cancelled) setSteps(data || []); });
