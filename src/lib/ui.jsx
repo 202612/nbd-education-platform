@@ -289,9 +289,11 @@ export function AuthHero() {
   // Beyond the admin's own uploaded (or default) photo, cycle through real
   // product photography for whatever brands are marked visible on the hero —
   // same photos/crops as the logged-in Home banner, same idea: show the
-  // actual range instead of one static image. These don't need the
-  // percentage/coverPct dance above since they use a plain CSS "cover", which
-  // always fills the stage with no gap by definition.
+  // actual range instead of one static image. These use "contain" rather
+  // than the admin photo's percentage/coverPct zoom — they're a mix of
+  // aspect ratios (and a couple are lower-res than the admin's own hero
+  // photo), so a "cover" crop was cutting pieces off some and force-scaling
+  // others past their native resolution, looking soft.
   const rotationPhotos = (() => {
     const seen = new Set();
     const out = [];
@@ -344,7 +346,7 @@ export function AuthHero() {
           style={{
             position: "absolute", inset: 0,
             backgroundImage: `url(${p.src})`,
-            backgroundSize: "cover",
+            backgroundSize: "contain",
             backgroundPosition: p.bannerPosition || p.position,
             backgroundRepeat: "no-repeat",
             opacity: photoIdx === i + 1 ? 1 : 0,

@@ -2019,10 +2019,15 @@ function CustomerHome({ brands, completedStepIds, participantName, onOpenBrand }
   return (
     <div>
       <style>{`
-        .nbd-home-banner-photo { background-size: cover; }
+        /* "contain" rather than "cover" on purpose — these photos vary in
+           aspect ratio (some square, some portrait, some low-res), and a
+           cover crop was both cutting pieces off some of them and forcing
+           others to upscale past their native resolution, looking soft.
+           Contain never crops or upscales beyond fit, and the banner's own
+           green gradient shows through as a deliberate frame around it. */
+        .nbd-home-banner-photo { background-size: contain; background-repeat: no-repeat; }
         @media (max-width: 700px) {
           .nbd-home-banner { min-height: 230px !important; padding: 28px 22px !important; }
-          .nbd-home-banner-photo { background-size: contain !important; background-repeat: no-repeat; }
         }
       `}</style>
       <div
