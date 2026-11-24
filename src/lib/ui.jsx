@@ -341,22 +341,42 @@ export function AuthHero() {
         }}
       />
       {rotationPhotos.map((p, i) => (
-        <div
-          key={p.src}
-          style={{
-            position: "absolute", inset: 0,
-            backgroundImage: `url(${p.src})`,
-            backgroundSize: "contain",
-            backgroundPosition: p.bannerPosition || p.position,
-            backgroundRepeat: "no-repeat",
-            opacity: photoIdx === i + 1 ? 1 : 0,
-            transition: "opacity 1.2s ease",
-            // These are real, well-lit product photos on light backgrounds —
-            // darkened (rather than brightened, like the admin photo above)
-            // so the white headline/eyebrow text stays legible over them too.
-            filter: "brightness(0.55)",
-          }}
-        />
+        <React.Fragment key={p.src}>
+          {/* Blurred, scaled-up cover copy of the same photo sitting behind
+              the sharp contained one — fills the letterbox bars a "contain"
+              fit leaves (otherwise just the stage's plain dark background)
+              with the photo's own colours instead of empty space, the same
+              trick Spotify/Apple Music use for album art. Scaled up well
+              past 100% so the blur never reveals a hard edge. */}
+          <div
+            style={{
+              position: "absolute", inset: 0,
+              backgroundImage: `url(${p.src})`,
+              backgroundSize: "cover",
+              backgroundPosition: p.bannerPosition || p.position,
+              backgroundRepeat: "no-repeat",
+              opacity: photoIdx === i + 1 ? 1 : 0,
+              transition: "opacity 1.2s ease",
+              filter: "blur(50px) brightness(0.45) saturate(1.15)",
+              transform: "scale(1.3)",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute", inset: 0,
+              backgroundImage: `url(${p.src})`,
+              backgroundSize: "contain",
+              backgroundPosition: p.bannerPosition || p.position,
+              backgroundRepeat: "no-repeat",
+              opacity: photoIdx === i + 1 ? 1 : 0,
+              transition: "opacity 1.2s ease",
+              // These are real, well-lit product photos on light backgrounds —
+              // darkened (rather than brightened, like the admin photo above)
+              // so the white headline/eyebrow text stays legible over them too.
+              filter: "brightness(0.55)",
+            }}
+          />
+        </React.Fragment>
       ))}
       {/* Dark scrim so white heading text and the glass logo band at the
           bottom both stay legible over whatever photo is uploaded, heavier
