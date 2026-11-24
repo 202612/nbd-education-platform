@@ -271,6 +271,29 @@ export function AuthHero() {
   const zoomPct = (settings.background_zoom ?? 1) * 100;
   const bgWidthPct = Math.max(zoomPct, coverPct);
 
+  // Beyond the admin's own uploaded (or default) photo, cycle through real
+  // product photography for whatever brands are marked visible on the hero —
+  // same photos/crops as the logged-in Home banner, same idea: show the
+  // actual range instead of one static image. These don't need the
+  // percentage/coverPct dance above since they use a plain CSS "cover", which
+  // always fills the stage with no gap by definition.
+  const rotationPhotos = (() => {
+    const seen = new Set();
+    const out = [];
+    for (const b of brandLogos) {
+      const p = brandHeaderPhoto(b.name);
+      if (p && !seen.has(p.src)) { seen.add(p.src); out.push(p); }
+    }
+    return out;
+  })();
+  const slideCount = 1 + rotationPhotos.length;
+  const [photoIdx, setPhotoIdx] = useState(0);
+  useEffect(() => {
+    if (slideCount < 2) return;
+    const id = setInterval(() => setPhotoIdx((i) => (i + 1) % slideCount), 6000);
+    return () => clearInterval(id);
+  }, [slideCount]);
+
   return (
     <>
     <div
@@ -292,14 +315,32 @@ export function AuthHero() {
           backgroundSize: `${bgWidthPct}%`,
           backgroundPosition: `${settings.background_position_x ?? 50}% ${settings.background_position_y ?? 50}%`,
           backgroundRepeat: "no-repeat",
-          opacity: bgReady ? 1 : 0,
-          transition: "opacity 400ms ease",
+          opacity: bgReady && photoIdx === 0 ? 1 : 0,
+          transition: "opacity 1.2s ease",
           // Brightens the photo itself (not just an overlay), since the
           // currently-uploaded photo already has its own dark grading baked
           // in — this compensates regardless of which photo is active.
           filter: "brightness(2.6)",
         }}
       />
+      {rotationPhotos.map((p, i) => (
+        <div
+          key={p.src}
+          style={{
+            position: "absolute", inset: 0,
+            backgroundImage: `url(${p.src})`,
+            backgroundSize: "cover",
+            backgroundPosition: p.bannerPosition || p.position,
+            backgroundRepeat: "no-repeat",
+            opacity: photoIdx === i + 1 ? 1 : 0,
+            transition: "opacity 1.2s ease",
+            // These are real, well-lit product photos on light backgrounds —
+            // darkened (rather than brightened, like the admin photo above)
+            // so the white headline/eyebrow text stays legible over them too.
+            filter: "brightness(0.55)",
+          }}
+        />
+      ))}
       {/* Dark scrim so white heading text and the glass logo band at the
           bottom both stay legible over whatever photo is uploaded, heavier
           toward the bottom where the marquee band sits. */}
