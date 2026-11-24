@@ -538,13 +538,22 @@ export function DoodlePalette({ size = 19, active }) {
 // in sync if a crop or brand match ever needs tuning.
 export function brandHeaderPhoto(name) {
   const n = (name || "").toLowerCase();
-  if (n.includes("kevin")) return { src: "/brand-headers/kevinmurphy.jpg", position: "center 18%" };
-  if (n.includes("eleven")) return { src: "/brand-headers/eleven.jpg", position: "center 15%" };
-  if (n.includes("davines")) return { src: "/brand-headers/davines.jpg", position: "center" };
-  if (n.includes("aveda")) return { src: "/brand-headers/aveda.jpg", position: "center" };
-  if (n.includes("k18")) return { src: "/brand-headers/k18.jpg", position: "center" };
-  if (n.includes("color wow")) return { src: "/brand-headers/colorwow.jpg", position: "center" };
-  if (n.includes("living proof")) return { src: "/brand-headers/livingproof.jpg", position: "center 10%" };
+  const isColour = n.includes("colour") || n.includes("color") && !n.includes("color wow");
+  if (n.includes("kevin")) {
+    return isColour
+      ? { src: "/brand-headers/kevinmurphy_colour.jpg", position: "center", bannerPosition: "center" }
+      : { src: "/brand-headers/kevinmurphy.jpg", position: "center", bannerPosition: "center" };
+  }
+  if (n.includes("eleven")) {
+    return isColour
+      ? { src: "/brand-headers/eleven_colour.jpg", position: "center 15%", bannerPosition: "center 20%" }
+      : { src: "/brand-headers/eleven.jpg", position: "center", bannerPosition: "center" };
+  }
+  if (n.includes("davines")) return { src: "/brand-headers/davines.jpg", position: "center", bannerPosition: "center" };
+  if (n.includes("aveda")) return { src: "/brand-headers/aveda.jpg", position: "center", bannerPosition: "center" };
+  if (n.includes("k18")) return { src: "/brand-headers/k18.jpg", position: "center", bannerPosition: "center" };
+  if (n.includes("color wow")) return { src: "/brand-headers/colorwow.jpg", position: "center", bannerPosition: "center" };
+  if (n.includes("living proof")) return { src: "/brand-headers/livingproof.jpg", position: "center 10%", bannerPosition: "center 15%" };
   return null;
 }
 

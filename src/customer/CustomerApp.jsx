@@ -2024,6 +2024,7 @@ function CustomerHome({ brands, completedStepIds, participantName, onOpenBrand }
           background: "linear-gradient(125deg, #5e8f1e 0%, #98cb63 100%)",
           borderRadius: 18,
           padding: "36px 40px",
+          minHeight: 190,
           marginBottom: 28,
           color: "#fff",
           display: "flex",
@@ -2038,7 +2039,7 @@ function CustomerHome({ brands, completedStepIds, participantName, onOpenBrand }
             key={p.src}
             style={{
               position: "absolute", inset: 0,
-              backgroundImage: `url(${p.src})`, backgroundSize: "cover", backgroundPosition: p.position,
+              backgroundImage: `url(${p.src})`, backgroundSize: "cover", backgroundPosition: p.bannerPosition || p.position,
               opacity: i === photoIdx ? 1 : 0, transition: "opacity 1.2s ease",
             }}
           />
