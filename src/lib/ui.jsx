@@ -617,28 +617,36 @@ export function DoodlePalette({ size = 19, active }) {
 // header, the Home welcome-banner rotation, the brand tiles, and the
 // registration-page phone preview — a single lookup so every surface stays
 // in sync if a crop or brand match ever needs tuning.
+// Bumped every time any file in public/brand-headers/ is edited in place
+// (same filename, new bytes) — these got hit by stale CDN/browser caching
+// more than once since the path alone doesn't change. A query string on
+// the URL forces every client to fetch fresh without having to rename
+// files each time.
+const BRAND_PHOTO_VERSION = 7;
+
 export function brandHeaderPhoto(name) {
   const n = (name || "").toLowerCase();
   const isColour = n.includes("colour") || n.includes("color") && !n.includes("color wow");
+  const v = `?v=${BRAND_PHOTO_VERSION}`;
   // bannerPosition is plain "center" — each of these files now has its
   // real photo content baked in on BOTH left and right edges (mirrored),
   // with blur filling only the middle, so centering the whole file keeps
   // it symmetric regardless of how much extra width the stage has.
   if (n.includes("kevin")) {
     return isColour
-      ? { src: "/brand-headers/kevinmurphy_colour.jpg", position: "center", bannerPosition: "center" }
-      : { src: "/brand-headers/kevinmurphy2.jpg", position: "center", bannerPosition: "center" };
+      ? { src: `/brand-headers/kevinmurphy_colour.jpg${v}`, position: "center", bannerPosition: "center" }
+      : { src: `/brand-headers/kevinmurphy2.jpg${v}`, position: "center", bannerPosition: "center" };
   }
   if (n.includes("eleven")) {
     return isColour
-      ? { src: "/brand-headers/eleven_colour.jpg", position: "center 15%", bannerPosition: "center" }
-      : { src: "/brand-headers/eleven2.jpg", position: "center", bannerPosition: "center" };
+      ? { src: `/brand-headers/eleven_colour.jpg${v}`, position: "center 15%", bannerPosition: "center" }
+      : { src: `/brand-headers/eleven2.jpg${v}`, position: "center", bannerPosition: "center" };
   }
-  if (n.includes("davines")) return { src: "/brand-headers/davines2.jpg", position: "center", bannerPosition: "center" };
-  if (n.includes("aveda")) return { src: "/brand-headers/aveda2.jpg", position: "center", bannerPosition: "center" };
-  if (n.includes("k18")) return { src: "/brand-headers/k18.jpg", position: "center", bannerPosition: "center" };
-  if (n.includes("color wow")) return { src: "/brand-headers/colorwow2.jpg", position: "center", bannerPosition: "center" };
-  if (n.includes("living proof")) return { src: "/brand-headers/livingproof.jpg", position: "center 10%", bannerPosition: "center" };
+  if (n.includes("davines")) return { src: `/brand-headers/davines2.jpg${v}`, position: "center", bannerPosition: "center" };
+  if (n.includes("aveda")) return { src: `/brand-headers/aveda2.jpg${v}`, position: "center", bannerPosition: "center" };
+  if (n.includes("k18")) return { src: `/brand-headers/k18.jpg${v}`, position: "center", bannerPosition: "center" };
+  if (n.includes("color wow")) return { src: `/brand-headers/colorwow2.jpg${v}`, position: "center", bannerPosition: "center" };
+  if (n.includes("living proof")) return { src: `/brand-headers/livingproof.jpg${v}`, position: "center 10%", bannerPosition: "center" };
   return null;
 }
 
