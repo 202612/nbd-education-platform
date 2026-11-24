@@ -530,3 +530,140 @@ export function DoodleClock({ size = 19, active }) {
 export function DoodlePalette({ size = 19, active }) {
   return <svg {...doodleProps(size, active)}><path d="M12 4 C 6.5 4 3.5 8 3.5 12.5 C 3.5 16.5 6 18.5 8.5 18 C 9.6 17.8 9.6 16.5 8.8 15.8 C 7.8 14.9 8.3 13.3 9.8 13.2 C 15 13 20.5 12.5 20.5 8.5 C 20.5 5.8 17 4 12 4 Z" /><circle cx="7.3" cy="10" r="1" fill="currentColor" stroke="none" /><circle cx="11" cy="7.3" r="1" fill="currentColor" stroke="none" /><circle cx="15.5" cy="7.8" r="1" fill="currentColor" stroke="none" /></svg>;
 }
+
+// Real campaign photography extracted from the brand education brochure,
+// one crop per brand (public/brand-headers/*.jpg). Shared by the Training
+// header, the Home welcome-banner rotation, the brand tiles, and the
+// registration-page phone preview — a single lookup so every surface stays
+// in sync if a crop or brand match ever needs tuning.
+export function brandHeaderPhoto(name) {
+  const n = (name || "").toLowerCase();
+  if (n.includes("kevin")) return { src: "/brand-headers/kevinmurphy.jpg", position: "center 18%" };
+  if (n.includes("eleven")) return { src: "/brand-headers/eleven.jpg", position: "center 15%" };
+  if (n.includes("davines")) return { src: "/brand-headers/davines.jpg", position: "center" };
+  if (n.includes("aveda")) return { src: "/brand-headers/aveda.jpg", position: "center" };
+  if (n.includes("k18")) return { src: "/brand-headers/k18.jpg", position: "center" };
+  if (n.includes("color wow")) return { src: "/brand-headers/colorwow.jpg", position: "center" };
+  if (n.includes("living proof")) return { src: "/brand-headers/livingproof.jpg", position: "center 10%" };
+  return null;
+}
+
+// Phone-frame preview for the "Request training access" page — shows a
+// stylised snippet of the real Customer Home screen (same colours, logos,
+// and brand photography) so a salon can see what they're signing up for
+// before they submit the form. Sample progress numbers only: there's no
+// real customer behind this yet, it's illustrative.
+const PREVIEW_SAMPLE = [
+  { pct: 80, status: "4/5 steps" },
+  { pct: 40, status: "2/5 steps" },
+  { pct: 20, status: "1/5 steps" },
+  { pct: 100, status: "Completed" },
+];
+
+export function RegistrationPreviewPhone() {
+  const [brands, setBrands] = useState([]);
+  useEffect(() => {
+    let cancelled = false;
+    supabase
+      .from("brands")
+      .select("id,name,logo_url")
+      .not("logo_url", "is", null)
+      .order("name")
+      .then(({ data }) => { if (!cancelled) setBrands(data || []); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const withPhotos = brands.filter((b) => brandHeaderPhoto(b.name));
+  const tileBrands = (withPhotos.length >= 4 ? withPhotos : brands).slice(0, 4);
+  if (tileBrands.length === 0) return null;
+  const continueBrand = tileBrands[0];
+
+  const ring = (pct, r = 15) => {
+    const circ = 2 * Math.PI * r;
+    return { circ, offset: circ - (circ * pct) / 100 };
+  };
+
+  return (
+    <div style={{ position: "relative", display: "flex", justifyContent: "center", paddingTop: 8 }}>
+      <style>{`
+        .nbd-preview-glow { position: absolute; width: 320px; height: 320px; background: radial-gradient(circle, rgba(152,203,99,0.35), rgba(152,203,99,0) 70%); top: -40px; filter: blur(2px); z-index: 0; }
+        .nbd-preview-phone { position: relative; z-index: 1; width: 240px; border-radius: 34px; background: #0e0c09; padding: 10px; box-shadow: 0 30px 60px -20px rgba(32,27,21,0.45), 0 10px 20px -8px rgba(32,27,21,0.3); transform: rotate(-3deg); }
+        .nbd-preview-screen { background: #f8f8f8; border-radius: 26px; overflow: hidden; position: relative; height: 520px; }
+        .nbd-preview-notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 90px; height: 22px; background: #0e0c09; border-radius: 0 0 14px 14px; z-index: 5; }
+        .nbd-preview-banner { position: relative; background: linear-gradient(125deg, #5e8f1e 0%, #98cb63 100%); padding: 30px 14px 16px; color: #fff; overflow: hidden; }
+        .nbd-preview-tile { position: relative; background: #fff; border: 1px solid #e4dfd6; border-radius: 12px; padding: 10px 8px 9px; overflow: hidden; }
+        .nbd-preview-tile-photo { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0.68; }
+        .nbd-preview-tile-scrim { position: absolute; inset: 0; background: linear-gradient(170deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 45%, #fff 92%); }
+        .nbd-preview-ring-wrap { position: relative; width: 34px; height: 34px; margin-bottom: 6px; background: rgba(255,255,255,0.78); border-radius: 50%; }
+      `}</style>
+      <div className="nbd-preview-glow" />
+      <div className="nbd-preview-phone">
+        <div className="nbd-preview-screen">
+          <div className="nbd-preview-notch" />
+          <div className="nbd-preview-banner">
+            <div style={{ position: "relative", fontSize: 10, letterSpacing: 1, textTransform: "uppercase", opacity: 0.85, marginBottom: 3 }}>Welcome back</div>
+            <div style={{ position: "relative", fontSize: 16, fontWeight: 700, marginBottom: 12 }}>Hi there</div>
+            <div style={{ position: "relative", display: "flex", gap: 16 }}>
+              <div><div style={{ fontSize: 18, fontWeight: 700, lineHeight: 1 }}>{tileBrands.length}</div><div style={{ fontSize: 8, textTransform: "uppercase", letterSpacing: 0.5, opacity: 0.85, marginTop: 3 }}>Brands</div></div>
+              <div><div style={{ fontSize: 18, fontWeight: 700, lineHeight: 1 }}>62%</div><div style={{ fontSize: 8, textTransform: "uppercase", letterSpacing: 0.5, opacity: 0.85, marginTop: 3 }}>Complete</div></div>
+              <div><div style={{ fontSize: 18, fontWeight: 700, lineHeight: 1 }}>1</div><div style={{ fontSize: 8, textTransform: "uppercase", letterSpacing: 0.5, opacity: 0.85, marginTop: 3 }}>Certified</div></div>
+            </div>
+          </div>
+          <div style={{ padding: "14px 14px 0" }}>
+            <div style={{ background: "#fff", border: "1px solid #e4dfd6", borderRadius: 12, padding: 10, display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 8, border: "1px solid #e4dfd6", background: "#fff", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", padding: 4 }}>
+                <img src={continueBrand.logo_url} alt={continueBrand.name} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: 0.5, textTransform: "uppercase", color: "#4d6b2c", marginBottom: 2 }}>Continue</div>
+                <div style={{ fontSize: 11.5, fontWeight: 700, color: navy[900] }}>{continueBrand.name}</div>
+                <div style={{ height: 4, borderRadius: 2, background: "#e4dfd6", overflow: "hidden", marginTop: 5 }}>
+                  <div style={{ height: "100%", borderRadius: 2, width: "40%", background: "linear-gradient(90deg, #4d6b2c, #98cb63)" }} />
+                </div>
+              </div>
+            </div>
+            <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", color: "#8a8074", margin: "0 0 8px" }}>Your brands</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 14 }}>
+              {tileBrands.map((b, i) => {
+                const sample = PREVIEW_SAMPLE[i % PREVIEW_SAMPLE.length];
+                const photo = brandHeaderPhoto(b.name);
+                const { circ, offset } = ring(sample.pct);
+                return (
+                  <div key={b.id} className="nbd-preview-tile">
+                    {photo && <div className="nbd-preview-tile-photo" style={{ backgroundImage: `url(${photo.src})`, backgroundPosition: photo.position }} />}
+                    <div className="nbd-preview-tile-scrim" />
+                    {sample.pct === 100 && (
+                      <div style={{ position: "absolute", top: 8, right: 8, width: 14, height: 14, borderRadius: "50%", background: "#98cb63", color: "#201b15", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 900, zIndex: 2 }}>✓</div>
+                    )}
+                    <div style={{ position: "relative" }}>
+                      <div className="nbd-preview-ring-wrap">
+                        <svg width="34" height="34" viewBox="0 0 34 34" style={{ transform: "rotate(-90deg)" }}>
+                          <circle cx="17" cy="17" r="15" fill="none" stroke="#ece6da" strokeWidth="4" />
+                          <circle cx="17" cy="17" r="15" fill="none" stroke="#4d6b2c" strokeWidth="4" strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={offset} />
+                        </svg>
+                        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8.5, fontWeight: 800, color: navy[900] }}>{sample.pct}%</div>
+                      </div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: navy[900], marginBottom: 2 }}>{b.name}</div>
+                      <div style={{ fontSize: 9, color: "#8a8074" }}>{sample.status}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "#fff", borderTop: "1px solid #e4dfd6", display: "flex", justifyContent: "space-around", padding: "9px 0 11px" }}>
+            {[["Home", true], ["Training", false], ["Certificates", false], ["Team", false]].map(([label, active]) => (
+              <div key={label} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+                <div style={{ width: 16, height: 16, borderRadius: 5, background: active ? "#4d6b2c" : "#e4dfd6" }} />
+                <div style={{ fontSize: 7, letterSpacing: 0.3, color: active ? "#4d6b2c" : "#8a8074", fontWeight: active ? 700 : 400 }}>{label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div style={{ textAlign: "center", fontSize: 12.5, color: "#8a8074", marginTop: 18, maxWidth: 230, lineHeight: 1.5, marginLeft: "auto", marginRight: "auto" }}>
+        A snippet of the real Customer Home screen — your actual brand colours and logos, shown the way salons will see it once approved.
+      </div>
+    </div>
+  );
+}

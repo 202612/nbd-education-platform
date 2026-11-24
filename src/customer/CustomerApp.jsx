@@ -5,7 +5,7 @@ import {
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { supabase } from "../lib/supabaseClient.js";
-import { navy, gold, grey, Badge, WORDMARK_SRC, DoodleHome, DoodlePlay, DoodleRadio, DoodleAward, DoodleUsers, DoodleChart, DoodleSettings, DoodleBook, DoodleCalendar, Skeleton, DEFAULT_HERO_BG_SRC } from "../lib/ui.jsx";
+import { navy, gold, grey, Badge, WORDMARK_SRC, DoodleHome, DoodlePlay, DoodleRadio, DoodleAward, DoodleUsers, DoodleChart, DoodleSettings, DoodleBook, DoodleCalendar, Skeleton, DEFAULT_HERO_BG_SRC, brandHeaderPhoto } from "../lib/ui.jsx";
 
 // NBD-brand accent colours cycled per connection line, so each matched pair
 // gets its own recognisable colour across both columns and the line itself.
@@ -1156,18 +1156,6 @@ function StepRow({ step, done, locked, onOpen }) {
 // brochure, which already uses these images for the exact same purpose —
 // training materials for these brands' NBD-approved stockists). Falls back
 // to the plain gradient for any brand without a matching photo yet.
-function brandHeaderPhoto(name) {
-  const n = (name || "").toLowerCase();
-  if (n.includes("kevin")) return { src: "/brand-headers/kevinmurphy.jpg", position: "center 18%" };
-  if (n.includes("eleven")) return { src: "/brand-headers/eleven.jpg", position: "center 15%" };
-  if (n.includes("davines")) return { src: "/brand-headers/davines.jpg", position: "center" };
-  if (n.includes("aveda")) return { src: "/brand-headers/aveda.jpg", position: "center" };
-  if (n.includes("k18")) return { src: "/brand-headers/k18.jpg", position: "center" };
-  if (n.includes("color wow")) return { src: "/brand-headers/colorwow.jpg", position: "center" };
-  if (n.includes("living proof")) return { src: "/brand-headers/livingproof.jpg", position: "center 10%" };
-  return null;
-}
-
 function CustomerBrandDetail({ brand, completedStepIds, onStepCompleted, participantName, onBack }) {
   const headerPhoto = brandHeaderPhoto(brand.name);
   const [openStepId, setOpenStepId] = useState(null);
@@ -1868,9 +1856,13 @@ function BrandTileGrid({ brands, completedStepIds, onOpenBrand }) {
         .nbd-tile { position: relative; background: #fff; border: 1px solid #e4dfd6; border-radius: 16px; padding: 18px 16px; overflow: hidden; transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; cursor: pointer; text-align: left; }
         .nbd-tile:hover { transform: translateY(-4px); box-shadow: 0 14px 30px rgba(32,27,21,0.12); border-color: #d8d0c2; }
         .nbd-tile-ring { stroke-linecap: round; transition: stroke-dashoffset 1s cubic-bezier(.2,.8,.2,1); }
-        .nbd-tile-badge { position: absolute; top: 12px; right: 12px; width: 22px; height: 22px; border-radius: 50%; background: #98cb63; color: #201b15; display: flex; align-items: center; justify-content: center; }
+        .nbd-tile-badge { position: absolute; top: 12px; right: 12px; width: 22px; height: 22px; border-radius: 50%; background: #98cb63; color: #201b15; display: flex; align-items: center; justify-content: center; z-index: 2; }
         .nbd-tile-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
         @media (max-width: 900px) { .nbd-tile-grid { grid-template-columns: repeat(2, 1fr); } }
+        .nbd-tile-photo { position: absolute; inset: 0; background-size: cover; opacity: 0.68; }
+        .nbd-tile-scrim { position: absolute; inset: 0; background: linear-gradient(170deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 45%, #fff 92%); }
+        .nbd-tile-body { position: relative; }
+        .nbd-tile-ring-wrap { position: relative; width: 52px; height: 52px; margin-bottom: 12px; background: rgba(255,255,255,0.78); border-radius: 50%; }
       `}</style>
       <div style={{ fontSize: 18, fontWeight: 700, color: navy[900], margin: "0 0 14px" }}>Your brands</div>
       <div className="nbd-tile-grid">
@@ -1881,20 +1873,25 @@ function BrandTileGrid({ brands, completedStepIds, onOpenBrand }) {
           const status = total === 0 ? "No training yet" : done === 0 ? "Not started" : done === total ? "Completed" : "In progress";
           const r = 22, circ = 2 * Math.PI * r;
           const offset = circ - (circ * pct) / 100;
+          const photo = brandHeaderPhoto(b.name);
           return (
             <button key={b.id} className="nbd-tile" onClick={() => onOpenBrand(b.id)}>
+              {photo && <div className="nbd-tile-photo" style={{ backgroundImage: `url(${photo.src})`, backgroundPosition: photo.position }} />}
+              <div className="nbd-tile-scrim" />
               {pct === 100 && total > 0 && (
                 <div className="nbd-tile-badge"><Check size={13} /></div>
               )}
-              <div style={{ position: "relative", width: 52, height: 52, marginBottom: 12 }}>
-                <svg width="52" height="52" viewBox="0 0 52 52" style={{ transform: "rotate(-90deg)" }}>
-                  <circle cx="26" cy="26" r={r} fill="none" stroke="#ece6da" strokeWidth="5" />
-                  <circle className="nbd-tile-ring" cx="26" cy="26" r={r} fill="none" stroke="#4d6b2c" strokeWidth="5" strokeDasharray={circ} strokeDashoffset={offset} />
-                </svg>
-                <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: navy[900] }}>{pct}%</div>
+              <div className="nbd-tile-body">
+                <div className="nbd-tile-ring-wrap">
+                  <svg width="52" height="52" viewBox="0 0 52 52" style={{ transform: "rotate(-90deg)" }}>
+                    <circle cx="26" cy="26" r={r} fill="none" stroke="#ece6da" strokeWidth="5" />
+                    <circle className="nbd-tile-ring" cx="26" cy="26" r={r} fill="none" stroke="#4d6b2c" strokeWidth="5" strokeDasharray={circ} strokeDashoffset={offset} />
+                  </svg>
+                  <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 800, color: navy[900] }}>{pct}%</div>
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: navy[900], marginBottom: 2 }}>{b.name}</div>
+                <div style={{ fontSize: 12.5, color: "#8a8074" }}>{status}</div>
               </div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: navy[900], marginBottom: 2 }}>{b.name}</div>
-              <div style={{ fontSize: 12.5, color: "#8a8074" }}>{status}</div>
             </button>
           );
         })}

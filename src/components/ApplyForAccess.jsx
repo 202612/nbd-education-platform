@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
-import { navy, cream, grey, AuthHero, PasswordField, validatePassword, PublicFooter, PublicBrandStrip } from "../lib/ui.jsx";
+import { navy, cream, grey, AuthHero, PasswordField, validatePassword, PublicFooter, PublicBrandStrip, RegistrationPreviewPhone } from "../lib/ui.jsx";
 
 export default function ApplyForAccess({ onSwitchToLogin, onSwitchToTeam }) {
   const [brands, setBrands] = useState(null);
@@ -118,6 +118,8 @@ export default function ApplyForAccess({ onSwitchToLogin, onSwitchToTeam }) {
               <div style={{ fontSize: 15, fontWeight: 700, color: navy[900] }}>Logging in as part of a team?</div>
               <div style={{ fontSize: 14, color: grey, marginTop: 2 }}>If your account manager already added you, create your password here →</div>
             </button>
+
+            <RegistrationPreviewPhone />
           </div>
 
           <div className="nbd-auth-card" style={{ maxWidth: 520 }}>
