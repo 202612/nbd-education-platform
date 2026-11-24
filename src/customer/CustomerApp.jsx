@@ -1816,8 +1816,8 @@ function ContinueCard({ pick, onOpenBrand }) {
         @keyframes nbd-continue-fill-anim { from { width: 0%; } }
         .nbd-continue-btn svg { transition: transform .15s ease; }
         .nbd-continue-card:hover .nbd-continue-btn svg { transform: translateX(2px); }
-        .nbd-continue-photo { position: absolute; inset: 0; background-size: cover; opacity: 0.55; }
-        .nbd-continue-scrim { position: absolute; inset: 0; background: linear-gradient(100deg, #fff 20%, rgba(255,255,255,0.35) 55%, rgba(255,255,255,0.12) 100%); }
+        .nbd-continue-photo { position: absolute; inset: 0; background-size: cover; opacity: 0.3; }
+        .nbd-continue-scrim { position: absolute; inset: 0; background: linear-gradient(100deg, #fff 35%, rgba(255,255,255,0.6) 65%, rgba(255,255,255,0.4) 100%); }
       `}</style>
       {photo && <div className="nbd-continue-photo" style={{ backgroundImage: `url(${photo.src})`, backgroundPosition: photo.position }} />}
       <div className="nbd-continue-scrim" />
