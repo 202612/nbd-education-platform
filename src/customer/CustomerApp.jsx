@@ -2026,6 +2026,7 @@ function CustomerHome({ brands, completedStepIds, participantName, onOpenBrand }
            Contain never crops or upscales beyond fit, and the banner's own
            green gradient shows through as a deliberate frame around it. */
         .nbd-home-banner-photo { background-size: contain; background-repeat: no-repeat; }
+        .nbd-home-banner-blur { background-size: cover; background-repeat: no-repeat; filter: blur(50px) saturate(1.1); transform: scale(1.3); }
         @media (max-width: 700px) {
           .nbd-home-banner { min-height: 230px !important; padding: 28px 22px !important; }
         }
@@ -2048,15 +2049,27 @@ function CustomerHome({ brands, completedStepIds, participantName, onOpenBrand }
         }}
       >
         {rotationPhotos.map((p, i) => (
-          <div
-            key={p.src}
-            className="nbd-home-banner-photo"
-            style={{
-              position: "absolute", inset: 0,
-              backgroundImage: `url(${p.src})`, backgroundPosition: p.bannerPosition || p.position,
-              opacity: i === photoIdx ? 1 : 0, transition: "opacity 1.2s ease",
-            }}
-          />
+          <React.Fragment key={p.src}>
+            {/* Blurred, scaled-up cover copy behind the sharp contained
+                photo — fills in the letterbox space "contain" leaves with
+                the photo's own colours instead of just the flat gradient. */}
+            <div
+              className="nbd-home-banner-blur"
+              style={{
+                position: "absolute", inset: 0,
+                backgroundImage: `url(${p.src})`, backgroundPosition: p.bannerPosition || p.position,
+                opacity: i === photoIdx ? 1 : 0, transition: "opacity 1.2s ease",
+              }}
+            />
+            <div
+              className="nbd-home-banner-photo"
+              style={{
+                position: "absolute", inset: 0,
+                backgroundImage: `url(${p.src})`, backgroundPosition: p.bannerPosition || p.position,
+                opacity: i === photoIdx ? 1 : 0, transition: "opacity 1.2s ease",
+              }}
+            />
+          </React.Fragment>
         ))}
         {rotationPhotos.length > 0 && (
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(125deg, rgba(94,143,30,0.82) 0%, rgba(152,203,99,0.72) 100%)" }} />
