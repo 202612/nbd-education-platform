@@ -542,17 +542,17 @@ export function brandHeaderPhoto(name) {
   if (n.includes("kevin")) {
     return isColour
       ? { src: "/brand-headers/kevinmurphy_colour.jpg", position: "center", bannerPosition: "center" }
-      : { src: "/brand-headers/kevinmurphy.jpg", position: "center", bannerPosition: "center" };
+      : { src: "/brand-headers/kevinmurphy2.jpg", position: "center", bannerPosition: "center" };
   }
   if (n.includes("eleven")) {
     return isColour
       ? { src: "/brand-headers/eleven_colour.jpg", position: "center 15%", bannerPosition: "center 20%" }
-      : { src: "/brand-headers/eleven.jpg", position: "center", bannerPosition: "center" };
+      : { src: "/brand-headers/eleven2.jpg", position: "center", bannerPosition: "center" };
   }
-  if (n.includes("davines")) return { src: "/brand-headers/davines.jpg", position: "center", bannerPosition: "center" };
-  if (n.includes("aveda")) return { src: "/brand-headers/aveda.jpg", position: "center", bannerPosition: "center" };
+  if (n.includes("davines")) return { src: "/brand-headers/davines2.jpg", position: "center", bannerPosition: "center" };
+  if (n.includes("aveda")) return { src: "/brand-headers/aveda2.jpg", position: "center", bannerPosition: "center" };
   if (n.includes("k18")) return { src: "/brand-headers/k18.jpg", position: "center", bannerPosition: "center" };
-  if (n.includes("color wow")) return { src: "/brand-headers/colorwow.jpg", position: "center", bannerPosition: "center" };
+  if (n.includes("color wow")) return { src: "/brand-headers/colorwow2.jpg", position: "center", bannerPosition: "center" };
   if (n.includes("living proof")) return { src: "/brand-headers/livingproof.jpg", position: "center 10%", bannerPosition: "center 15%" };
   return null;
 }
