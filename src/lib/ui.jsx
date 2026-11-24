@@ -634,12 +634,12 @@ export function RegistrationPreviewPhone() {
   };
 
   return (
-    <div style={{ position: "relative", display: "flex", justifyContent: "center", paddingTop: 8 }}>
+    <div style={{ position: "relative", display: "flex", justifyContent: "center", paddingTop: 44 }}>
       <style>{`
-        .nbd-preview-glow { position: absolute; width: 320px; height: 320px; background: radial-gradient(circle, rgba(152,203,99,0.35), rgba(152,203,99,0) 70%); top: -40px; filter: blur(2px); z-index: 0; }
-        .nbd-preview-phone { position: relative; z-index: 1; width: 240px; border-radius: 34px; background: #0e0c09; padding: 10px; box-shadow: 0 30px 60px -20px rgba(32,27,21,0.45), 0 10px 20px -8px rgba(32,27,21,0.3); transform: rotate(-3deg); }
-        .nbd-preview-screen { background: #f8f8f8; border-radius: 26px; overflow: hidden; position: relative; height: 520px; }
-        .nbd-preview-notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 90px; height: 22px; background: #0e0c09; border-radius: 0 0 14px 14px; z-index: 5; }
+        .nbd-preview-glow { position: absolute; width: 360px; height: 360px; background: radial-gradient(circle, rgba(152,203,99,0.35), rgba(152,203,99,0) 70%); top: -30px; filter: blur(2px); z-index: 0; }
+        .nbd-preview-phone { position: relative; z-index: 1; width: 280px; border-radius: 38px; background: #0e0c09; padding: 11px; box-shadow: 0 30px 60px -20px rgba(32,27,21,0.45), 0 10px 20px -8px rgba(32,27,21,0.3); transform: rotate(-3deg); }
+        .nbd-preview-screen { background: #f8f8f8; border-radius: 29px; overflow: hidden; position: relative; height: 580px; }
+        .nbd-preview-notch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 105px; height: 24px; background: #0e0c09; border-radius: 0 0 16px 16px; z-index: 5; }
         .nbd-preview-banner { position: relative; background: linear-gradient(125deg, #5e8f1e 0%, #98cb63 100%); padding: 30px 14px 16px; color: #fff; overflow: hidden; }
         .nbd-preview-tile { position: relative; background: #fff; border: 1px solid #e4dfd6; border-radius: 12px; padding: 10px 8px 9px; overflow: hidden; }
         .nbd-preview-tile-photo { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0.68; }
@@ -710,9 +710,6 @@ export function RegistrationPreviewPhone() {
             ))}
           </div>
         </div>
-      </div>
-      <div style={{ textAlign: "center", fontSize: 12.5, color: "#8a8074", marginTop: 18, maxWidth: 230, lineHeight: 1.5, marginLeft: "auto", marginRight: "auto" }}>
-        A snippet of the real Customer Home screen — your actual brand colours and logos, shown the way salons will see it once approved.
       </div>
     </div>
   );
