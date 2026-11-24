@@ -620,27 +620,25 @@ export function DoodlePalette({ size = 19, active }) {
 export function brandHeaderPhoto(name) {
   const n = (name || "").toLowerCase();
   const isColour = n.includes("colour") || n.includes("color") && !n.includes("color wow");
-  // bannerPosition is "left center" (not "center") everywhere — each of
-  // these files already has its own real photo content baked in near its
-  // left edge, with the rest extended/blurred to the right. Centering the
-  // whole file within an even wider stage would shift that real content
-  // back toward the middle, undoing it, so the banner anchors the file
-  // itself to the left instead.
+  // bannerPosition is plain "center" — each of these files now has its
+  // real photo content baked in on BOTH left and right edges (mirrored),
+  // with blur filling only the middle, so centering the whole file keeps
+  // it symmetric regardless of how much extra width the stage has.
   if (n.includes("kevin")) {
     return isColour
-      ? { src: "/brand-headers/kevinmurphy_colour.jpg", position: "center", bannerPosition: "left center" }
-      : { src: "/brand-headers/kevinmurphy2.jpg", position: "center", bannerPosition: "left center" };
+      ? { src: "/brand-headers/kevinmurphy_colour.jpg", position: "center", bannerPosition: "center" }
+      : { src: "/brand-headers/kevinmurphy2.jpg", position: "center", bannerPosition: "center" };
   }
   if (n.includes("eleven")) {
     return isColour
-      ? { src: "/brand-headers/eleven_colour.jpg", position: "center 15%", bannerPosition: "left center" }
-      : { src: "/brand-headers/eleven2.jpg", position: "center", bannerPosition: "left center" };
+      ? { src: "/brand-headers/eleven_colour.jpg", position: "center 15%", bannerPosition: "center" }
+      : { src: "/brand-headers/eleven2.jpg", position: "center", bannerPosition: "center" };
   }
-  if (n.includes("davines")) return { src: "/brand-headers/davines2.jpg", position: "center", bannerPosition: "left center" };
-  if (n.includes("aveda")) return { src: "/brand-headers/aveda2.jpg", position: "center", bannerPosition: "left center" };
-  if (n.includes("k18")) return { src: "/brand-headers/k18.jpg", position: "center", bannerPosition: "left center" };
-  if (n.includes("color wow")) return { src: "/brand-headers/colorwow2.jpg", position: "center", bannerPosition: "left center" };
-  if (n.includes("living proof")) return { src: "/brand-headers/livingproof.jpg", position: "center 10%", bannerPosition: "left center" };
+  if (n.includes("davines")) return { src: "/brand-headers/davines2.jpg", position: "center", bannerPosition: "center" };
+  if (n.includes("aveda")) return { src: "/brand-headers/aveda2.jpg", position: "center", bannerPosition: "center" };
+  if (n.includes("k18")) return { src: "/brand-headers/k18.jpg", position: "center", bannerPosition: "center" };
+  if (n.includes("color wow")) return { src: "/brand-headers/colorwow2.jpg", position: "center", bannerPosition: "center" };
+  if (n.includes("living proof")) return { src: "/brand-headers/livingproof.jpg", position: "center 10%", bannerPosition: "center" };
   return null;
 }
 
