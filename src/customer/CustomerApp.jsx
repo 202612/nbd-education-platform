@@ -1910,6 +1910,18 @@ function CustomerHome({ brands, completedStepIds, participantName, onOpenBrand }
   const overallPct = totalSteps ? Math.round((totalDone / totalSteps) * 100) : 0;
   const continuePick = pickContinueBrand(brands, completedStepIds);
 
+  // Only rotates through photos for brands this customer actually stocks —
+  // reuses the exact same files + crop positions already tuned for the
+  // Training header, so nothing here risks a fresh, untested crop.
+  const rotationPhotos = brands.map((b) => brandHeaderPhoto(b.name)).filter(Boolean);
+  const [photoIdx, setPhotoIdx] = useState(0);
+  useEffect(() => {
+    if (rotationPhotos.length < 2) return;
+    const id = setInterval(() => setPhotoIdx((i) => (i + 1) % rotationPhotos.length), 6000);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rotationPhotos.length]);
+
   return (
     <div>
       <div
@@ -1927,6 +1939,19 @@ function CustomerHome({ brands, completedStepIds, participantName, onOpenBrand }
           gap: 24,
         }}
       >
+        {rotationPhotos.map((p, i) => (
+          <div
+            key={p.src}
+            style={{
+              position: "absolute", inset: 0,
+              backgroundImage: `url(${p.src})`, backgroundSize: "cover", backgroundPosition: p.position,
+              opacity: i === photoIdx ? 1 : 0, transition: "opacity 1.2s ease",
+            }}
+          />
+        ))}
+        {rotationPhotos.length > 0 && (
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(125deg, rgba(94,143,30,0.82) 0%, rgba(152,203,99,0.72) 100%)" }} />
+        )}
         {/* Quiet linework texture, same idea as the brochure's illustration —
             restrained, on-brand green, not a flat gradient. */}
         <svg viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ position: "absolute", top: -40, right: -60, width: 420, height: 420, opacity: 0.16, pointerEvents: "none" }}>
