@@ -1300,7 +1300,7 @@ function useCountdown(targetIso) {
   };
 }
 
-function WebinarDetail({ webinar, onBack, onRefetch }) {
+function WebinarDetail({ webinar, onBack, onRefetch, onToggleRsvp }) {
   const countdown = useCountdown(webinar.scheduled_at);
   const watchedRef = useRef(false);
 
@@ -1349,7 +1349,18 @@ function WebinarDetail({ webinar, onBack, onRefetch }) {
               </div>
             ))}
           </div>
-          <div style={{ color: "#8a8074", fontSize: 15 }}>{formatDateTime(webinar.scheduled_at)}</div>
+          <div style={{ color: "#8a8074", fontSize: 15, marginBottom: 18 }}>{formatDateTime(webinar.scheduled_at)}</div>
+          <button
+            onClick={() => onToggleRsvp(webinar)}
+            style={{
+              fontSize: 14, fontWeight: 700, padding: "9px 20px", borderRadius: 999, cursor: "pointer",
+              border: webinar.has_rsvped ? "1px solid #4a6b3d" : "1px solid #e4dfd6",
+              background: webinar.has_rsvped ? "#eef5e2" : "#fff",
+              color: webinar.has_rsvped ? "#4a6b3d" : "#6b6155",
+            }}
+          >
+            {webinar.has_rsvped ? "✓ You're attending" : "I'm attending — add to my Calendar"}
+          </button>
         </div>
       )}
     </div>
@@ -1380,17 +1391,27 @@ function CustomerCalendar({ account, currentUser, team, brands, teamProgress, co
   const [startDate, setStartDate] = useState("");
   const [deadlineDate, setDeadlineDate] = useState("");
   const [note, setNote] = useState("");
+  const [webinars, setWebinars] = useState([]);
 
   async function load() {
-    const { data, error: err } = await supabase
-      .from("training_schedule")
-      .select("id,assigned_to,brand_id,start_date,deadline_date,note,created_by,app_users:assigned_to(name),brands(name,logo_url,steps:brand_steps(id))")
-      .order("deadline_date", { ascending: true });
+    const [{ data, error: err }, { data: webinarData }] = await Promise.all([
+      supabase
+        .from("training_schedule")
+        .select("id,assigned_to,brand_id,start_date,deadline_date,note,created_by,app_users:assigned_to(name),brands(name,logo_url,steps:brand_steps(id))")
+        .order("deadline_date", { ascending: true }),
+      supabase.rpc("get_my_webinars"),
+    ]);
     if (err) { setError(err.message); return; }
     setRows(data || []);
+    setWebinars((webinarData || []).filter((w) => w.has_rsvped));
   }
 
   useEffect(() => { load(); }, []);
+
+  async function cancelWebinarRsvp(webinarId) {
+    await supabase.rpc("cancel_webinar_rsvp", { p_webinar_id: webinarId });
+    load();
+  }
 
   function doneSetFor(userId) {
     if (userId === currentUser.id) return completedStepIds;
@@ -1405,13 +1426,37 @@ function CustomerCalendar({ account, currentUser, team, brands, teamProgress, co
     const completed = stepIds.length > 0 && doneCount === stepIds.length;
     const overdue = !completed && r.deadline_date < todayStr;
     const status = completed ? "Completed" : overdue ? "Overdue" : "Upcoming";
-    return { ...r, doneCount, totalSteps: stepIds.length, status };
+    return { ...r, doneCount, totalSteps: stepIds.length, status, kind: "training" };
   });
+
+  // RSVP'd webinars land on the calendar the same way scheduled training
+  // does — same shape (start_date === deadline_date for a single dated
+  // event) so they can share the day-grid and list rendering below.
+  const withWebinars = webinars.map((w) => {
+    const d = new Date(w.scheduled_at);
+    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    return {
+      id: `webinar-${w.id}`,
+      webinar_id: w.id,
+      kind: "webinar",
+      assigned_to: currentUser.id,
+      created_by: currentUser.id,
+      app_users: { name: currentUser.name },
+      brands: { name: w.brand_name, logo_url: w.brand_logo_url },
+      start_date: dateStr,
+      deadline_date: dateStr,
+      note: w.title,
+      scheduled_at: w.scheduled_at,
+      status: w.is_live ? "Live now" : "Upcoming",
+    };
+  });
+
+  const allEntries = [...withStatus, ...withWebinars].sort((a, b) => a.deadline_date.localeCompare(b.deadline_date));
 
   // Shows the logo on both the day it starts and its deadline — a quick
   // glance at the grid shows both when something begins and when it's due.
   const byDate = {};
-  for (const r of withStatus) {
+  for (const r of allEntries) {
     (byDate[r.start_date] ||= []).push(r);
     if (r.deadline_date !== r.start_date) (byDate[r.deadline_date] ||= []).push(r);
   }
@@ -1611,42 +1656,53 @@ function CustomerCalendar({ account, currentUser, team, brands, teamProgress, co
 
       {!rows && <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#8a8074", fontSize: 16 }}><Loader2 size={16} className="spin" /> Loading…</div>}
 
-      {rows && withStatus.length === 0 && (
+      {rows && allEntries.length === 0 && (
         <div style={{ background: "#fff", border: "1px dashed #e4dfd6", borderRadius: 18, padding: "48px 32px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
           <div style={{ width: 64, height: 64, borderRadius: 16, background: "#f1f7e9", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <DoodleCalendar size={32} />
           </div>
           <div style={{ fontSize: 17, fontWeight: 700, color: navy[900] }}>Nothing scheduled yet</div>
-          <div style={{ fontSize: 14, color: "#8a8074", maxWidth: 320, lineHeight: 1.5 }}>Click a date above to schedule your next brand training.</div>
+          <div style={{ fontSize: 14, color: "#8a8074", maxWidth: 320, lineHeight: 1.5 }}>Click a date above to schedule your next brand training, or RSVP to a webinar.</div>
         </div>
       )}
 
-      {withStatus.length > 0 && (
+      {allEntries.length > 0 && (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {withStatus.map((r) => (
+          {allEntries.map((r) => (
             <div key={r.id} className="nbd-cal-row" style={{ display: "flex", alignItems: "center", gap: 16, background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: "14px 16px" }}>
               <div style={{ width: 48, height: 48, flexShrink: 0, borderRadius: 10, background: "#fff", border: "1px solid #e4dfd6", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 {r.brands?.logo_url ? <img src={r.brands.logo_url} alt={r.brands.name} style={{ maxHeight: "70%", maxWidth: "70%", objectFit: "contain" }} /> : <DoodleCalendar size={20} />}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 600, fontSize: 16, color: navy[900] }}>{r.brands?.name || "—"}</div>
-                <div style={{ fontSize: 14, color: "#8a8074" }}>
-                  {r.app_users?.name}{r.assigned_to === currentUser.id ? " (you)" : ""} &middot; {formatDate(r.start_date)} → {formatDate(r.deadline_date)}
-                  {r.totalSteps > 0 && ` · ${r.doneCount} of ${r.totalSteps} steps complete`}
-                </div>
+                {r.kind === "webinar" ? (
+                  <div style={{ fontSize: 14, color: "#8a8074" }}>
+                    <Radio size={12} style={{ verticalAlign: -1, marginRight: 4 }} /> Webinar &middot; {formatDateTime(r.scheduled_at)}
+                  </div>
+                ) : (
+                  <div style={{ fontSize: 14, color: "#8a8074" }}>
+                    {r.app_users?.name}{r.assigned_to === currentUser.id ? " (you)" : ""} &middot; {formatDate(r.start_date)} → {formatDate(r.deadline_date)}
+                    {r.totalSteps > 0 && ` · ${r.doneCount} of ${r.totalSteps} steps complete`}
+                  </div>
+                )}
                 {r.note && <div style={{ fontSize: 13, color: "#a39a8d", marginTop: 2 }}>{r.note}</div>}
               </div>
               <div
                 style={{
                   flexShrink: 0, fontSize: 13, fontWeight: 700, padding: "6px 14px", borderRadius: 999, whiteSpace: "nowrap",
-                  background: r.status === "Overdue" ? "#fbe9e7" : r.status === "Completed" ? "#eef5e2" : "#f1efe9",
-                  color: r.status === "Overdue" ? "#a3372f" : r.status === "Completed" ? "#4a6b3d" : "#6b6155",
+                  background: r.status === "Overdue" ? "#fbe9e7" : r.status === "Completed" || r.status === "Live now" ? "#eef5e2" : "#f1efe9",
+                  color: r.status === "Overdue" ? "#a3372f" : r.status === "Completed" || r.status === "Live now" ? "#4a6b3d" : "#6b6155",
                 }}
               >
                 {r.status}
               </div>
               {(r.assigned_to === currentUser.id || r.created_by === currentUser.id || isHolder) && (
-                <button className="nbd-cal-cancel" onClick={() => cancel(r.id)} style={{ background: "none", border: "none", cursor: "pointer", color: "#a39a8d" }} title="Cancel">
+                <button
+                  className="nbd-cal-cancel"
+                  onClick={() => (r.kind === "webinar" ? cancelWebinarRsvp(r.webinar_id) : cancel(r.id))}
+                  style={{ background: "none", border: "none", cursor: "pointer", color: "#a39a8d" }}
+                  title={r.kind === "webinar" ? "Cancel RSVP" : "Cancel"}
+                >
                   <Trash2 size={15} color="currentColor" />
                 </button>
               )}
@@ -1669,6 +1725,12 @@ function CustomerWebinars() {
   }
   useEffect(() => { load(); }, []);
 
+  async function toggleRsvp(w) {
+    setWebinars((prev) => prev.map((x) => (x.id === w.id ? { ...x, has_rsvped: !x.has_rsvped } : x)));
+    if (w.has_rsvped) await supabase.rpc("cancel_webinar_rsvp", { p_webinar_id: w.id });
+    else await supabase.rpc("rsvp_webinar", { p_webinar_id: w.id });
+  }
+
   if (webinars === null) {
     return <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#8a8074", fontSize: 16 }}><Loader2 size={16} className="spin" /> Loading webinars…</div>;
   }
@@ -1687,7 +1749,7 @@ function CustomerWebinars() {
   const openWebinar = openBrand?.items.find((w) => w.id === openWebinarId);
 
   if (openBrand && openWebinar) {
-    return <WebinarDetail webinar={openWebinar} onBack={() => setOpenWebinarId(null)} onRefetch={load} />;
+    return <WebinarDetail webinar={openWebinar} onBack={() => setOpenWebinarId(null)} onRefetch={load} onToggleRsvp={toggleRsvp} />;
   }
 
   if (openBrand) {
@@ -1709,19 +1771,36 @@ function CustomerWebinars() {
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {openBrand.items.map((w) => (
-            <button
+            <div
               key={w.id}
-              onClick={() => setOpenWebinarId(w.id)}
               className="nbd-rowcard"
-              style={{ display: "flex", alignItems: "center", gap: 12, textAlign: "left", width: "100%", background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: "13px 16px", cursor: "pointer" }}
+              style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", background: "#fff", border: "1px solid #e4dfd6", borderRadius: 10, padding: "13px 16px" }}
             >
-              <Radio size={18} color={w.is_live ? "#4a6b3d" : navy[700]} />
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 500, color: navy[900], fontSize: 16 }}>{w.title}</div>
-                <div style={{ fontSize: 14, color: "#8a8074" }}>{w.is_live ? "Available now" : formatDateTime(w.scheduled_at)}</div>
-              </div>
+              <button
+                onClick={() => setOpenWebinarId(w.id)}
+                style={{ display: "flex", alignItems: "center", gap: 12, flex: 1, minWidth: 0, textAlign: "left", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+              >
+                <Radio size={18} color={w.is_live ? "#4a6b3d" : navy[700]} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 500, color: navy[900], fontSize: 16 }}>{w.title}</div>
+                  <div style={{ fontSize: 14, color: "#8a8074" }}>{w.is_live ? "Available now" : formatDateTime(w.scheduled_at)}</div>
+                </div>
+              </button>
               {w.is_live && <Badge tone="gold">Live</Badge>}
-            </button>
+              {!w.is_live && (
+                <button
+                  onClick={() => toggleRsvp(w)}
+                  style={{
+                    flexShrink: 0, fontSize: 13, fontWeight: 700, padding: "7px 14px", borderRadius: 999, whiteSpace: "nowrap", cursor: "pointer",
+                    border: w.has_rsvped ? "1px solid #4a6b3d" : "1px solid #e4dfd6",
+                    background: w.has_rsvped ? "#eef5e2" : "#fff",
+                    color: w.has_rsvped ? "#4a6b3d" : "#6b6155",
+                  }}
+                >
+                  {w.has_rsvped ? "✓ Attending" : "I'm attending"}
+                </button>
+              )}
+            </div>
           ))}
         </div>
       </div>
@@ -1749,16 +1828,27 @@ function CustomerWebinars() {
           <div style={{ fontSize: 14, color: "#8a8074", maxWidth: 340, lineHeight: 1.5 }}>Check back soon — new sessions for your brands show up here as soon as they're added.</div>
         </div>
       )}
+      <style>{`
+        .nbd-webinar-card { position: relative; overflow: hidden; transition: transform .18s ease, box-shadow .18s ease; }
+        .nbd-webinar-card:hover { transform: translateY(-4px); box-shadow: 0 14px 30px rgba(32,27,21,0.12); }
+        .nbd-webinar-photo { position: absolute; inset: 0; background-size: cover; opacity: 0.4; }
+        .nbd-webinar-scrim { position: absolute; inset: 0; background: linear-gradient(165deg, #fff 25%, rgba(255,255,255,0.35) 60%, rgba(255,255,255,0.12) 100%); }
+      `}</style>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 20 }}>
         {byBrand.map((b) => {
           const liveCount = b.items.filter((w) => w.is_live).length;
+          const next = b.items.find((w) => !w.is_live);
+          const photo = brandHeaderPhoto(b.brand_name);
           return (
-            <button key={b.brand_id} onClick={() => setOpenBrandId(b.brand_id)} style={{ textAlign: "left", background: "#fff", border: "1px solid #e4dfd6", borderRadius: 16, padding: 20, cursor: "pointer" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+            <button key={b.brand_id} onClick={() => setOpenBrandId(b.brand_id)} className="nbd-webinar-card" style={{ textAlign: "left", background: "#fff", border: "1px solid #e4dfd6", borderRadius: 16, padding: 20, cursor: "pointer" }}>
+              {photo && <div className="nbd-webinar-photo" style={{ backgroundImage: `url(${photo.src})`, backgroundPosition: photo.position }} />}
+              <div className="nbd-webinar-scrim" />
+              <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
                 {b.brand_logo_url && <img src={b.brand_logo_url} alt={b.brand_name} style={{ height: 28, maxWidth: 90, objectFit: "contain" }} />}
                 <div style={{ fontWeight: 700, fontSize: 16, color: navy[900] }}>{b.brand_name}</div>
               </div>
-              <div style={{ fontSize: 14, color: "#8a8074" }}>{b.items.length} webinar{b.items.length === 1 ? "" : "s"}{liveCount > 0 ? ` · ${liveCount} live now` : ""}</div>
+              <div style={{ position: "relative", fontSize: 14, color: "#8a8074" }}>{b.items.length} webinar{b.items.length === 1 ? "" : "s"}{liveCount > 0 ? ` · ${liveCount} live now` : ""}</div>
+              {next && <div style={{ position: "relative", fontSize: 13, color: "#4a6b3d", fontWeight: 600, marginTop: 4 }}>Next: {formatDateTime(next.scheduled_at)}</div>}
             </button>
           );
         })}

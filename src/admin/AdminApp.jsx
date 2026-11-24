@@ -1912,19 +1912,37 @@ function AddWebinarForm({ brands, initial, onCancel, onSave }) {
 }
 
 function WebinarAttendanceList({ webinar }) {
-  if (webinar.attendance.length === 0) {
-    return <p style={{ fontSize: 14, color: "#a39a8d", margin: "10px 0 0" }}>No one has watched this yet.</p>;
-  }
   return (
-    <div style={{ marginTop: 10, borderTop: "1px solid #f0ece3", paddingTop: 10 }}>
-      <div style={{ fontSize: 13, color: "#8a8074", marginBottom: 6, fontWeight: 600 }}>Watched by ({webinar.attendance.length})</div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-        {webinar.attendance.map((a) => (
-          <div key={a.id} style={{ fontSize: 14, color: navy[900], display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
-            <span>{a.app_users?.name || "—"} <span style={{ color: "#a39a8d" }}>({a.app_users?.accounts?.company_name || "—"})</span></span>
-            <span style={{ color: "#8a8074", whiteSpace: "nowrap" }}>{formatDateTimeLocal(a.watched_at)}</span>
+    <div style={{ marginTop: 10, borderTop: "1px solid #f0ece3", paddingTop: 10, display: "flex", flexDirection: "column", gap: 16 }}>
+      <div>
+        <div style={{ fontSize: 13, color: "#8a8074", marginBottom: 6, fontWeight: 600 }}>RSVPed ({webinar.rsvps.length})</div>
+        {webinar.rsvps.length === 0 ? (
+          <p style={{ fontSize: 14, color: "#a39a8d", margin: 0 }}>No one has RSVPed yet.</p>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            {webinar.rsvps.map((r) => (
+              <div key={r.id} style={{ fontSize: 14, color: navy[900], display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+                <span>{r.app_users?.name || "—"} <span style={{ color: "#a39a8d" }}>({r.app_users?.accounts?.company_name || "—"})</span></span>
+                <span style={{ color: "#8a8074", whiteSpace: "nowrap" }}>{formatDateTimeLocal(r.created_at)}</span>
+              </div>
+            ))}
           </div>
-        ))}
+        )}
+      </div>
+      <div>
+        <div style={{ fontSize: 13, color: "#8a8074", marginBottom: 6, fontWeight: 600 }}>Watched by ({webinar.attendance.length})</div>
+        {webinar.attendance.length === 0 ? (
+          <p style={{ fontSize: 14, color: "#a39a8d", margin: 0 }}>No one has watched this yet.</p>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            {webinar.attendance.map((a) => (
+              <div key={a.id} style={{ fontSize: 14, color: navy[900], display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+                <span>{a.app_users?.name || "—"} <span style={{ color: "#a39a8d" }}>({a.app_users?.accounts?.company_name || "—"})</span></span>
+                <span style={{ color: "#8a8074", whiteSpace: "nowrap" }}>{formatDateTimeLocal(a.watched_at)}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1938,17 +1956,22 @@ function AdminWebinars() {
   const [expandedId, setExpandedId] = useState(null);
 
   async function load() {
-    const [{ data: brandRows }, { data: webinarRows }, { data: attendanceRows }] = await Promise.all([
+    const [{ data: brandRows }, { data: webinarRows }, { data: attendanceRows }, { data: rsvpRows }] = await Promise.all([
       supabase.from("brands").select("id,name").order("name"),
       supabase.from("webinars").select("id,brand_id,title,video_url,scheduled_at,brands(name)").order("scheduled_at", { ascending: false }),
       supabase.from("webinar_attendance").select("id,webinar_id,watched_at,app_users(name,email,accounts(company_name))"),
+      supabase.from("webinar_rsvps").select("id,webinar_id,created_at,app_users(name,email,accounts(company_name))"),
     ]);
     setBrands(brandRows || []);
     const byWebinar = {};
     for (const a of attendanceRows || []) {
       (byWebinar[a.webinar_id] ||= []).push(a);
     }
-    setWebinars((webinarRows || []).map((w) => ({ ...w, attendance: byWebinar[w.id] || [] })));
+    const rsvpsByWebinar = {};
+    for (const r of rsvpRows || []) {
+      (rsvpsByWebinar[r.webinar_id] ||= []).push(r);
+    }
+    setWebinars((webinarRows || []).map((w) => ({ ...w, attendance: byWebinar[w.id] || [], rsvps: rsvpsByWebinar[w.id] || [] })));
   }
   useEffect(() => { load(); }, []);
 
@@ -2001,7 +2024,7 @@ function AdminWebinars() {
                   <div style={{ fontWeight: 500, color: navy[900], fontSize: 16 }}>{w.title}</div>
                   <div style={{ fontSize: 14, color: "#8a8074" }}>
                     {w.brands?.name} · {formatDateTimeLocal(w.scheduled_at)} {isLive && <span style={{ color: "#4a6b3d", fontWeight: 600 }}>· Live</span>}
-                    {" · "}{w.attendance.length} watched
+                    {" · "}{w.rsvps.length} RSVPed · {w.attendance.length} watched
                   </div>
                 </div>
                 <div className="nbd-actions">
