@@ -622,7 +622,7 @@ export function DoodlePalette({ size = 19, active }) {
 // more than once since the path alone doesn't change. A query string on
 // the URL forces every client to fetch fresh without having to rename
 // files each time.
-const BRAND_PHOTO_VERSION = 7;
+const BRAND_PHOTO_VERSION = 8;
 
 export function brandHeaderPhoto(name) {
   const n = (name || "").toLowerCase();
