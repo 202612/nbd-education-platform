@@ -2018,7 +2018,15 @@ function CustomerHome({ brands, completedStepIds, participantName, onOpenBrand }
 
   return (
     <div>
+      <style>{`
+        .nbd-home-banner-photo { background-size: cover; }
+        @media (max-width: 700px) {
+          .nbd-home-banner { min-height: 230px !important; padding: 28px 22px !important; }
+          .nbd-home-banner-photo { background-size: contain !important; background-repeat: no-repeat; }
+        }
+      `}</style>
       <div
+        className="nbd-home-banner"
         style={{
           position: "relative", overflow: "hidden",
           background: "linear-gradient(125deg, #5e8f1e 0%, #98cb63 100%)",
@@ -2037,9 +2045,10 @@ function CustomerHome({ brands, completedStepIds, participantName, onOpenBrand }
         {rotationPhotos.map((p, i) => (
           <div
             key={p.src}
+            className="nbd-home-banner-photo"
             style={{
               position: "absolute", inset: 0,
-              backgroundImage: `url(${p.src})`, backgroundSize: "cover", backgroundPosition: p.bannerPosition || p.position,
+              backgroundImage: `url(${p.src})`, backgroundPosition: p.bannerPosition || p.position,
               opacity: i === photoIdx ? 1 : 0, transition: "opacity 1.2s ease",
             }}
           />
