@@ -202,6 +202,7 @@ export const HERO_STAGE_HEIGHT = "clamp(420px, 46vw, 520px)";
 export function AuthHero() {
   const { settings } = useSiteSettings();
   const [brandLogos, setBrandLogos] = useState([]);
+  const [allBrands, setAllBrands] = useState([]);
   const [bgReady, setBgReady] = useState(false);
   const [coverPct, setCoverPct] = useState(100);
   const stageRef = useRef(null);
@@ -215,6 +216,20 @@ export function AuthHero() {
       .not("logo_url", "is", null)
       .eq("hero_visible", true)
       .then(({ data }) => { if (!cancelled) setBrandLogos(data || []); });
+    return () => { cancelled = true; };
+  }, []);
+
+  // Separate from brandLogos above (which is gated by the admin's
+  // per-brand "show on hero" toggle, for the small floating logo badges) —
+  // the rotating photo background should cycle through every brand's real
+  // photography regardless of that toggle, same as the logged-in Home
+  // banner does with its own full approved-brand list.
+  useEffect(() => {
+    let cancelled = false;
+    supabase
+      .from("brands")
+      .select("id,name")
+      .then(({ data }) => { if (!cancelled) setAllBrands(data || []); });
     return () => { cancelled = true; };
   }, []);
 
@@ -280,7 +295,7 @@ export function AuthHero() {
   const rotationPhotos = (() => {
     const seen = new Set();
     const out = [];
-    for (const b of brandLogos) {
+    for (const b of allBrands) {
       const p = brandHeaderPhoto(b.name);
       if (p && !seen.has(p.src)) { seen.add(p.src); out.push(p); }
     }
