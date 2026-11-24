@@ -1797,11 +1797,13 @@ function ContinueCard({ pick, onOpenBrand }) {
   if (!pick) return null;
   const { brand, done, total, started } = pick;
   const pct = total ? Math.round((done / total) * 100) : 0;
+  const photo = brandHeaderPhoto(brand.name);
   return (
     <button
       className="nbd-continue-card"
       onClick={() => onOpenBrand(brand.id)}
       style={{
+        position: "relative", overflow: "hidden",
         display: "flex", alignItems: "center", gap: 20, width: "100%", textAlign: "left",
         background: "#fff", border: "1px solid #e4dfd6", borderRadius: 16, padding: 20,
         marginBottom: 20, cursor: "pointer",
@@ -1814,15 +1816,19 @@ function ContinueCard({ pick, onOpenBrand }) {
         @keyframes nbd-continue-fill-anim { from { width: 0%; } }
         .nbd-continue-btn svg { transition: transform .15s ease; }
         .nbd-continue-card:hover .nbd-continue-btn svg { transform: translateX(2px); }
+        .nbd-continue-photo { position: absolute; inset: 0; background-size: cover; opacity: 0.55; }
+        .nbd-continue-scrim { position: absolute; inset: 0; background: linear-gradient(100deg, #fff 20%, rgba(255,255,255,0.35) 55%, rgba(255,255,255,0.12) 100%); }
       `}</style>
-      <div style={{ width: 64, height: 64, borderRadius: 12, border: "1px solid #e4dfd6", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, padding: 10 }}>
+      {photo && <div className="nbd-continue-photo" style={{ backgroundImage: `url(${photo.src})`, backgroundPosition: photo.position }} />}
+      <div className="nbd-continue-scrim" />
+      <div style={{ position: "relative", width: 64, height: 64, borderRadius: 12, border: "1px solid #e4dfd6", background: "rgba(255,255,255,0.9)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, padding: 10 }}>
         {brand.logo_url ? (
           <img src={brand.logo_url} alt={brand.name} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
         ) : (
           <div style={{ fontWeight: 700, fontSize: 14, color: navy[900] }}>{brand.name}</div>
         )}
       </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div style={{ position: "relative", flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", color: "#4d6b2c", marginBottom: 4 }}>
           {started ? "Continue where you left off" : "Pick up next"}
         </div>
@@ -1837,6 +1843,7 @@ function ContinueCard({ pick, onOpenBrand }) {
       <div
         className="nbd-continue-btn"
         style={{
+          position: "relative",
           flexShrink: 0, display: "flex", alignItems: "center", gap: 6, background: navy[900], color: "#fff", fontSize: 14, fontWeight: 700,
           padding: "10px 22px", borderRadius: 8, whiteSpace: "nowrap",
         }}
@@ -2032,18 +2039,23 @@ function CustomerTraining({ brands, completedStepIds, onStepCompleted, participa
             {filtered.length === 0 && (
               <div style={{ padding: "32px 24px", textAlign: "center", color: "#a39a8d", fontSize: 15 }}>No brands match this filter.</div>
             )}
-            {filtered.map(({ brand: b, done, pct, status }, i) => (
+            {filtered.map(({ brand: b, done, pct, status }, i) => {
+              const photo = brandHeaderPhoto(b.name);
+              return (
               <button
                 key={b.id}
                 className="nbd-training-row"
                 onClick={() => setOpenBrandId(b.id)}
                 style={{
+                  position: "relative", overflow: "hidden",
                   display: "flex", alignItems: "center", gap: 18, width: "100%", textAlign: "left",
                   padding: "18px 24px", background: "none", border: "none", cursor: "pointer",
                   borderTop: i === 0 ? "none" : "1px solid #f0ece3",
                 }}
               >
-                <div style={{ width: 56, height: 56, borderRadius: 10, border: "1px solid #e4dfd6", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, padding: 8 }}>
+                {photo && <div className="nbd-training-photo" style={{ backgroundImage: `url(${photo.src})`, backgroundPosition: photo.position }} />}
+                <div className="nbd-training-scrim" />
+                <div style={{ position: "relative", width: 56, height: 56, borderRadius: 10, border: "1px solid #e4dfd6", background: "rgba(255,255,255,0.9)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, padding: 8 }}>
                   {b.logo_url ? (
                     <img src={b.logo_url} alt={b.name} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
                   ) : (
@@ -2051,12 +2063,12 @@ function CustomerTraining({ brands, completedStepIds, onStepCompleted, participa
                   )}
                 </div>
 
-                <div style={{ flex: "1 1 180px", minWidth: 0 }}>
+                <div style={{ position: "relative", flex: "1 1 180px", minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: 17, color: navy[900] }}>{b.name}</div>
                   <div style={{ fontSize: 14, color: "#8a8074" }}>{done} of {b.steps.length} steps complete</div>
                 </div>
 
-                <div className="nbd-training-progress" style={{ width: 160, flexShrink: 0 }}>
+                <div className="nbd-training-progress" style={{ position: "relative", width: 160, flexShrink: 0 }}>
                   <div style={{ height: 6, background: "#e4dfd6", borderRadius: 999, overflow: "hidden" }}>
                     <div className="nbd-training-fill" style={{ height: "100%", width: `${pct}%`, background: pct === 100 ? "linear-gradient(90deg, #4d6b2c, #98cb63)" : "linear-gradient(90deg, #5c6e46, #98cb63)" }} />
                   </div>
@@ -2064,6 +2076,7 @@ function CustomerTraining({ brands, completedStepIds, onStepCompleted, participa
 
                 <div
                   style={{
+                    position: "relative",
                     flexShrink: 0, fontSize: 13, fontWeight: 700, padding: "6px 14px", borderRadius: 999, whiteSpace: "nowrap",
                     background: status === "Not started" ? "#f1efe9" : status === "Completed" ? "#eef5e2" : "#eef2f8",
                     color: status === "Not started" ? "#8a8074" : status === "Completed" ? "#4a6b3d" : navy[900],
@@ -2074,9 +2087,10 @@ function CustomerTraining({ brands, completedStepIds, onStepCompleted, participa
                   {status}
                 </div>
 
-                <ChevronLeft size={16} color="#c7bfae" className="nbd-training-chevron" style={{ transform: "rotate(180deg)", flexShrink: 0 }} />
+                <ChevronLeft size={16} color="#c7bfae" className="nbd-training-chevron" style={{ position: "relative", transform: "rotate(180deg)", flexShrink: 0 }} />
               </button>
-            ))}
+              );
+            })}
           </div>
           <style>{`
             @media (max-width: 700px) { .nbd-training-progress { display: none; } }
@@ -2086,6 +2100,8 @@ function CustomerTraining({ brands, completedStepIds, onStepCompleted, participa
             .nbd-training-chevron { transition: transform .15s ease; }
             .nbd-training-fill { animation: nbd-fill-in 1s cubic-bezier(.2,.8,.2,1) 0.1s backwards; }
             @keyframes nbd-fill-in { from { width: 0%; } }
+            .nbd-training-photo { position: absolute; inset: 0; background-size: cover; opacity: 0.4; }
+            .nbd-training-scrim { position: absolute; inset: 0; background: linear-gradient(100deg, #fff 30%, rgba(255,255,255,0.4) 65%, rgba(255,255,255,0.15) 100%); }
           `}</style>
         </>
       )}
