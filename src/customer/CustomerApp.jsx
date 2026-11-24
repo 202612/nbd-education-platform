@@ -2025,8 +2025,15 @@ function CustomerHome({ brands, completedStepIds, participantName, onOpenBrand }
            others to upscale past their native resolution, looking soft.
            Contain never crops or upscales beyond fit, and the banner's own
            green gradient shows through as a deliberate frame around it. */
-        .nbd-home-banner-photo { background-size: contain; background-repeat: no-repeat; }
-        .nbd-home-banner-blur { background-size: cover; background-repeat: no-repeat; filter: blur(50px) saturate(1.1); transform: scale(1.3); }
+        .nbd-home-banner-photo {
+          background-size: contain; background-repeat: no-repeat;
+          /* Fades to transparent right at its own edges so it blends into
+             the blurred copy behind instead of a visible seam — reads as
+             this photo's edges stretching outward, not a separate layer. */
+          mask-image: linear-gradient(90deg, transparent 0%, black 12%, black 88%, transparent 100%);
+          -webkit-mask-image: linear-gradient(90deg, transparent 0%, black 12%, black 88%, transparent 100%);
+        }
+        .nbd-home-banner-blur { background-size: cover; background-repeat: no-repeat; filter: blur(26px) saturate(1.1); transform: scale(1.08); }
         @media (max-width: 700px) {
           .nbd-home-banner { min-height: 230px !important; padding: 28px 22px !important; }
         }

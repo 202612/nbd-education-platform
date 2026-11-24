@@ -342,12 +342,13 @@ export function AuthHero() {
       />
       {rotationPhotos.map((p, i) => (
         <React.Fragment key={p.src}>
-          {/* Blurred, scaled-up cover copy of the same photo sitting behind
-              the sharp contained one — fills the letterbox bars a "contain"
-              fit leaves (otherwise just the stage's plain dark background)
-              with the photo's own colours instead of empty space, the same
-              trick Spotify/Apple Music use for album art. Scaled up well
-              past 100% so the blur never reveals a hard edge. */}
+          {/* Same photo, same crop, sitting behind the sharp contained one —
+              lightly blurred and only just scaled up (not a totally
+              different zoom level like a generic "album art" blur) so it
+              reads as this photo's own edges stretching outward, not a
+              separate hazy duplicate. The sharp layer on top fades to
+              transparent right at its own edges via mask-image, so the two
+              blend into one continuous image instead of a visible seam. */}
           <div
             style={{
               position: "absolute", inset: 0,
@@ -357,8 +358,8 @@ export function AuthHero() {
               backgroundRepeat: "no-repeat",
               opacity: photoIdx === i + 1 ? 1 : 0,
               transition: "opacity 1.2s ease",
-              filter: "blur(50px) brightness(0.45) saturate(1.15)",
-              transform: "scale(1.3)",
+              filter: "blur(26px) brightness(0.45) saturate(1.15)",
+              transform: "scale(1.08)",
             }}
           />
           <div
@@ -370,6 +371,8 @@ export function AuthHero() {
               backgroundRepeat: "no-repeat",
               opacity: photoIdx === i + 1 ? 1 : 0,
               transition: "opacity 1.2s ease",
+              maskImage: "linear-gradient(90deg, transparent 0%, black 12%, black 88%, transparent 100%)",
+              WebkitMaskImage: "linear-gradient(90deg, transparent 0%, black 12%, black 88%, transparent 100%)",
               // These are real, well-lit product photos on light backgrounds —
               // darkened (rather than brightened, like the admin photo above)
               // so the white headline/eyebrow text stays legible over them too.
