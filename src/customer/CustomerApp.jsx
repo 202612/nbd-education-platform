@@ -2725,7 +2725,14 @@ export default function CustomerApp({ user, account }) {
         .select("id,name,tagline,logo_url,steps:brand_steps(id,type,title,video_url,video_storage_path,duration,order_index,cert_template_url,cert_name_x,cert_name_y,cert_name_font_size,cert_name_color,cert_date_x,cert_date_y,cert_date_font_size,cert_date_color,cert_id_x,cert_id_y,cert_id_font_size,cert_id_color)");
       if (cancelled) return;
       if (error) { setLoadError(error.message); return; }
-      setBrands(data || []);
+      // A video step with no file/URL attached yet is a draft the admin is
+      // prepping (title + header image only) — don't show it to customers
+      // until the actual video is added.
+      const ready = (data || []).map((b) => ({
+        ...b,
+        steps: (b.steps || []).filter((s) => s.type !== "video" || s.video_url || s.video_storage_path),
+      }));
+      setBrands(ready);
       await loadProgress();
       await loadTeam();
       await loadTeamProgress();

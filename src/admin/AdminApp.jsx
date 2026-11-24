@@ -403,6 +403,8 @@ function AddVideoForm({ brandId, initial, submitLabel, onCancel, onSave }) {
   const [storagePath, setStoragePath] = useState(initial?.video_storage_path || null);
   const [uploading, setUploading] = useState(false);
   const [fileName, setFileName] = useState("");
+  const [thumbnailUrl, setThumbnailUrl] = useState(initial?.thumbnail_url || null);
+  const [uploadingThumb, setUploadingThumb] = useState(false);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -420,6 +422,19 @@ function AddVideoForm({ brandId, initial, submitLabel, onCancel, onSave }) {
     setFileName(file.name);
   }
 
+  async function handleThumbnail(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingThumb(true);
+    setError("");
+    const path = `${brandId}/${Date.now()}-${file.name}`;
+    const { error: uploadError } = await supabase.storage.from("step-thumbnails").upload(path, file);
+    if (uploadError) { setUploadingThumb(false); setError(uploadError.message); return; }
+    const { data } = supabase.storage.from("step-thumbnails").getPublicUrl(path);
+    setUploadingThumb(false);
+    setThumbnailUrl(data.publicUrl);
+  }
+
   async function save() {
     if (!title.trim()) { setError("Give the video a title"); return; }
     setSaving(true);
@@ -429,6 +444,7 @@ function AddVideoForm({ brandId, initial, submitLabel, onCancel, onSave }) {
       duration: duration.trim(),
       video_url: storagePath ? null : (videoUrl.trim() || null),
       video_storage_path: storagePath,
+      thumbnail_url: thumbnailUrl,
     });
     setSaving(false);
     if (err) setError(err);
@@ -440,7 +456,13 @@ function AddVideoForm({ brandId, initial, submitLabel, onCancel, onSave }) {
       <input spellCheck lang="en-GB" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Foundations of Colour Theory" style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 16, boxSizing: "border-box" }} />
       <label style={{ fontSize: 15, color: "#6b6155", display: "block", marginBottom: 4 }}>Duration (optional)</label>
       <input value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="e.g. 6 min" style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, fontSize: 16, boxSizing: "border-box" }} />
-      <label style={{ fontSize: 15, color: "#6b6155", display: "block", marginBottom: 4 }}>Video file (MP4) — private, only approved customers can view it</label>
+      <label style={{ fontSize: 15, color: "#6b6155", display: "block", marginBottom: 4 }}>Header image (optional) — can be added now even before the video is ready</label>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+        {thumbnailUrl && <img src={thumbnailUrl} alt="" style={{ width: 64, height: 36, objectFit: "cover", borderRadius: 4, border: "1px solid #e4dfd6" }} />}
+        <input type="file" accept="image/*" onChange={handleThumbnail} style={{ fontSize: 15 }} />
+        {uploadingThumb && <Loader2 size={14} className="spin" />}
+      </div>
+      <label style={{ fontSize: 15, color: "#6b6155", display: "block", marginBottom: 4 }}>Video file (MP4) — private, only approved customers can view it. Leave empty to save this step as a draft — it won't show on the customer side until a video is attached.</label>
       <input type="file" accept="video/mp4,video/*" onChange={handleFile} style={{ marginBottom: 8, fontSize: 15 }} />
       {uploading && <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#8a8074", fontSize: 15, marginBottom: 8 }}><Loader2 size={14} className="spin" /> Uploading…</div>}
       {fileName && !uploading && <div style={{ color: "#4d6b2c", fontSize: 15, marginBottom: 8 }}>Uploaded: {fileName}</div>}
@@ -452,6 +474,9 @@ function AddVideoForm({ brandId, initial, submitLabel, onCancel, onSave }) {
         placeholder="https://…"
         style={{ width: "100%", padding: "8px 10px", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 14, fontSize: 16, boxSizing: "border-box" }}
       />
+      {!storagePath && !videoUrl.trim() && (
+        <div style={{ color: "#8a6a1f", fontSize: 14, marginBottom: 10 }}>No video attached yet — this step will be saved but hidden from customers until one is added.</div>
+      )}
       {error && <div style={{ color: "#a3372f", fontSize: 15, marginBottom: 10 }}>{error}</div>}
       <div style={{ display: "flex", gap: 8 }}>
         <button className="nbd-btn nbd-btn--primary" onClick={save} disabled={saving || uploading}>{saving ? "Saving…" : (submitLabel || "Save video step")}</button>
@@ -834,7 +859,7 @@ function BrandStepsEditor({ brandId, onBack }) {
     setBrand(b);
     const { data: s } = await supabase
       .from("brand_steps")
-      .select("id,type,title,video_url,video_storage_path,duration,order_index,cert_template_url,cert_name_x,cert_name_y,cert_name_font_size,cert_name_color,cert_date_x,cert_date_y,cert_date_font_size,cert_date_color,cert_id_x,cert_id_y,cert_id_font_size,cert_id_color,quiz_questions(id)")
+      .select("id,type,title,video_url,video_storage_path,thumbnail_url,duration,order_index,cert_template_url,cert_name_x,cert_name_y,cert_name_font_size,cert_name_color,cert_date_x,cert_date_y,cert_date_font_size,cert_date_color,cert_id_x,cert_id_y,cert_id_font_size,cert_id_color,quiz_questions(id)")
       .eq("brand_id", brandId)
       .order("order_index");
     setSteps(s || []);
@@ -845,9 +870,9 @@ function BrandStepsEditor({ brandId, onBack }) {
     return steps.length ? Math.max(...steps.map((s) => s.order_index)) + 1 : 0;
   }
 
-  async function saveVideo({ title, duration, video_url, video_storage_path }) {
+  async function saveVideo({ title, duration, video_url, video_storage_path, thumbnail_url }) {
     const order_index = await nextOrderIndex();
-    const { error: err } = await supabase.from("brand_steps").insert({ brand_id: brandId, type: "video", title, duration, video_url, video_storage_path, order_index });
+    const { error: err } = await supabase.from("brand_steps").insert({ brand_id: brandId, type: "video", title, duration, video_url, video_storage_path, thumbnail_url, order_index });
     if (err) return err.message;
     setAddingType(null);
     await load();
@@ -901,8 +926,8 @@ function BrandStepsEditor({ brandId, onBack }) {
     setEditingQuizData(null);
   }
 
-  async function updateVideo({ title, duration, video_url, video_storage_path }) {
-    const { error: err } = await supabase.from("brand_steps").update({ title, duration, video_url, video_storage_path }).eq("id", editingStep.id);
+  async function updateVideo({ title, duration, video_url, video_storage_path, thumbnail_url }) {
+    const { error: err } = await supabase.from("brand_steps").update({ title, duration, video_url, video_storage_path, thumbnail_url }).eq("id", editingStep.id);
     if (err) return err.message;
     cancelEdit();
     await load();
