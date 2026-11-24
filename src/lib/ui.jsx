@@ -202,7 +202,6 @@ export const HERO_STAGE_HEIGHT = "clamp(420px, 46vw, 520px)";
 export function AuthHero() {
   const { settings } = useSiteSettings();
   const [brandLogos, setBrandLogos] = useState([]);
-  const [allBrands, setAllBrands] = useState([]);
   const [bgReady, setBgReady] = useState(false);
   const [coverPct, setCoverPct] = useState(100);
   const stageRef = useRef(null);
@@ -216,20 +215,6 @@ export function AuthHero() {
       .not("logo_url", "is", null)
       .eq("hero_visible", true)
       .then(({ data }) => { if (!cancelled) setBrandLogos(data || []); });
-    return () => { cancelled = true; };
-  }, []);
-
-  // Separate from brandLogos above (which is gated by the admin's
-  // per-brand "show on hero" toggle, for the small floating logo badges) —
-  // the rotating photo background should cycle through every brand's real
-  // photography regardless of that toggle, same as the logged-in Home
-  // banner does with its own full approved-brand list.
-  useEffect(() => {
-    let cancelled = false;
-    supabase
-      .from("brands")
-      .select("id,name")
-      .then(({ data }) => { if (!cancelled) setAllBrands(data || []); });
     return () => { cancelled = true; };
   }, []);
 
@@ -286,31 +271,6 @@ export function AuthHero() {
   const zoomPct = (settings.background_zoom ?? 1) * 100;
   const bgWidthPct = Math.max(zoomPct, coverPct);
 
-  // Beyond the admin's own uploaded (or default) photo, cycle through real
-  // product photography for whatever brands are marked visible on the hero —
-  // same photos/crops as the logged-in Home banner, same idea: show the
-  // actual range instead of one static image. These use "contain" rather
-  // than the admin photo's percentage/coverPct zoom — they're a mix of
-  // aspect ratios (and a couple are lower-res than the admin's own hero
-  // photo), so a "cover" crop was cutting pieces off some and force-scaling
-  // others past their native resolution, looking soft.
-  const rotationPhotos = (() => {
-    const seen = new Set();
-    const out = [];
-    for (const b of allBrands) {
-      const p = brandHeaderPhoto(b.name);
-      if (p && !seen.has(p.src)) { seen.add(p.src); out.push(p); }
-    }
-    return out;
-  })();
-  const slideCount = 1 + rotationPhotos.length;
-  const [photoIdx, setPhotoIdx] = useState(0);
-  useEffect(() => {
-    if (slideCount < 2) return;
-    const id = setInterval(() => setPhotoIdx((i) => (i + 1) % slideCount), 6000);
-    return () => clearInterval(id);
-  }, [slideCount]);
-
   return (
     <>
     <div
@@ -332,59 +292,14 @@ export function AuthHero() {
           backgroundSize: `${bgWidthPct}%`,
           backgroundPosition: `${settings.background_position_x ?? 50}% ${settings.background_position_y ?? 50}%`,
           backgroundRepeat: "no-repeat",
-          opacity: bgReady && photoIdx === 0 ? 1 : 0,
-          transition: "opacity 1.2s ease",
-          // Brightens the photo itself (not just an overlay), since the
-          // currently-uploaded photo already has its own dark grading baked
-          // in — this compensates regardless of which photo is active.
-          filter: "brightness(2.6)",
+          opacity: bgReady ? 1 : 0,
+          transition: "opacity 400ms ease",
         }}
       />
-      {rotationPhotos.map((p, i) => (
-        <React.Fragment key={p.src}>
-          {/* Same photo, same crop, sitting behind the sharp contained one —
-              lightly blurred and only just scaled up (not a totally
-              different zoom level like a generic "album art" blur) so it
-              reads as this photo's own edges stretching outward, not a
-              separate hazy duplicate. The sharp layer on top fades to
-              transparent right at its own edges via mask-image, so the two
-              blend into one continuous image instead of a visible seam. */}
-          <div
-            style={{
-              position: "absolute", inset: 0,
-              backgroundImage: `url(${p.src})`,
-              backgroundSize: "cover",
-              backgroundPosition: p.bannerPosition || p.position,
-              backgroundRepeat: "no-repeat",
-              opacity: photoIdx === i + 1 ? 1 : 0,
-              transition: "opacity 1.2s ease",
-              filter: "blur(26px) brightness(0.45) saturate(1.15)",
-              transform: "scale(1.08)",
-            }}
-          />
-          <div
-            style={{
-              position: "absolute", inset: 0,
-              backgroundImage: `url(${p.src})`,
-              backgroundSize: "contain",
-              backgroundPosition: p.bannerPosition || p.position,
-              backgroundRepeat: "no-repeat",
-              opacity: photoIdx === i + 1 ? 1 : 0,
-              transition: "opacity 1.2s ease",
-              maskImage: "linear-gradient(90deg, transparent 0%, black 12%, black 88%, transparent 100%)",
-              WebkitMaskImage: "linear-gradient(90deg, transparent 0%, black 12%, black 88%, transparent 100%)",
-              // These are real, well-lit product photos on light backgrounds —
-              // darkened (rather than brightened, like the admin photo above)
-              // so the white headline/eyebrow text stays legible over them too.
-              filter: "brightness(0.55)",
-            }}
-          />
-        </React.Fragment>
-      ))}
-      {/* Dark scrim so white heading text and the glass logo band at the
-          bottom both stay legible over whatever photo is uploaded, heavier
-          toward the bottom where the marquee band sits. */}
-      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(10,9,7,0) 0%, rgba(10,9,7,0.02) 55%, rgba(10,9,7,0.1) 100%)" }} />
+      {/* Same translucent green wash as the logged-in Home banner, over
+          whatever photo the admin's uploaded — ties the public hero and
+          the inside-the-app look together instead of a flat dark scrim. */}
+      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(125deg, rgba(94,143,30,0.45) 0%, rgba(152,203,99,0.38) 100%)" }} />
 
       {brandLogos.map((b) => (
         <img
@@ -470,6 +385,24 @@ export function AuthHero() {
         </div>
       </div>
 
+      {/* Phone + laptop previews flanking the centred logo/headline — real
+          brand data pulled live, same as the registration-page preview.
+          Hidden below a width where they'd just collide with the content
+          or with each other. */}
+      <style>{`
+        .nbd-hero-device { position: absolute; top: 50%; transform: translateY(-50%) scale(0.72); transform-origin: center; z-index: 1; pointer-events: none; }
+        .nbd-hero-device--left { left: 1vw; }
+        .nbd-hero-device--right { right: 1vw; }
+        @media (max-width: 1300px) {
+          .nbd-hero-device { display: none; }
+        }
+      `}</style>
+      <div className="nbd-hero-device nbd-hero-device--left">
+        <RegistrationPreviewPhone />
+      </div>
+      <div className="nbd-hero-device nbd-hero-device--right">
+        <DashboardPreviewLaptop />
+      </div>
     </div>
     </>
   );
@@ -662,7 +595,10 @@ const PREVIEW_SAMPLE = [
   { pct: 100, status: "Completed" },
 ];
 
-export function RegistrationPreviewPhone() {
+// Shared by the phone and laptop previews — fetches the real brand list
+// once and picks the same 4 "tile" brands + a "continue" brand for both,
+// so the two device mockups show consistent (if illustrative) data.
+function useBrandPreviewTiles() {
   const [brands, setBrands] = useState([]);
   useEffect(() => {
     let cancelled = false;
@@ -677,13 +613,19 @@ export function RegistrationPreviewPhone() {
 
   const withPhotos = brands.filter((b) => brandHeaderPhoto(b.name));
   const tileBrands = (withPhotos.length >= 4 ? withPhotos : brands).slice(0, 4);
-  if (tileBrands.length === 0) return null;
-  const continueBrand = tileBrands[0];
+  const continueBrand = tileBrands[0] || null;
+  return { tileBrands, continueBrand };
+}
 
-  const ring = (pct, r = 15) => {
-    const circ = 2 * Math.PI * r;
-    return { circ, offset: circ - (circ * pct) / 100 };
-  };
+function previewRing(pct, r = 15) {
+  const circ = 2 * Math.PI * r;
+  return { circ, offset: circ - (circ * pct) / 100 };
+}
+
+export function RegistrationPreviewPhone() {
+  const { tileBrands, continueBrand } = useBrandPreviewTiles();
+  if (tileBrands.length === 0) return null;
+  const ring = previewRing;
 
   return (
     <div style={{ position: "relative", display: "flex", justifyContent: "center", paddingTop: 44 }}>
@@ -763,6 +705,92 @@ export function RegistrationPreviewPhone() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// Laptop-framed counterpart to the phone preview above, for the public
+// hero's right-hand side — same real brand data, wider dashboard-style
+// layout (sidebar + tile grid) instead of a single column.
+export function DashboardPreviewLaptop() {
+  const { tileBrands } = useBrandPreviewTiles();
+  if (tileBrands.length === 0) return null;
+  const ring = previewRing;
+  const navItems = ["Home", "Training", "Calendar", "Webinars", "Certificates", "Team"];
+
+  return (
+    <div style={{ position: "relative" }}>
+      <style>{`
+        .nbd-laptop-glow { position: absolute; width: 420px; height: 420px; background: radial-gradient(circle, rgba(152,203,99,0.35), rgba(152,203,99,0) 70%); top: -40px; left: 50%; transform: translateX(-50%); filter: blur(2px); z-index: 0; }
+        .nbd-laptop-body { position: relative; z-index: 1; width: 460px; background: #1b1812; border-radius: 16px 16px 0 0; padding: 13px 13px 0; box-shadow: 0 30px 60px -20px rgba(32,27,21,0.45), 0 10px 20px -8px rgba(32,27,21,0.3); }
+        .nbd-laptop-bar { display: flex; gap: 6px; margin-bottom: 9px; padding-left: 4px; }
+        .nbd-laptop-dot { width: 8px; height: 8px; border-radius: 50%; background: #3a352b; }
+        .nbd-laptop-screen { background: #f8f8f8; border-radius: 7px 7px 0 0; overflow: hidden; height: 300px; display: flex; }
+        .nbd-laptop-nav { width: 76px; background: #fff; border-right: 1px solid #e4dfd6; padding: 12px 8px; flex-shrink: 0; }
+        .nbd-laptop-nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 2px; border-radius: 6px; margin-bottom: 4px; }
+        .nbd-laptop-nav-item.active { background: #58514a; }
+        .nbd-laptop-nav-dot { width: 13px; height: 13px; border-radius: 3px; background: #e4dfd6; }
+        .nbd-laptop-nav-item.active .nbd-laptop-nav-dot { background: #fff; }
+        .nbd-laptop-nav-lbl { font-size: 5.5px; color: #8a8074; text-align: center; line-height: 1.2; }
+        .nbd-laptop-nav-item.active .nbd-laptop-nav-lbl { color: #fff; font-weight: 700; }
+        .nbd-laptop-tile { position: relative; background: #fff; border: 1px solid #e4dfd6; border-radius: 8px; padding: 8px 7px; overflow: hidden; }
+        .nbd-laptop-tile-photo { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0.68; }
+        .nbd-laptop-tile-scrim { position: absolute; inset: 0; background: linear-gradient(170deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 45%, #fff 92%); }
+        .nbd-laptop-ring-wrap { position: relative; width: 26px; height: 26px; margin-bottom: 5px; background: rgba(255,255,255,0.78); border-radius: 50%; }
+        .nbd-laptop-base { width: 490px; height: 13px; background: #2a251d; border-radius: 0 0 9px 9px; margin: 0 auto; position: relative; left: -15px; }
+        .nbd-laptop-base::after { content: ""; position: absolute; left: 50%; top: 0; transform: translateX(-50%); width: 74px; height: 4px; background: #1b1812; border-radius: 0 0 4px 4px; }
+      `}</style>
+      <div className="nbd-laptop-glow" />
+      <div className="nbd-laptop-body">
+        <div className="nbd-laptop-bar">
+          <div className="nbd-laptop-dot" /><div className="nbd-laptop-dot" /><div className="nbd-laptop-dot" />
+        </div>
+        <div className="nbd-laptop-screen">
+          <div className="nbd-laptop-nav">
+            {navItems.map((label, i) => (
+              <div key={label} className={`nbd-laptop-nav-item${i === 0 ? " active" : ""}`}>
+                <div className="nbd-laptop-nav-dot" />
+                <div className="nbd-laptop-nav-lbl">{label}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ flex: 1, padding: "14px 16px", overflow: "hidden" }}>
+            <div style={{ background: "linear-gradient(125deg, #5e8f1e 0%, #98cb63 100%)", borderRadius: 10, padding: "12px 14px", color: "#fff", marginBottom: 10, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ fontSize: 13, fontWeight: 700 }}>Welcome back, Aoife</div>
+              <div style={{ display: "flex", gap: 12 }}>
+                <div style={{ textAlign: "center" }}><div style={{ fontSize: 12, fontWeight: 700 }}>{tileBrands.length}</div><div style={{ fontSize: 6, textTransform: "uppercase", opacity: 0.85 }}>Brands</div></div>
+                <div style={{ textAlign: "center" }}><div style={{ fontSize: 12, fontWeight: 700 }}>62%</div><div style={{ fontSize: 6, textTransform: "uppercase", opacity: 0.85 }}>Complete</div></div>
+                <div style={{ textAlign: "center" }}><div style={{ fontSize: 12, fontWeight: 700 }}>1</div><div style={{ fontSize: 6, textTransform: "uppercase", opacity: 0.85 }}>Certified</div></div>
+              </div>
+            </div>
+            <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: 1, textTransform: "uppercase", color: "#8a8074", margin: "0 0 7px" }}>Your brands</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 7 }}>
+              {tileBrands.map((b, i) => {
+                const sample = PREVIEW_SAMPLE[i % PREVIEW_SAMPLE.length];
+                const photo = brandHeaderPhoto(b.name);
+                const { circ, offset } = ring(sample.pct, 11);
+                return (
+                  <div key={b.id} className="nbd-laptop-tile">
+                    {photo && <div className="nbd-laptop-tile-photo" style={{ backgroundImage: `url(${photo.src})`, backgroundPosition: photo.position }} />}
+                    <div className="nbd-laptop-tile-scrim" />
+                    <div style={{ position: "relative" }}>
+                      <div className="nbd-laptop-ring-wrap">
+                        <svg width="26" height="26" viewBox="0 0 26 26" style={{ transform: "rotate(-90deg)" }}>
+                          <circle cx="13" cy="13" r="11" fill="none" stroke="#ece6da" strokeWidth="3.5" />
+                          <circle cx="13" cy="13" r="11" fill="none" stroke="#4d6b2c" strokeWidth="3.5" strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={offset} />
+                        </svg>
+                        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 6.5, fontWeight: 800, color: navy[900] }}>{sample.pct}%</div>
+                      </div>
+                      <div style={{ fontSize: 8, fontWeight: 700, color: navy[900] }}>{b.name}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="nbd-laptop-base" />
     </div>
   );
 }
