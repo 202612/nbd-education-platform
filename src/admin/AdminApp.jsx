@@ -2087,8 +2087,25 @@ function AdminAssistantPreview() {
 
 // ================= ROOT =================
 
+const ADMIN_TAB_IDS = ["dashboard", "customers", "assistant", "brands", "webinars", "approvals", "certificates", "design", "security"];
+const ADMIN_TAB_STORAGE_KEY = "nbd-admin-last-tab";
+
 export default function AdminApp() {
-  const [tab, setTab] = useState("dashboard");
+  // Admin-only: remembers whichever tab was open and restores it after a
+  // brief absence (closing the tab, refreshing, coming back later) instead
+  // of always resetting to Overview. Deliberately not done on the customer
+  // side — Home should always be the first thing a customer sees.
+  const [tab, setTab] = useState(() => {
+    try {
+      const saved = localStorage.getItem(ADMIN_TAB_STORAGE_KEY);
+      return ADMIN_TAB_IDS.includes(saved) ? saved : "dashboard";
+    } catch {
+      return "dashboard";
+    }
+  });
+  useEffect(() => {
+    try { localStorage.setItem(ADMIN_TAB_STORAGE_KEY, tab); } catch { /* ignore */ }
+  }, [tab]);
   const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
