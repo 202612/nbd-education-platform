@@ -384,20 +384,12 @@ export function AuthHero() {
           {settings.subtitle}
         </div>
       </div>
-
-      {/* The animated walkthrough, flanking the centred logo/headline
-          inside the hero itself rather than as its own page section.
-          Scaled down to fit the stage's fixed height, hidden below a
-          width where it'd collide with the centred content. */}
-      <style>{`
-        .nbd-hero-walkthrough { position: absolute; width: 520px; right: 1.5vw; top: 50%; transform: translateY(-50%) scale(0.74); transform-origin: right center; z-index: 1; pointer-events: none; }
-        @media (max-width: 1100px) {
-          .nbd-hero-walkthrough { display: none; }
-        }
-      `}</style>
-      <div className="nbd-hero-walkthrough">
-        <PlatformWalkthrough />
-      </div>
+      {/* Animated walkthrough temporarily pulled out of the hero while
+          Chloe records a real screen capture of the site — the looping
+          demo would be a confusing distraction in that recording. Add it
+          back in (same markup as before) once the real clip is in hand:
+          <div className="nbd-hero-walkthrough"><PlatformWalkthrough /></div>
+          plus its accompanying .nbd-hero-walkthrough style block. */}
     </div>
     </>
   );
