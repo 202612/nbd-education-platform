@@ -296,10 +296,10 @@ export function AuthHero() {
           transition: "opacity 400ms ease",
         }}
       />
-      {/* Same translucent green wash as the logged-in Home banner, over
-          whatever photo the admin's uploaded — ties the public hero and
-          the inside-the-app look together instead of a flat dark scrim. */}
-      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(125deg, rgba(94,143,30,0.45) 0%, rgba(152,203,99,0.38) 100%)" }} />
+      {/* Translucent white wash over whatever photo the admin's uploaded —
+          keeps the photo visible but legible, matching the light look of
+          the rest of the site rather than a dark scrim. */}
+      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(125deg, rgba(255,255,255,0.72) 0%, rgba(255,255,255,0.55) 100%)" }} />
 
       {brandLogos.map((b) => (
         <img
@@ -355,7 +355,7 @@ export function AuthHero() {
             </div>
           )}
         </div>
-        <div style={{ fontSize: settings.eyebrow_size || 15, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: "rgba(255,255,255,0.85)", marginBottom: 6 }}>
+        <div style={{ fontSize: settings.eyebrow_size || 15, fontWeight: 700, letterSpacing: 3, textTransform: "uppercase", color: "rgba(32,27,21,0.8)", marginBottom: 6 }}>
           {settings.eyebrow}
         </div>
         <h1
@@ -363,7 +363,7 @@ export function AuthHero() {
             fontFamily: "'Lato', -apple-system, sans-serif",
             fontWeight: 300,
             fontSize: `${settings.headline_size || 42}px`,
-            color: "#fff",
+            color: navy[900],
             margin: "0 0 20px",
             lineHeight: 1.08,
           }}
@@ -375,7 +375,7 @@ export function AuthHero() {
             fontSize: settings.subtitle_size || 15,
             letterSpacing: 2,
             textTransform: "uppercase",
-            color: "rgba(255,255,255,0.72)",
+            color: "rgba(32,27,21,0.65)",
             maxWidth: 640,
             margin: "0 auto",
             lineHeight: 1.7,
