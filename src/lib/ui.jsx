@@ -207,6 +207,14 @@ export function AuthHero() {
   const stageRef = useRef(null);
   const bgSrc = settings.background_url || DEFAULT_HERO_BG_SRC;
 
+  // Intro beat: logo/headline shows first, then floats up and off-screen,
+  // and the real promo video takes over as the hero's content.
+  const [introDone, setIntroDone] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setIntroDone(true), 1400);
+    return () => clearTimeout(t);
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     supabase
@@ -292,16 +300,41 @@ export function AuthHero() {
           backgroundSize: `${bgWidthPct}%`,
           backgroundPosition: `${settings.background_position_x ?? 50}% ${settings.background_position_y ?? 50}%`,
           backgroundRepeat: "no-repeat",
-          opacity: bgReady ? 1 : 0,
-          transition: "opacity 400ms ease",
+          opacity: bgReady && !introDone ? 1 : 0,
+          transition: "opacity 800ms ease",
         }}
       />
       {/* Translucent white wash over whatever photo the admin's uploaded —
           keeps the photo visible but legible, matching the light look of
-          the rest of the site rather than a dark scrim. */}
-      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(125deg, rgba(255,255,255,0.72) 0%, rgba(255,255,255,0.55) 100%)" }} />
+          the rest of the site rather than a dark scrim. Fades out with the
+          photo once the promo video takes over. */}
+      <div
+        style={{
+          position: "absolute", inset: 0,
+          background: "linear-gradient(125deg, rgba(255,255,255,0.72) 0%, rgba(255,255,255,0.55) 100%)",
+          opacity: introDone ? 0 : 1,
+          transition: "opacity 800ms ease",
+        }}
+      />
 
-      {brandLogos.map((b) => (
+      {/* Real promo video, cut from Chloe's own screen recording — fades
+          in once the logo/headline have floated off, replacing the static
+          photo as the hero's content. */}
+      <video
+        src="/hero-video/promo.mp4"
+        autoPlay
+        muted
+        loop
+        playsInline
+        style={{
+          position: "absolute", inset: 0,
+          width: "100%", height: "100%", objectFit: "cover",
+          opacity: introDone ? 1 : 0,
+          transition: "opacity 900ms ease",
+        }}
+      />
+
+      {!introDone && brandLogos.map((b) => (
         <img
           key={b.id}
           src={b.logo_url}
@@ -315,6 +348,8 @@ export function AuthHero() {
             height: `${b.hero_size || 44}px`,
             maxWidth: 130,
             objectFit: "contain",
+            opacity: introDone ? 0 : 1,
+            transition: "opacity 600ms ease",
           }}
         />
       ))}
@@ -324,7 +359,10 @@ export function AuthHero() {
           position: "absolute",
           left: `${settings.content_x ?? 50}%`,
           top: `${settings.content_y ?? 50}%`,
-          transform: "translate(-50%, -50%)",
+          transform: introDone ? "translate(-50%, -340%)" : "translate(-50%, -50%)",
+          opacity: introDone ? 0 : 1,
+          transition: "transform 900ms cubic-bezier(.4,0,.2,1), opacity 700ms ease",
+          pointerEvents: introDone ? "none" : "auto",
           width: "clamp(300px, 68vw, 620px)",
           textAlign: "center",
           zIndex: 2,
