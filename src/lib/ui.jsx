@@ -384,25 +384,6 @@ export function AuthHero() {
           {settings.subtitle}
         </div>
       </div>
-
-      {/* Phone + laptop previews flanking the centred logo/headline — real
-          brand data pulled live, same as the registration-page preview.
-          Hidden below a width where they'd just collide with the content
-          or with each other. */}
-      <style>{`
-        .nbd-hero-device { position: absolute; top: 50%; transform: translateY(-50%) scale(0.72); transform-origin: center; z-index: 1; pointer-events: none; }
-        .nbd-hero-device--left { left: 1vw; }
-        .nbd-hero-device--right { right: 1vw; }
-        @media (max-width: 1300px) {
-          .nbd-hero-device { display: none; }
-        }
-      `}</style>
-      <div className="nbd-hero-device nbd-hero-device--left">
-        <RegistrationPreviewPhone />
-      </div>
-      <div className="nbd-hero-device nbd-hero-device--right">
-        <DashboardPreviewLaptop />
-      </div>
     </div>
     </>
   );
