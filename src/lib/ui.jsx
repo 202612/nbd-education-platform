@@ -802,7 +802,7 @@ const WALKTHROUGH_SCENES = [
   { id: "team", caption: "Add your stylists" },
   { id: "assign", caption: "Assign their training" },
 ];
-const SCENE_MS = 4200;
+const SCENE_MS = 1700;
 
 export function PlatformWalkthrough() {
   const { tileBrands } = useBrandPreviewTiles();
@@ -810,7 +810,7 @@ export function PlatformWalkthrough() {
   const [clicking, setClicking] = useState(false);
 
   useEffect(() => {
-    const clickTimer = setTimeout(() => setClicking(true), SCENE_MS - 700);
+    const clickTimer = setTimeout(() => setClicking(true), SCENE_MS - 350);
     const advanceTimer = setTimeout(() => {
       setClicking(false);
       setIdx((i) => (i + 1) % WALKTHROUGH_SCENES.length);
@@ -840,12 +840,12 @@ export function PlatformWalkthrough() {
         .nbd-wt-dot { width: 9px; height: 9px; border-radius: 50%; background: #3a352b; }
         .nbd-wt-url { flex: 1; margin-left: 8px; background: #2a251d; border-radius: 6px; padding: 5px 12px; font-size: 12px; color: #8a8074; font-family: 'Lato', sans-serif; }
         .nbd-wt-screen { position: relative; background: #f8f8f8; border-radius: 8px 8px 0 0; height: 420px; overflow: hidden; }
-        .nbd-wt-scene { position: absolute; inset: 0; padding: 28px 36px; opacity: 0; transition: opacity 0.6s ease; }
-        .nbd-wt-scene.active { opacity: 1; z-index: 1; }
+        .nbd-wt-scene { position: absolute; inset: 0; padding: 28px 36px; opacity: 0; transform: scale(0.96); transition: opacity 0.22s ease, transform 0.3s cubic-bezier(.2,.8,.2,1); }
+        .nbd-wt-scene.active { opacity: 1; transform: scale(1); z-index: 1; }
         .nbd-wt-caption { position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%); background: rgba(32,27,21,0.88); color: #fff; font-size: 14px; font-weight: 700; padding: 10px 22px; border-radius: 999px; white-space: nowrap; z-index: 3; transition: opacity 0.4s ease; }
-        .nbd-wt-cursor { position: absolute; width: 22px; height: 22px; border-radius: 50%; background: rgba(32,27,21,0.75); border: 2px solid #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.3); transition: left 1s cubic-bezier(.4,0,.2,1), top 1s cubic-bezier(.4,0,.2,1); z-index: 4; transform: translate(-50%, -50%); }
+        .nbd-wt-cursor { position: absolute; width: 22px; height: 22px; border-radius: 50%; background: rgba(32,27,21,0.75); border: 2px solid #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.3); transition: left 0.4s cubic-bezier(.4,0,.2,1), top 0.4s cubic-bezier(.4,0,.2,1); z-index: 4; transform: translate(-50%, -50%); }
         .nbd-wt-cursor::after { content: ""; position: absolute; inset: -8px; border-radius: 50%; border: 2px solid rgba(152,203,99,0.9); opacity: 0; }
-        .nbd-wt-cursor.click::after { animation: nbd-wt-pulse 0.6s ease-out; }
+        .nbd-wt-cursor.click::after { animation: nbd-wt-pulse 0.35s ease-out; }
         @keyframes nbd-wt-pulse { from { opacity: 1; transform: scale(0.4); } to { opacity: 0; transform: scale(1.6); } }
         .nbd-wt-dots { display: flex; justify-content: center; gap: 7px; padding: 16px 0 0; }
         .nbd-wt-step { width: 7px; height: 7px; border-radius: 50%; background: #e4dfd6; transition: background 0.3s ease, width 0.3s ease; }
