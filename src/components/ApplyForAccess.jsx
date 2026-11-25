@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
-import { navy, cream, grey, AuthHero, PasswordField, validatePassword, PublicFooter, PublicBrandStrip, RegistrationPreviewPhone } from "../lib/ui.jsx";
+import { navy, cream, grey, AuthHero, PasswordField, validatePassword, PublicFooter, PublicBrandStrip, RegistrationPreviewPhone, PlatformWalkthrough } from "../lib/ui.jsx";
 
 export default function ApplyForAccess({ onSwitchToLogin, onSwitchToTeam }) {
   const [brands, setBrands] = useState(null);
@@ -93,6 +93,10 @@ export default function ApplyForAccess({ onSwitchToLogin, onSwitchToTeam }) {
   return (
     <div style={{ fontFamily: "'Lato', -apple-system, sans-serif", background: cream, minHeight: "100vh" }}>
       <AuthHero />
+
+      <div style={{ padding: "48px 0" }}>
+        <PlatformWalkthrough />
+      </div>
 
       <div className="nbd-auth-section">
         <div className="nbd-auth-eyebrow">

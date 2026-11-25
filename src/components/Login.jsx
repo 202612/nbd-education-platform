@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
-import { navy, cream, grey, AuthHero, PasswordField, validatePassword, PublicFooter, PublicBrandStrip } from "../lib/ui.jsx";
+import { navy, cream, grey, AuthHero, PasswordField, validatePassword, PublicFooter, PublicBrandStrip, PlatformWalkthrough } from "../lib/ui.jsx";
 
 export default function Login({ onSwitchToApply, initialMode = "signin" }) {
   const [mode, setMode] = useState(initialMode); // "signin" | "signup" | "forgot"
@@ -62,6 +62,10 @@ export default function Login({ onSwitchToApply, initialMode = "signin" }) {
   return (
     <div style={{ fontFamily: "'Lato', -apple-system, sans-serif", background: cream, minHeight: "100vh" }}>
       <AuthHero />
+
+      <div style={{ padding: "48px 0" }}>
+        <PlatformWalkthrough />
+      </div>
 
       <div className="nbd-auth-section">
         <div className="nbd-auth-eyebrow">

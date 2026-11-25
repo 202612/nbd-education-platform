@@ -775,3 +775,155 @@ export function DashboardPreviewLaptop() {
     </div>
   );
 }
+
+// Animated, looping "promo video" stand-in for the public hero — a browser
+// frame that auto-advances through the real customer journey (account,
+// brands, training, team, assign) with a simulated cursor moving to the
+// relevant spot each time. No real video/screen-recording capability here,
+// so this is a code-driven walkthrough rather than footage.
+const WALKTHROUGH_SCENES = [
+  { id: "account", caption: "Create your account" },
+  { id: "brands", caption: "Pick the brands you stock" },
+  { id: "training", caption: "Train in your own time" },
+  { id: "team", caption: "Add your stylists" },
+  { id: "assign", caption: "Assign their training" },
+];
+const SCENE_MS = 4200;
+
+export function PlatformWalkthrough() {
+  const { tileBrands } = useBrandPreviewTiles();
+  const [idx, setIdx] = useState(0);
+  const [clicking, setClicking] = useState(false);
+
+  useEffect(() => {
+    const clickTimer = setTimeout(() => setClicking(true), SCENE_MS - 700);
+    const advanceTimer = setTimeout(() => {
+      setClicking(false);
+      setIdx((i) => (i + 1) % WALKTHROUGH_SCENES.length);
+    }, SCENE_MS);
+    return () => { clearTimeout(clickTimer); clearTimeout(advanceTimer); };
+  }, [idx]);
+
+  const brandList = tileBrands.length ? tileBrands : [{ id: "a", name: "Kevin Murphy" }, { id: "b", name: "Davines" }, { id: "c", name: "Eleven Australia" }, { id: "d", name: "Aveda" }];
+
+  // Cursor position per scene, as a percentage of the screen area — tuned
+  // to sit near whatever that scene's "action" is.
+  const CURSOR_POS = {
+    account: { x: 72, y: 78 },
+    brands: { x: 24, y: 42 },
+    training: { x: 50, y: 50 },
+    team: { x: 78, y: 24 },
+    assign: { x: 68, y: 70 },
+  };
+  const scene = WALKTHROUGH_SCENES[idx];
+  const cursor = CURSOR_POS[scene.id];
+
+  return (
+    <div style={{ maxWidth: 860, margin: "0 auto", padding: "0 24px" }}>
+      <style>{`
+        .nbd-wt-frame { position: relative; background: #1b1812; border-radius: 16px; padding: 12px 12px 0; box-shadow: 0 30px 70px rgba(32,27,21,0.25); }
+        .nbd-wt-bar { display: flex; align-items: center; gap: 8px; padding-bottom: 10px; }
+        .nbd-wt-dot { width: 9px; height: 9px; border-radius: 50%; background: #3a352b; }
+        .nbd-wt-url { flex: 1; margin-left: 8px; background: #2a251d; border-radius: 6px; padding: 5px 12px; font-size: 12px; color: #8a8074; font-family: 'Lato', sans-serif; }
+        .nbd-wt-screen { position: relative; background: #f8f8f8; border-radius: 8px 8px 0 0; height: 420px; overflow: hidden; }
+        .nbd-wt-scene { position: absolute; inset: 0; padding: 28px 36px; opacity: 0; transition: opacity 0.6s ease; }
+        .nbd-wt-scene.active { opacity: 1; z-index: 1; }
+        .nbd-wt-caption { position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%); background: rgba(32,27,21,0.88); color: #fff; font-size: 14px; font-weight: 700; padding: 10px 22px; border-radius: 999px; white-space: nowrap; z-index: 3; transition: opacity 0.4s ease; }
+        .nbd-wt-cursor { position: absolute; width: 22px; height: 22px; border-radius: 50%; background: rgba(32,27,21,0.75); border: 2px solid #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.3); transition: left 1s cubic-bezier(.4,0,.2,1), top 1s cubic-bezier(.4,0,.2,1); z-index: 4; transform: translate(-50%, -50%); }
+        .nbd-wt-cursor::after { content: ""; position: absolute; inset: -8px; border-radius: 50%; border: 2px solid rgba(152,203,99,0.9); opacity: 0; }
+        .nbd-wt-cursor.click::after { animation: nbd-wt-pulse 0.6s ease-out; }
+        @keyframes nbd-wt-pulse { from { opacity: 1; transform: scale(0.4); } to { opacity: 0; transform: scale(1.6); } }
+        .nbd-wt-dots { display: flex; justify-content: center; gap: 7px; padding: 16px 0 0; }
+        .nbd-wt-step { width: 7px; height: 7px; border-radius: 50%; background: #e4dfd6; transition: background 0.3s ease, width 0.3s ease; }
+        .nbd-wt-step.active { background: #4d6b2c; width: 20px; border-radius: 4px; }
+      `}</style>
+
+      <div className="nbd-wt-frame">
+        <div className="nbd-wt-bar">
+          <div className="nbd-wt-dot" /><div className="nbd-wt-dot" /><div className="nbd-wt-dot" />
+          <div className="nbd-wt-url">app.nationalbeauty.ie</div>
+        </div>
+        <div className="nbd-wt-screen">
+
+          {/* Scene: create account */}
+          <div className={`nbd-wt-scene${scene.id === "account" ? " active" : ""}`}>
+            <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: "#a39a8d", marginBottom: 16 }}>Get started</div>
+            <div style={{ fontSize: 22, fontWeight: 300, color: navy[900], marginBottom: 18 }}>Request training access</div>
+            <div style={{ maxWidth: 320 }}>
+              {["Salon / business name", "Email", "Choose a password"].map((label) => (
+                <div key={label} style={{ marginBottom: 14 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: "#6b6155", marginBottom: 4 }}>{label}</div>
+                  <div style={{ height: 36, background: "#fff", border: "1px solid #ddd5cb", borderRadius: 6 }} />
+                </div>
+              ))}
+              <div style={{ display: "inline-block", background: navy[900], color: "#fff", fontSize: 13, fontWeight: 700, padding: "10px 24px", borderRadius: 6, textTransform: "uppercase", letterSpacing: 0.5 }}>Submit request</div>
+            </div>
+          </div>
+
+          {/* Scene: pick brands */}
+          <div className={`nbd-wt-scene${scene.id === "brands" ? " active" : ""}`}>
+            <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: "#a39a8d", marginBottom: 16 }}>Your salon</div>
+            <div style={{ fontSize: 22, fontWeight: 300, color: navy[900], marginBottom: 18 }}>Which brands do you stock?</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, maxWidth: 360 }}>
+              {brandList.slice(0, 4).map((b, i) => (
+                <div key={b.id} style={{ display: "flex", alignItems: "center", gap: 12, background: "#fff", border: `1px solid ${i < 2 ? "#4d6b2c" : "#e2e2e2"}`, borderRadius: 8, padding: "10px 14px" }}>
+                  <div style={{ width: 18, height: 18, borderRadius: 4, border: "1.5px solid #4d6b2c", background: i < 2 ? "#4d6b2c" : "#fff", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 12 }}>{i < 2 ? "✓" : ""}</div>
+                  <div style={{ fontWeight: 700, fontSize: 14, color: navy[900] }}>{b.name}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Scene: training */}
+          <div className={`nbd-wt-scene${scene.id === "training" ? " active" : ""}`}>
+            <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: "#a39a8d", marginBottom: 16 }}>Davines</div>
+            <div style={{ fontSize: 22, fontWeight: 300, color: navy[900], marginBottom: 18 }}>Foundations of Colour Theory</div>
+            <div style={{ maxWidth: 420, height: 190, borderRadius: 12, background: "linear-gradient(125deg, #5e8f1e 0%, #98cb63 100%)", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
+              <div style={{ width: 56, height: 56, borderRadius: "50%", background: "rgba(255,255,255,0.92)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ width: 0, height: 0, borderTop: "11px solid transparent", borderBottom: "11px solid transparent", borderLeft: "17px solid #4d6b2c", marginLeft: 4 }} />
+              </div>
+              <div style={{ position: "absolute", bottom: 12, right: 16, background: "rgba(32,27,21,0.5)", color: "#fff", fontSize: 12, fontWeight: 700, padding: "3px 9px", borderRadius: 999 }}>6 min</div>
+            </div>
+          </div>
+
+          {/* Scene: add team */}
+          <div className={`nbd-wt-scene${scene.id === "team" ? " active" : ""}`}>
+            <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: "#a39a8d", marginBottom: 16 }}>Your team</div>
+            <div style={{ fontSize: 22, fontWeight: 300, color: navy[900], marginBottom: 18 }}>Stylists at this salon</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, maxWidth: 400 }}>
+              {["Aoife M.", "Saoirse K."].map((name) => (
+                <div key={name} style={{ display: "flex", alignItems: "center", gap: 12, background: "#fff", border: "1px solid #e4dfd6", borderRadius: 8, padding: "10px 14px" }}>
+                  <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#e9f2d9", color: "#4d6b2c", fontWeight: 700, fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center" }}>{name[0]}</div>
+                  <div style={{ fontWeight: 700, fontSize: 14, color: navy[900] }}>{name}</div>
+                </div>
+              ))}
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 6, alignSelf: "flex-start", background: "#fff", border: "1px dashed #98cb63", color: "#4d6b2c", fontSize: 13, fontWeight: 700, padding: "9px 16px", borderRadius: 8, marginTop: 4 }}>+ Add stylist</div>
+            </div>
+          </div>
+
+          {/* Scene: assign training */}
+          <div className={`nbd-wt-scene${scene.id === "assign" ? " active" : ""}`}>
+            <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: 1.5, textTransform: "uppercase", color: "#a39a8d", marginBottom: 16 }}>Calendar</div>
+            <div style={{ fontSize: 22, fontWeight: 300, color: navy[900], marginBottom: 18 }}>Schedule training for your team</div>
+            <div style={{ maxWidth: 300, background: "#fff", border: "1px solid #e4dfd6", borderRadius: 12, padding: 18 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#6b6155", marginBottom: 4 }}>Who's this for?</div>
+              <div style={{ height: 32, background: "#f8f8f8", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 12, display: "flex", alignItems: "center", padding: "0 10px", fontSize: 13, color: navy[900] }}>Aoife M.</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: "#6b6155", marginBottom: 4 }}>Which brand?</div>
+              <div style={{ height: 32, background: "#f8f8f8", border: "1px solid #ddd5cb", borderRadius: 6, marginBottom: 14, display: "flex", alignItems: "center", padding: "0 10px", fontSize: 13, color: navy[900] }}>{brandList[0]?.name || "Davines"}</div>
+              <div style={{ display: "inline-block", background: navy[900], color: "#fff", fontSize: 13, fontWeight: 700, padding: "9px 20px", borderRadius: 6 }}>Schedule it</div>
+            </div>
+          </div>
+
+          <div className={`nbd-wt-cursor${clicking ? " click" : ""}`} style={{ left: `${cursor.x}%`, top: `${cursor.y}%` }} />
+          <div className="nbd-wt-caption">{scene.caption}</div>
+        </div>
+      </div>
+
+      <div className="nbd-wt-dots">
+        {WALKTHROUGH_SCENES.map((s, i) => (
+          <div key={s.id} className={`nbd-wt-step${i === idx ? " active" : ""}`} />
+        ))}
+      </div>
+    </div>
+  );
+}
