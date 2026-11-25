@@ -384,6 +384,20 @@ export function AuthHero() {
           {settings.subtitle}
         </div>
       </div>
+
+      {/* The animated walkthrough, flanking the centred logo/headline
+          inside the hero itself rather than as its own page section.
+          Scaled down to fit the stage's fixed height, hidden below a
+          width where it'd collide with the centred content. */}
+      <style>{`
+        .nbd-hero-walkthrough { position: absolute; width: 520px; right: 1.5vw; top: 50%; transform: translateY(-50%) scale(0.74); transform-origin: right center; z-index: 1; pointer-events: none; }
+        @media (max-width: 1100px) {
+          .nbd-hero-walkthrough { display: none; }
+        }
+      `}</style>
+      <div className="nbd-hero-walkthrough">
+        <PlatformWalkthrough />
+      </div>
     </div>
     </>
   );
